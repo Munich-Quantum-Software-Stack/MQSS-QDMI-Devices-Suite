@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/build/tests/IBMBackend",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "build",
+            "env": {
+                "QDMI_CONFIG_FILE" : "${workspaceFolder}/tests/.qdmi-config",
+                "CONF_IBM" : "${workspaceFolder}/tests/ibm_conf.json",
+                "PROP_IBM" : "${workspaceFolder}/tests/ibm_prob.json",
+            },
+        }
+    ]
+}

@@ -1,15 +1,11 @@
 #ifndef QDMIBACKENDIBM_H
 #define QDMIBACKENDIBM_H
-#include "qdmi_internal.h"
+#include "private/qdmi_internal.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include <dlfcn.h>
 #include <string.h>
 #include <stdbool.h>
 #include <jansson.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 extern json_error_t error;

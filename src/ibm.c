@@ -1,4 +1,5 @@
 #include "ibm.h"
+#include <jansson.h>
 
 #define CHECK_ERR(a,b) { if (a!=QDMI_SUCCESS) { printf("\n[Error]: %i at %s",a,b); return 1; }}
 
@@ -143,6 +144,8 @@ int QDMI_backend_init(QInfo info)
 int QDMI_query_device_property_exists(QDMI_Device dev, QDMI_Device_property prop, int* scope)
 {
 
+    //TODO : Needs to be updated
+    /*
     json_t *property = json_object_get(ibm_root, backend_properties[prop->name]);
     if (property) {
         *scope = 1;
@@ -182,23 +185,28 @@ int QDMI_query_device_property_exists(QDMI_Device dev, QDMI_Device_property prop
         printf("    [Backend]..............Queried property does not exist: Device property #%d\n", prop->name);
         return QDMI_ERROR_FATAL;
     }
+
+    */
 }
 
-int QDMI_query_device_property_c(QDMI_Device dev, QDMI_Device_property prop, char *value)
+int QDMI_query_device_property_c(QDMI_Device dev, QDMI_Device_property prop, char** value)
 {
-    json_t *property = json_object_get(ibm_root, backend_properties[prop->name]);
+    json_t *property = json_object_get(ibm_root, backend_properties[prop]);
     if (property && json_is_string(property)) {
         const char *tmp_value = json_string_value(property);
-        strcpy(value, tmp_value);
+        *value = malloc(sizeof(char) * json_string_length(property));
+        strcpy(*value, tmp_value);
         return QDMI_SUCCESS;
     } else {
-        printf("    [Backend]..............Queried property either does not exists or it isn't a string: Device property #%d\n", prop->name);
+        printf("    [Backend]..............Queried property either does not exists or it isn't a string: Device property #%d\n", prop);
         return QDMI_ERROR_FATAL;
     }
 }
 
 int QDMI_query_device_property_i(QDMI_Device dev, QDMI_Device_property prop, int *value)
 {
+    //TODO : Needs to be updated
+    /*
     json_t *property = json_object_get(ibm_root, backend_properties[prop->name]);
     if (property && json_is_integer(property)) {
         *value = json_integer_value(property);
@@ -207,10 +215,13 @@ int QDMI_query_device_property_i(QDMI_Device dev, QDMI_Device_property prop, int
         printf("    [Backend]..............Queried property either does not exist or it isn't an integer: Device property #%d\n", prop->name);
         return QDMI_ERROR_FATAL;
     }
+    */
 }
 
 int QDMI_query_device_property_f(QDMI_Device dev, QDMI_Device_property prop, float *value)
 {
+    //TODO : Needs to be updated
+    /*
     json_t *property = json_object_get(ibm_root, backend_properties[prop->name]);
     if (property && json_is_real(property)) {
         *value = (float)json_real_value(property);
@@ -219,10 +230,13 @@ int QDMI_query_device_property_f(QDMI_Device dev, QDMI_Device_property prop, flo
         printf("    [Backend]..............Queried property either does not exist or it isn't a float: Device property #%d\n", prop->name);
         return QDMI_ERROR_FATAL;
     }
+    */
 }
 
 int QDMI_query_device_property_d(QDMI_Device dev, QDMI_Device_property prop, double *value)
 {
+    //TODO : Needs to be updated
+    /*
     json_t *property = json_object_get(ibm_root, backend_properties[prop->name]);
     if (property && json_is_real(property)) {
         *value = json_real_value(property);
@@ -231,6 +245,7 @@ int QDMI_query_device_property_d(QDMI_Device dev, QDMI_Device_property prop, dou
         printf("    [Backend]..............Queried property either does not exist or it isn't a double: Device property #%d\n", prop->name);
         return QDMI_ERROR_FATAL;
     }
+    */
 }
 
 int QDMI_populate_gateset(int num_gates, json_t *basis_gates)
@@ -593,7 +608,7 @@ int QDMI_query_qubits_num(QDMI_Device dev, int *num_qubits)
     return QDMI_SUCCESS;
 }
 
-int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit_property prop, QDMI_Qubit qubit, int* scope)
+int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qubit_property prop, int* scope)
 {
 
     *scope = 1;

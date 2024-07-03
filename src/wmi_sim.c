@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-#include "qdmi_backend_wmi_real.h"
+#include "wmi_sim.h"
 
 #define BUZZ_SIZE 65
 #define base_url "https://wmiqc-api.wmi.badw.de"
@@ -32,11 +32,10 @@ struct ResponseStruct
 
 cJSON *backend_configuration()
 {
-
     char *configuration_string = "{ \
-    \"backend_name\": \"dedicated\", \
+    \"backend_name\": \"dedicatedSimulator\", \
     \"backend_version\": \"1.0.0\", \
-    \"n_qubits\": 3, \
+    \"n_qubits\": 5, \
     \"basis_gates\": [\"id\", \"x\", \"y\", \"sx\", \"rz\", \"mz\"], \
     \"coupling_map\": null, \
     \"simulator\": false, \
@@ -56,11 +55,8 @@ cJSON *backend_configuration()
 
 cJSON *backend_options(int shots)
 {
-
     char *option_string = NULL;
-    asprintf(&option_string, "{ \"shots\": %i, \
-                                \"do_emulation\": \"false\"}",
-             shots);
+    asprintf(&option_string, "{ \"shots\": %i}", shots);
 
     size_t len = strlen(option_string);
 
@@ -105,7 +101,7 @@ int QDMI_query_all_gates(QDMI_Device dev, QDMI_Gate *gates)
 // init not needed for wmi backend
 int QDMI_backend_init(QInfo info)
 {
-    printf("   [Backend].............Initializing WMI (real device) via QDMI\n");
+    printf("   [Backend].............Initializing WMI (simulator) via QDMI\n");
 
     char *uri = NULL;
     void *regpointer = NULL;
@@ -121,8 +117,8 @@ int QDMI_backend_init(QInfo info)
 int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits)
 {
     printf("   [Backend].............Returning size\n");
-
-    *numbits = 1;
+    
+    *numbits = 5;
     return QDMI_SUCCESS;
 }
 
@@ -130,8 +126,54 @@ int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits
 int QDMI_set_coupling_mapping(QDMI_Device dev, int qubit_index, QDMI_Qubit qubit)
 {
     qubit->index = qubit_index;
-    qubit->coupling_mapping = NULL;
-    qubit->size_coupling_mapping = 0;
+
+    int i;
+    switch (qubit_index) {
+        case 0:
+            qubit->coupling_mapping = (QDMI_qubit_index*)malloc(4 * sizeof(QDMI_qubit_index));
+            qubit->coupling_mapping[0] = 1;
+            qubit->coupling_mapping[1] = 2;
+            qubit->coupling_mapping[2] = 3;
+            qubit->coupling_mapping[3] = 4;
+            qubit->size_coupling_mapping = 4;
+            break;
+        case 1:
+            qubit->coupling_mapping = (QDMI_qubit_index*)malloc(4 * sizeof(QDMI_qubit_index));
+            qubit->coupling_mapping[0] = 0;
+            qubit->coupling_mapping[1] = 2;
+            qubit->coupling_mapping[2] = 3;
+            qubit->coupling_mapping[3] = 4;
+            qubit->size_coupling_mapping = 4;
+            break;
+        case 2:
+            qubit->coupling_mapping = (QDMI_qubit_index*)malloc(4 * sizeof(QDMI_qubit_index));
+            qubit->coupling_mapping[0] = 0;
+            qubit->coupling_mapping[1] = 1;
+            qubit->coupling_mapping[2] = 3;
+            qubit->coupling_mapping[3] = 4;
+            qubit->size_coupling_mapping = 4;
+            break;
+        case 3:
+            qubit->coupling_mapping = (QDMI_qubit_index*)malloc(4 * sizeof(QDMI_qubit_index));
+            qubit->coupling_mapping[0] = 0;
+            qubit->coupling_mapping[1] = 1;
+            qubit->coupling_mapping[2] = 2;
+            qubit->coupling_mapping[3] = 4;
+            qubit->size_coupling_mapping = 4;
+            break;
+        case 4:
+            qubit->coupling_mapping = (QDMI_qubit_index*)malloc(4 * sizeof(QDMI_qubit_index));
+            qubit->coupling_mapping[0] = 0;
+            qubit->coupling_mapping[1] = 1;
+            qubit->coupling_mapping[2] = 2;
+            qubit->coupling_mapping[3] = 3;
+            qubit->size_coupling_mapping = 4;
+            break;
+        default:
+            qubit->coupling_mapping = NULL;
+            qubit->size_coupling_mapping = 0;
+            break; 
+    }
 }
 
 // Looks like this is initializing qubits and setting the coupling map for each qubit
@@ -154,6 +196,9 @@ int QDMI_query_all_qubits(QDMI_Device dev, QDMI_Qubit *qubits)
     for (i = 0; i < num_qubits; i++)
     {
         QDMI_set_coupling_mapping(dev, i, (*qubits) + i);
+
+        //for (int j = 0; j < (*qubits)[i].size_coupling_mapping; j++)
+        //    printf("qubit[%d]->coupling_mapping[%d] = %d \n", i, j, (*qubits)[i].coupling_mapping[j]);
     }
 
     printf("   [Backend].............Returning available qubits\n");
@@ -163,8 +208,7 @@ int QDMI_query_all_qubits(QDMI_Device dev, QDMI_Qubit *qubits)
 // number of qubits
 int QDMI_query_qubits_num(QDMI_Device dev, int *num_qubits)
 {
-    *num_qubits = 1;
-    // printf("   [Backend].............QDMI_query_qubits_num\n");
+    *num_qubits = 5;
     return QDMI_SUCCESS;
 }
 
@@ -198,33 +242,30 @@ char *get_token()
 }
 
 // directly parsing response to json
-static size_t parse_json(void *contents, size_t size, size_t nmemb, struct ResponseStruct *response)
+size_t parse_json(void *contents, size_t size, size_t nmemb, struct ResponseStruct *response)
 {
-
     size_t realsize = size * nmemb;
-
+    
     struct ResponseStruct *mem = (struct ResponseStruct *)response;
-
     cJSON *ptr = cJSON_ParseWithLength(contents, realsize);
-
-    if (!ptr)
+  
+    if(!ptr)
     {
         /* out of memory! */
-        printf("not enough memory (realloc returned NULL)\n");
+        printf("   [Backend].............Not enough memory (realloc returned NULL)\n");
         return 0;
     }
-
+  
     mem->json = ptr;
     mem->size += realsize;
-
+  
     return realsize;
 }
 
 // get status of device.
 int QDMI_device_status(QDMI_Device dev, QInfo info, int *status)
 {
-
-    printf("   [Backend].............WMI (real device) query device status OK\n");
+    printf("   [Backend].............WMI (simulator) query device status OK\n");
 
     CURL *curl = curl_easy_init();
 
@@ -240,10 +281,7 @@ int QDMI_device_status(QDMI_Device dev, QInfo info, int *status)
     response.size = 0;
 
     // set options
-    char url[256];
-    snprintf(url, sizeof(url), "%s%s", base_url, "/1/wmiqc/qobj");
-
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_URL, "https://wmiqc-api.wmi.badw.de/1/wmiqc/qobj");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
@@ -261,7 +299,7 @@ int QDMI_device_status(QDMI_Device dev, QInfo info, int *status)
     CURLcode result = curl_easy_perform(curl);
     if (result != CURLE_OK)
     {
-        fprintf(stderr, "[Backend].............Request problem: %s\n", curl_easy_strerror(result));
+        fprintf(stderr, "Request problem: %s\n", curl_easy_strerror(result));
         return QDMI_ERROR_BACKEND;
     }
 
@@ -297,23 +335,10 @@ int QDMI_device_status(QDMI_Device dev, QInfo info, int *status)
     return QDMI_SUCCESS;
 }
 
-// https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
-bool IsPowerOfTwo(unsigned int x)
-{
-    return (x > 0) && ((x & (x - 1)) == 0);
-}
-
 // submit function. Need to know what the different structs are for
 int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInfo info, QDMI_Job *job)
 {
-    printf("   [Backend].............QDMI_control_submit\n");
-
-    bool is_power_of_two = IsPowerOfTwo(numshots);
-    if (!is_power_of_two)
-    {
-        fprintf(stderr, "[Backend].............Powers of 2 required for number of shots, but is %i!\n", numshots);
-        return QDMI_ERROR_CONFIG;
-    }
+    printf("   [Backend].............Circuit received\n");
 
     CURL *curl = curl_easy_init();
 
@@ -341,12 +366,11 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
     sz = snprintf(NULL, 0, "\"%i\"", job_id);
     job_id_json = (char *)malloc(sz + 1);
     snprintf(job_id_json, sz + 1, "\"%i\"", job_id);
-
     form = curl_mime_init(curl);
 
     // set general options
     char url[256];
-    snprintf(url, sizeof(url), "%s%s", base_url, "/1/wmiqc/qir");
+    snprintf(url, sizeof(url), "%s%s", base_url, "/1/qiskitSimulator/qir");
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
@@ -406,11 +430,6 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
         fprintf(stderr, "   [Backend].............Request problem: %ld - %s\n", http_code, string);
         return QDMI_ERROR_BACKEND;
     }
-    if (result != CURLE_OK)
-    {
-        fprintf(stderr, "[Backend].............Request problem: %s\n", curl_easy_strerror(result));
-        return QDMI_ERROR_BACKEND;
-    }
 
     free(string);
     free(response.json);
@@ -442,15 +461,10 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     // make sure results are an array of zeros
-    int state_space = 1;
-    for (int i; i < numbits; i++)
-    {
-        state_space *= 2;
-    }
-    for (int i = 0; i < state_space; i++)
-    {
+    unsigned int i;
+
+    for (i = 0; i < ((unsigned int)1 << numbits); i++)
         num[i] = 0;
-    }
 
     char *token_header = get_token();
 
@@ -466,7 +480,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
 
     // set options
     char url[256];
-    snprintf(url, sizeof(url), "%s%s", base_url, "/1/wmiqc/qobj");
+    snprintf(url, sizeof(url), "%s%s", base_url, "/1/qiskitSimulator/qobj");
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
@@ -498,8 +512,10 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
 
     if (http_code == 200)
     {
-        printf("   [Backend].............Job finished\n");
-        fflush(stdout);
+        //printf("   [Backend].............Job finished\n");
+
+        cJSON *message = cJSON_GetObjectItemCaseSensitive(response.json, "message");
+        char *string = cJSON_Print(message);
 
         long bitstring_idx;
         char *bitstring_string;
@@ -522,7 +538,8 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
     }
     else
     {
-        fprintf(stderr, "   [Backend].............Request problem: %ld - %s\n", http_code, string);
+        printf("   [Backend].............Job not done\n");
+        return QDMI_ERROR_BACKEND;
     }
 
     free(response.json);
@@ -536,7 +553,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
 
 int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *status)
 {
-    printf("   [Backend].............Querying status\n");
+    //printf("   [Backend].............Querying status\n");
 
     CURL *curl = curl_easy_init();
 
@@ -548,8 +565,8 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
 
     int err = 0, numbits = 0;
 
-    err = QDMI_control_readout_size(dev, status, &numbits);
-    CHECK_ERR(err, "QDMI_control_readout_raw_num");
+    //err = QDMI_control_readout_size(dev, status, &numbits); // TODO Why do we need this?
+    //CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     char *token_header = get_token();
 
@@ -565,7 +582,7 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
 
     // set options
     char url[256];
-    snprintf(url, sizeof(url), "%s%s", base_url, "/1/wmiqc/qobj");
+    snprintf(url, sizeof(url), "%s%s", base_url, "/1/qiskitSimulator/qobj");
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
@@ -573,8 +590,8 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
 
     // headers
     struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, token_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     // payload
@@ -594,23 +611,26 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
     // process data
     long http_code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-    cJSON *message = cJSON_GetObjectItemCaseSensitive(response.json, "message");
-    char *string = cJSON_Print(message);
-
     if (http_code == 200)
     {
-        printf("   [Backend].............Job finished\n");
-        fflush(stdout);
+        //printf("   [Backend].............Job finished\n");
         (*flag) = QDMI_COMPLETE;
     }
     else if (http_code == 202)
     {
-        printf("   [Backend].............Job Running\n");
+        //printf("   [Backend].............Job Running\n");
         (*flag) = QDMI_EXECUTING;
     }
     else
     {
+        cJSON *message = cJSON_GetObjectItemCaseSensitive(response.json, "message");
+        char *string = cJSON_Print(message);
+
         fprintf(stderr, "   [Backend].............Request problem: %ld - %s\n", http_code, string);
+        
+        free(response.json);
+        free(job_id_json);
+
         (*flag) = QDMI_HALTED;
         return QDMI_ERROR_BACKEND;
     }
@@ -625,7 +645,6 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
 
 int QDMI_control_wait(QDMI_Device dev, QDMI_Job *job, QDMI_Status *status)
 {
-
     bool done = false;
     int flag = QDMI_EXECUTING;
 
@@ -649,9 +668,6 @@ int QDMI_control_wait(QDMI_Device dev, QDMI_Job *job, QDMI_Status *status)
 
 int QDMI_control_pack_qir(QDMI_Device dev, void *qirmod, QDMI_Fragment *frag)
 {
-    if(!dev || !qirmod || !frag)
-        return QDMI_ERROR_FATAL;
-
     (*frag)->qirmod = qirmod;
 
     return QDMI_SUCCESS;

@@ -2,7 +2,7 @@
 #define QDMIBACKENDWMI_H
 
 #include <qdmi_backend.h>
-#include "qdmi_internal.h"
+#include "private/qdmi_internal.h"
 
 const char *gate_set[] = 
 {

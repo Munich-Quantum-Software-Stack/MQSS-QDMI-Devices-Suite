@@ -1,3 +1,7 @@
 add_executable(IBMBackend IBMBackendTest.c)
 target_link_libraries(IBMBackend backend_ibm)
 add_test(IBMBackend IBMBackend)
+
+add_executable(WMIRealBackend WMIRealBackendTest.c)
+target_link_libraries(WMIRealBackend backend_wmi_real)
+add_test(WMIRealBackend WMIRealBackend)

@@ -1,5 +1,5 @@
-#ifndef QDMIBACKENDWMI_H
-#define QDMIBACKENDWMI_H
+#ifndef QDMIBACKENDWMIREAL_H
+#define QDMIBACKENDWMIREAL_H
 
 #include <qdmi_backend.h>
 #include "private/qdmi_internal.h"

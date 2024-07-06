@@ -23,34 +23,32 @@ int main(int argc, char **argv)
 {
     putenv("TOKEN_WMI=../inputs/token.txt");
     QInfo info;
-    QDMI_Session session = NULL;
+    QDMI_Session session;
     QDMI_Library lib;
     QDMI_Fragment frag;
-    QDMI_Device device;
+    //QDMI_Device device;
     QDMI_Job job;
     int err, count = 0;
 
     job = malloc(sizeof(struct QDMI_Job_impl_d));
-    if (device == NULL)
-    {
-        printf("\n[ERROR]: Job could not be created");
-        exit(EXIT_FAILURE);
-    }
-
-    device = malloc(sizeof(struct QDMI_Device_impl_d));
-    if (device == NULL)
-    {
-        printf("\n[ERROR]: Device could not be created");
-        printf("\n[ERROR]: Device could not be created");
-        exit(EXIT_FAILURE);
-    }
 
     err = QInfo_create(&info);
-    CHECK_ERR(err, "QInfo_create");
-
-    // QDMI_session_init(info, &session) -> QDMI_internal_startup(info) -> QDMI_load_libraries(info) -> QInfo_create(&(newlib->info))
+    if QDMI_IS_ERROR(err) return err;
+    
     err = QDMI_session_init(info, &session);
-    CHECK_ERR(err, "QDMI_session_init");
+    int count_2 = 2;
+    err = QDMI_core_device_count(&session, &count_2);
+    if QDMI_IS_ERROR(err) return err;
+
+    printf("%i\n", count_2);
+
+    QDMI_Device devices[count_2];
+    for(int index = 0; index < count_2; index++)
+        QDMI_core_open_device(&session, index, &info, &devices[index]);
+
+    QDMI_Device device = devices[2];
+
+    err = QDMI_session_init(info, &session);
 
     frag = (QDMI_Fragment)malloc(sizeof(struct QDMI_Fragment_d));
     if (frag == NULL)
@@ -72,31 +70,23 @@ int main(int argc, char **argv)
     fread(frag->qirmod, 1, frag->sizebuffer, f);
     fclose(f);
 
-    lib = find_library_by_name("/home/martin/bin/lib/libbackend_wmi.so");
-    if (!lib)
-    {
-        printf("\n[ERROR]: Library could not be found");
-        exit(EXIT_FAILURE);
-    }
-    device->library = *lib;
-
     int num_qubits;
     err = QDMI_query_qubits_num(device, &num_qubits);
     CHECK_ERR(err, "QDMI_query_qubits_num");
-
+    
     int status = 0;
-    err = QDMI_device_status(device, device->library.info, &status);
+    err = QDMI_device_status(device, info, &status);
     CHECK_ERR(err, "QDMI_device_status");
-
+    
     // job_id as random int
     srand(time(NULL));
     int task_id = rand();
     job->task_id = task_id;
-    err = QDMI_control_submit(device, &frag, 1024, device->library.info, &job);
+    err = QDMI_control_submit(device, &frag, 1024, info, &job);
     CHECK_ERR(err, "QDMI_control_submit");
-
+    
     int wait_status = QDMI_control_wait(device, &job, &status);
-
+    
     // init results array
     int state_space = 1;
     for (int i; i < num_qubits; i++)
@@ -108,7 +98,7 @@ int main(int argc, char **argv)
     {
         num[i] = 0;
     }
-
+    printf("7\n");
     err = QDMI_control_readout_raw_num(device, &status, job->task_id, &num);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 

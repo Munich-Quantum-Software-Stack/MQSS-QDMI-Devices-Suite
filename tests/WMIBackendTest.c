@@ -21,34 +21,34 @@ QDMI_Library find_library_by_name(const char *libname);
 
 int main(int argc, char **argv)
 {
-    putenv("TOKEN_WMI=../inputs/token.txt");
+    
+    putenv("TOKEN_WMI=./inputs/token.txt");
+
     QInfo info;
     QDMI_Session session;
     QDMI_Library lib;
     QDMI_Fragment frag;
-    //QDMI_Device device;
     QDMI_Job job;
     int err, count = 0;
 
     job = malloc(sizeof(struct QDMI_Job_impl_d));
-
+    
     err = QInfo_create(&info);
     if QDMI_IS_ERROR(err) return err;
     
     err = QDMI_session_init(info, &session);
-    int count_2 = 2;
-    err = QDMI_core_device_count(&session, &count_2);
+    
+    int device_count = -1;
+    
+    err = QDMI_core_device_count(&session, &device_count);
     if QDMI_IS_ERROR(err) return err;
 
-    printf("%i\n", count_2);
 
-    QDMI_Device devices[count_2];
-    for(int index = 0; index < count_2; index++)
+    QDMI_Device devices[device_count];
+    for(int index = 0; index < device_count; index++)
         QDMI_core_open_device(&session, index, &info, &devices[index]);
 
-    QDMI_Device device = devices[2];
-
-    err = QDMI_session_init(info, &session);
+    QDMI_Device device = devices[0];
 
     frag = (QDMI_Fragment)malloc(sizeof(struct QDMI_Fragment_d));
     if (frag == NULL)
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     // put readable qir in qirmod.
     char *buffer = 0;
     long length;
-    FILE *f = fopen("../inputs/circuit_excited.bc", "rb");
+    FILE *f = fopen("./inputs/circuit_ground.bc", "rb");
     fseek(f, 0, SEEK_END);
     frag->sizebuffer = ftell(f);
     fseek(f, 0, SEEK_SET);
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     {
         num[i] = 0;
     }
-    printf("7\n");
+    
     err = QDMI_control_readout_raw_num(device, &status, job->task_id, &num);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
@@ -107,8 +107,6 @@ int main(int argc, char **argv)
         printf("Measurement: %i counts:: %i\n", i, num[i]);
     }
 
-    // QDMI_session_finalize(session) -> QDMI_internal_shutdown()
-    err = QDMI_session_finalize(session);
     CHECK_ERR(err, "QDMI_session_finalize");
 
     err = QInfo_free(info);

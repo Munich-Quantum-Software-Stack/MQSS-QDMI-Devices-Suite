@@ -1,5 +1,7 @@
 #include "ibm.h"
 #include <jansson.h>
+#include <stdlib.h> 
+#include <time.h>   
 
 #define CHECK_ERR(a,b) { if (a!=QDMI_SUCCESS) { printf("\n[Error]: %i at %s",a,b); return 1; }}
 
@@ -18,6 +20,20 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
 int QDMI_control_pack_qasm2(QDMI_Device dev, char *qasmstr, QDMI_Fragment *frag)
 {
     printf("   [Backend].............QDMI_control_pack_qasm2\n");
+
+    return QDMI_SUCCESS;
+}
+
+int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *status)
+{
+    // Initialize random number generator
+    srand(time(NULL));
+
+    // Generate random number between 0 and 3 (as status can be 0, 1, 2, 3)
+    int random_value = rand() % 4;
+
+    *flag = random_value;
+    *status = random_value;
 
     return QDMI_SUCCESS;
 }

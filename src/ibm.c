@@ -1,4 +1,6 @@
 #include "ibm.h"
+#include "private/qdmi_internal.h"
+#include "qdmi.h"
 #include <jansson.h>
 #include <stdlib.h> 
 #include <time.h>   
@@ -65,6 +67,7 @@ int QDMI_control_wait(QDMI_Device dev, QDMI_Job *job, QDMI_Status *status)
 
 int QDMI_control_pack_qir(QDMI_Device dev, void *qirmod, QDMI_Fragment *frag)
 {
+    (*frag) = malloc(sizeof(QDMI_Fragment_t));
     (*frag)->qirmod = qirmod;
 
     return QDMI_SUCCESS;

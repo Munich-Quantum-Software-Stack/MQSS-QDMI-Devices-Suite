@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
 #include <qdmi.h>
-#include "private/qdmi_internal.h"
+#include <qinfo.h>
 
-int QDMI_session_init(QInfo info, QDMI_Session *session);
-int QDMI_session_finalize(QDMI_Session session);
-QDMI_Library find_library_by_name(const char *libname);
+
+//int QDMI_session_init(QInfo info, QDMI_Session *session);
+//int QDMI_session_finalize(QDMI_Session session);
+//QDMI_Library find_library_by_name(const char *libname);
 
 #define CHECK_ERR(a, b)                          \
     {                                            \
@@ -26,12 +26,10 @@ int main(int argc, char **argv)
 
     QInfo info;
     QDMI_Session session;
-    QDMI_Library lib;
     QDMI_Fragment frag;
     QDMI_Job job;
     int err, count = 0;
 
-    job = malloc(sizeof(struct QDMI_Job_impl_d));
     
     err = QInfo_create(&info);
     if QDMI_IS_ERROR(err) return err;
@@ -50,7 +48,6 @@ int main(int argc, char **argv)
 
     QDMI_Device device = devices[0];
 
-    frag = (QDMI_Fragment)malloc(sizeof(struct QDMI_Fragment_d));
     if (frag == NULL)
     {
         QDMI_session_finalize(session);
@@ -64,10 +61,11 @@ int main(int argc, char **argv)
     long length;
     FILE *f = fopen("./inputs/circuit_ground.bc", "rb");
     fseek(f, 0, SEEK_END);
-    frag->sizebuffer = ftell(f);
+    int sizebuffer = ftell(f);
+    void *qirmod = malloc(sizebuffer);
+    fread(qirmod, 1, sizebuffer, f);
+    QDMI_control_pack_qir(device, qirmod,  &frag);
     fseek(f, 0, SEEK_SET);
-    frag->qirmod = malloc(frag->sizebuffer);
-    fread(frag->qirmod, 1, frag->sizebuffer, f);
     fclose(f);
 
     int num_qubits;
@@ -80,8 +78,8 @@ int main(int argc, char **argv)
     
     // job_id as random int
     srand(time(NULL));
-    int task_id = rand();
-    job->task_id = task_id;
+    //int task_id = rand();
+    //job->task_id = task_id;
     err = QDMI_control_submit(device, &frag, 1024, info, &job);
     CHECK_ERR(err, "QDMI_control_submit");
     
@@ -99,7 +97,7 @@ int main(int argc, char **argv)
         num[i] = 0;
     }
     
-    err = QDMI_control_readout_raw_num(device, &status, job->task_id, &num);
+    err = QDMI_control_readout_raw_num(device, &status, 0, &num); // NEEDS TO UPDATED SEE ISSUE#39 ON QDMI
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     for (int i = 0; i < state_space; i++)
@@ -112,7 +110,6 @@ int main(int argc, char **argv)
     err = QInfo_free(info);
     CHECK_ERR(err, "QInfo_free");
 
-    free(frag->qirmod);
     free(frag);
     free(device);
     free(job);

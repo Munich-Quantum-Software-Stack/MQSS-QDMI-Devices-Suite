@@ -1,4 +1,12 @@
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH})
+set(IBM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/ibm)
+
+find_package(jansson REQUIRED)
+
+add_library(backend_ibm SHARED)
+target_sources(backend_ibm PRIVATE ibm.c)
+target_include_directories(backend_ibm PUBLIC ${IBM_INCLUDE_DIR} ${QDMI_INCLUDE_DIRS} ${QDMI_SRC_DIRS} ${QINFO_INCLUDE_DIRS})
+target_link_libraries(backend_ibm PUBLIC qdmi jansson)
+#set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH})
 
 #find_package(qdmi REQUIRED)
 #find_package(jansson REQUIRED)
@@ -21,8 +29,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH
 #target_link_libraries(backend_wmi_real PUBLIC qinfo qdmi LLVM cjson curl)
 #target_link_libraries(backend_wmi_sim PUBLIC qinfo qdmi LLVM cjson curl)
 
-add_subdirectory(ibm)
-add_subdirectory(wmi)
+#add_subdirectory(ibm)
+#add_subdirectory(wmi)
 
 #target_sources(backend_ibm PRIVATE ibm.c)
 #target_sources(backend_wmi_real PRIVATE wmi_real.c)

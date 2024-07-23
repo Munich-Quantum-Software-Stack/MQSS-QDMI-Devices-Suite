@@ -11,6 +11,17 @@ json_t *ibm_root;
 char **gate_set;
 json_t *ibm_properties;
 
+char *backend_properties[] = 
+{
+    "backend_name", "backend_version",
+    "n_qubits", "basis_gates", "gates", "coupling_map"
+};
+
+char * qubit_properties[] =
+{
+    "T1", "T2", "readout_error", "readout_length"
+};
+
 
 int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInfo info, QDMI_Job *job)
 {

@@ -651,7 +651,7 @@ int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qub
             return QDMI_PROPERTY_NOTEXIST;
         }
         else{
-            printf("    [Backend]..............%s property does not exist\n",  qubit_properties[0]);
+            printf("    [Backend]..............%s property exists\n",  qubit_properties[0]);
             return QDMI_SUCCESS;
         }
 
@@ -679,7 +679,7 @@ int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qub
             return QDMI_PROPERTY_NOTEXIST;
         }
         else{
-            printf("    [Backend]..............%s property does not exist\n",  qubit_properties[2]);
+            printf("    [Backend]..............%s property exists\n",  qubit_properties[2]);
             return QDMI_SUCCESS;
         }
 

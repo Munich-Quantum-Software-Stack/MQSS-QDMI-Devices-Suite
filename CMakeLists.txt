@@ -4,21 +4,24 @@ project(Backends
         VERSION 0.1
         DESCRIPTION "QDMI Backends")
 
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(CMAKE_C_FLAGS "-g")
+include(GNUInstallDirs)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_FLAGS "-g")
 
 add_library(backend_ibm SHARED)
-target_include_directories(backend_ibm PUBLIC include)
+target_include_directories(backend_ibm PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 find_package(LLVM REQUIRED CONFIG)
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
+target_include_directories(backend_ibm PUBLIC
+    $<BUILD_INTERFACE:${LLVM_INCLUDE_DIRS}>
+)
 
-#install(TARGETS backend_ibm DESTINATION lib)
+add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(src)
 add_subdirectory(tests)
 
-
-#add_executable(IBMBackend tests/IBMBackendTest.c)
-#target_link_libraries(IBMBackend backend_ibm3)

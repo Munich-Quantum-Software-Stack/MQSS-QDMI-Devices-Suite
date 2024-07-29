@@ -7,6 +7,3 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(qinfo)
-FetchContent_GetProperties(qinfo)
-
-set(QINFO_INCLUDE_DIRS "${qinfo_SOURCE_DIR}/include")

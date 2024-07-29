@@ -1,11 +1,26 @@
 #include "ibm.h"
+#include "private/qdmi_internal.h"
+#include "qdmi.h"
 #include <jansson.h>
+#include <stdlib.h> 
+#include <time.h>   
 
 #define CHECK_ERR(a,b) { if (a!=QDMI_SUCCESS) { printf("\n[Error]: %i at %s",a,b); return 1; }}
 
 json_t *ibm_root;
 char **gate_set;
 json_t *ibm_properties;
+
+char *backend_properties[] = 
+{
+    "backend_name", "backend_version",
+    "n_qubits", "basis_gates", "gates", "coupling_map"
+};
+
+char * qubit_properties[] =
+{
+    "T1", "T2", "readout_error", "readout_length"
+};
 
 
 int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInfo info, QDMI_Job *job)
@@ -18,6 +33,20 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
 int QDMI_control_pack_qasm2(QDMI_Device dev, char *qasmstr, QDMI_Fragment *frag)
 {
     printf("   [Backend].............QDMI_control_pack_qasm2\n");
+
+    return QDMI_SUCCESS;
+}
+
+int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *status)
+{
+    // Initialize random number generator
+    srand(time(NULL));
+
+    // Generate random number between 0 and 3 (as status can be 0, 1, 2, 3)
+    int random_value = rand() % 4;
+
+    *flag = random_value;
+    *status = random_value;
 
     return QDMI_SUCCESS;
 }
@@ -49,6 +78,7 @@ int QDMI_control_wait(QDMI_Device dev, QDMI_Job *job, QDMI_Status *status)
 
 int QDMI_control_pack_qir(QDMI_Device dev, void *qirmod, QDMI_Fragment *frag)
 {
+    (*frag) = malloc(sizeof(QDMI_Fragment_t));
     (*frag)->qirmod = qirmod;
 
     return QDMI_SUCCESS;
@@ -621,7 +651,7 @@ int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qub
             return QDMI_PROPERTY_NOTEXIST;
         }
         else{
-            printf("    [Backend]..............%s property does not exist\n",  qubit_properties[0]);
+            printf("    [Backend]..............%s property exists\n",  qubit_properties[0]);
             return QDMI_SUCCESS;
         }
 
@@ -649,7 +679,7 @@ int QDMI_query_qubit_property_exists(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qub
             return QDMI_PROPERTY_NOTEXIST;
         }
         else{
-            printf("    [Backend]..............%s property does not exist\n",  qubit_properties[2]);
+            printf("    [Backend]..............%s property exists\n",  qubit_properties[2]);
             return QDMI_SUCCESS;
         }
 

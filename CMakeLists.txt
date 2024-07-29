@@ -4,8 +4,10 @@ project(Backends
         VERSION 0.1
         DESCRIPTION "QDMI Backends")
 
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(CMAKE_C_FLAGS "-g")
+include(GNUInstallDirs)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_FLAGS "-g")
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -31,6 +33,3 @@ find_package(cjson REQUIRED)
 add_subdirectory(src)
 add_subdirectory(tests)
 
-
-#add_executable(IBMBackend tests/IBMBackendTest.c)
-#target_link_libraries(IBMBackend backend_ibm3)

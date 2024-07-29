@@ -1,5 +1,6 @@
 #ifndef QDMIBACKENDIBM_H
 #define QDMIBACKENDIBM_H
+
 #include "private/qdmi_internal.h"
 
 #include <dlfcn.h>
@@ -13,15 +14,9 @@ extern json_t *ibm_root;
 extern json_t *ibm_properties;
 extern char **gate_set;
 
-const char *backend_properties[] = 
-{
-    "backend_name", "backend_version",
-    "n_qubits", "basis_gates", "gates", "coupling_map"
-};
+extern char *backend_properties[];
 
-const char * qubit_properties[] =
-{
-    "T1", "T2", "readout_error", "readout_length"
-};
+extern char * qubit_properties[];
+
 int fetch_configuration();
 #endif // QDMIBACKENDIBM_H

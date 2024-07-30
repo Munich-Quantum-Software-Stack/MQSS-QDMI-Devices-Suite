@@ -1,12 +1,9 @@
 #include <qdmi_backend.h>
 #include <private/qdmi_internal.h>
 
-#include "cJSON.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <ctype.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <unistd.h>
 #include <curl/curl.h>

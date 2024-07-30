@@ -1,27 +1,23 @@
-cmake_minimum_required(VERSION 3.22)
+# set required cmake version
+cmake_minimum_required(VERSION 3.19...3.30)
 
 project(Backends
         VERSION 0.1
-        DESCRIPTION "QDMI Backends")
+        DESCRIPTION "QDMI Backends"
+        LANGUAGES C)
 
-include(GNUInstallDirs)
+# Generate compile_commands.json to make it easier to work with clang based tools
+set(CMAKE_EXPORT_COMPILE_COMMANDS
+    ON
+    CACHE BOOL "Export compile commands" FORCE)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_C_FLAGS "-g")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-add_library(backend_ibm SHARED)
-target_include_directories(backend_ibm PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
+# set the include directory for the build tree
+set(BACKENDS_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-find_package(LLVM REQUIRED CONFIG)
-target_include_directories(backend_ibm PUBLIC
-    $<BUILD_INTERFACE:${LLVM_INCLUDE_DIRS}>
-)
-
-add_definitions(${LLVM_DEFINITIONS})
+# Declare all external dependencies and make sure that they are available.
+include(cmake/ExternalDependencies.cmake)
 
 add_subdirectory(src)
 add_subdirectory(tests)
-

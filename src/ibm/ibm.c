@@ -1,9 +1,12 @@
-#include "ibm.h"
-#include "private/qdmi_internal.h"
-#include "qdmi.h"
+#include <private/qdmi_internal.h>
+#include <qdmi.h>
+
 #include <jansson.h>
-#include <stdlib.h> 
-#include <time.h>   
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include <unistd.h>
 
 #define CHECK_ERR(a,b) { if (a!=QDMI_SUCCESS) { printf("\n[Error]: %i at %s",a,b); return 1; }}
 
@@ -11,7 +14,7 @@ json_t *ibm_root;
 char **gate_set;
 json_t *ibm_properties;
 
-char *backend_properties[] = 
+char *backend_properties[] =
 {
     "backend_name", "backend_version",
     "n_qubits", "basis_gates", "gates", "coupling_map"
@@ -105,12 +108,12 @@ int fetch_backend_configuration()
     json_error_t error;
     ibm_root = json_loadf(fp, 0, &error);
     fclose(fp);
-    if (!ibm_root) 
+    if (!ibm_root)
     {
         fprintf(stderr, "Error parsing JSON: %s\n", error.text);
         return QDMI_ERROR_CONFIG;
     }
-    if (!json_is_object(ibm_root)) 
+    if (!json_is_object(ibm_root))
     {
         fprintf(stderr, "Root element is not an object.\n");
         return QDMI_ERROR_CONFIG;
@@ -133,17 +136,17 @@ int fetch_backend_configuration()
 
     ibm_properties = json_loadf(fprop, 0, &error);
     fclose(fprop);
-    if (!ibm_properties) 
+    if (!ibm_properties)
     {
         fprintf(stderr, "Error parsing JSON: %s\n", error.text);
         return QDMI_ERROR_CONFIG;
     }
-    if (!json_is_object(ibm_properties)) 
+    if (!json_is_object(ibm_properties))
     {
         fprintf(stderr, "Root (property) element is not an object.\n");
         return QDMI_ERROR_CONFIG;
     }
-    
+
     return QDMI_SUCCESS;
 }
 
@@ -309,8 +312,8 @@ int QDMI_populate_gateset(int num_gates, json_t *basis_gates)
             json_decref(ibm_root);
             return QDMI_ERROR_CFGFILE;
         }
-    }   
-    
+    }
+
     return QDMI_SUCCESS;
 }
 int QDMI_query_gateset_num(QDMI_Device dev, int *num_gates)
@@ -351,7 +354,7 @@ void QDMI_get_gate_info(QDMI_Device dev, int gate_index, QDMI_Gate gate)
     size_t num_coupling_maps = json_array_size(coupling_map_array);
     gate->size_coupling_map = num_coupling_maps;
     gate->gate_size = 0; // Set later
-    
+
     if(num_coupling_maps != 0){
         // Allocate memory for coupling maps
         gate->coupling_mapping = (QDMI_Gate_property **)malloc((num_coupling_maps) * sizeof(QDMI_Gate_property *));
@@ -388,7 +391,7 @@ void QDMI_get_gate_info(QDMI_Device dev, int gate_index, QDMI_Gate gate)
                     continue;
                 }
                 int qubit = json_integer_value(connection);
-                gate->coupling_mapping[j][k] = qubit; 
+                gate->coupling_mapping[j][k] = qubit;
 
             }
         }
@@ -396,7 +399,7 @@ void QDMI_get_gate_info(QDMI_Device dev, int gate_index, QDMI_Gate gate)
     // Set coupling_mapping to NULL if the backend doesn't provide it
     else {
         gate->coupling_mapping = NULL;
-    }   
+    }
     gate->unitary  = "Unitary_Matrix";
     gate->fidelity = 1.0;
 }
@@ -478,9 +481,9 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
         [4, 3]
     ]
 
-* Following method reads the sets the coupling mapping for the corresponding qubit, 
+* Following method reads the sets the coupling mapping for the corresponding qubit,
     assuming the coupling map is in the above format
-* The space and time complexity of this method can be further improved and 
+* The space and time complexity of this method can be further improved and
     this version is just a prototype.
 */
 int QDMI_set_coupling_mapping(QDMI_Device dev, int qubit_index, QDMI_Qubit qubit)
@@ -555,7 +558,7 @@ int QDMI_set_qubit_properties(QDMI_Device dev, QDMI_Qubit qubit)
     }
 
     size_t i, j;
-    
+
     json_t *qb= json_array_get(qubits, qubit->index);
     if (!json_is_array(qb)) {
         fprintf(stderr, "   [Backend]..............Error: qb is not an array\n");
@@ -586,7 +589,7 @@ int QDMI_set_qubit_properties(QDMI_Device dev, QDMI_Qubit qubit)
             }
         }
     }
-    
+
     qubit->t1 = values[0];
     qubit->t2 = values[1];
     qubit->readout_error = values[2];
@@ -619,7 +622,7 @@ int QDMI_query_all_qubits(QDMI_Device dev, QDMI_Qubit *qubits)
         QDMI_set_coupling_mapping(dev, i, (*qubits) + i);
         QDMI_set_qubit_properties(dev, (*qubits) + i);
     }
-        
+
 
     printf("   [Backend]..............Returning available qubits\n");
     return QDMI_SUCCESS;
@@ -738,13 +741,13 @@ int QDMI_query_qubit_property_i(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qubit_pr
         value = qubit->coupling_mapping;
         return QDMI_SUCCESS;
     }
-    
+
 }
 
 int QDMI_query_qubit_property_f(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qubit_property prop, float *value)
 {
     // Ideally should be called after QDMI_query_qubit_property_exists
-    *value = 1.1; 
+    *value = 1.1;
     return QDMI_SUCCESS;
 }
 
@@ -758,7 +761,7 @@ int QDMI_query_qubit_property_d(QDMI_Device dev, QDMI_Qubit qubit, QDMI_Qubit_pr
     else if(prop->name == QDMI_READOUT_ERROR)
         *value = qubit->readout_error;
     else if(prop->name == QDMI_READOUT_LENGTH)
-        *value = qubit->readout_length; 
-    
+        *value = qubit->readout_length;
+
     return QDMI_SUCCESS;
 }

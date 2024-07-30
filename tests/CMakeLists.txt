@@ -1,3 +1,2 @@
-add_executable(IBMBackend IBMBackendTest.c)
-target_link_libraries(IBMBackend backend_ibm)
-add_test(IBMBackend IBMBackend)
+add_subdirectory(ibm)
+add_subdirectory(wmi)

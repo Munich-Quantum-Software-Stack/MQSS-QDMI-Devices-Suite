@@ -9,4 +9,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cjson)
 FetchContent_GetProperties(cjson)
 
-set(CJON_INCLUDE_DIRS "${cjson_SOURCE_DIR}/")
+# cJSON does not set the include directory on the target
+target_include_directories(cjson PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)

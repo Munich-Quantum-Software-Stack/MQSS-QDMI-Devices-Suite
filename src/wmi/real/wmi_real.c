@@ -1,3 +1,5 @@
+#include <qdmi_backend.h>
+#include <private/qdmi_internal.h>
 
 #include "cJSON.h"
 #include <stdio.h>
@@ -10,8 +12,6 @@
 #include <curl/curl.h>
 #include <cJSON.h>
 
-#include "wmi_real.h"
-
 #define BUZZ_SIZE 65
 #define base_url "https://wmiqc-api.wmi.badw.de"
 
@@ -23,6 +23,16 @@
             return 1;                            \
         }                                        \
     }
+
+const char *gate_set[] =
+    {
+        "__quantum__qis__id__body",
+        "__quantum__qis__x__body",
+        "__quantum__qis__y__body",
+        "__quantum__qis__sx__body",
+        "__quantum__qis__rz__body",
+        "__quantum__qis__mz__body",
+};
 
 struct ResponseStruct
 {

@@ -9,5 +9,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(qdmi)
 FetchContent_GetProperties(qdmi)
 
-set(QDMI_INCLUDE_DIRS "${qdmi_SOURCE_DIR}/include")
-set(QDMI_SRC_DIRS "${qdmi_SOURCE_DIR}/src")
+# workaround to get access to internal headers
+target_include_directories(qdmi PUBLIC $<BUILD_INTERFACE:${qdmi_SOURCE_DIR}/src>)

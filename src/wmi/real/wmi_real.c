@@ -142,6 +142,7 @@ int QDMI_set_coupling_mapping(QDMI_Device dev, int qubit_index, QDMI_Qubit qubit
     qubit->index = qubit_index;
     qubit->coupling_mapping = NULL;
     qubit->size_coupling_mapping = 0;
+    return QDMI_SUCCESS;
 }
 
 // Looks like this is initializing qubits and setting the coupling map for each qubit

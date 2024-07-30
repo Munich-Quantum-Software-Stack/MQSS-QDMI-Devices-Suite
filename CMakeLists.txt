@@ -16,5 +16,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # set the include directory for the build tree
 set(BACKENDS_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+# Declare all external dependencies and make sure that they are available.
+include(cmake/ExternalDependencies.cmake)
+
 add_subdirectory(src)
 add_subdirectory(tests)

@@ -220,6 +220,7 @@ int QDMI_query_device_property_exists(QDMI_Device dev, QDMI_Device_property prop
     }
 
     */
+    return QDMI_ERROR_NOTIMPL;
 }
 
 int QDMI_query_device_property_c(QDMI_Device dev, QDMI_Device_property prop, char** value)
@@ -249,6 +250,7 @@ int QDMI_query_device_property_i(QDMI_Device dev, QDMI_Device_property prop, int
         return QDMI_ERROR_FATAL;
     }
     */
+    return QDMI_ERROR_NOTIMPL;
 }
 
 int QDMI_query_device_property_f(QDMI_Device dev, QDMI_Device_property prop, float *value)
@@ -264,6 +266,7 @@ int QDMI_query_device_property_f(QDMI_Device dev, QDMI_Device_property prop, flo
         return QDMI_ERROR_FATAL;
     }
     */
+    return QDMI_ERROR_NOTIMPL;
 }
 
 int QDMI_query_device_property_d(QDMI_Device dev, QDMI_Device_property prop, double *value)
@@ -279,6 +282,7 @@ int QDMI_query_device_property_d(QDMI_Device dev, QDMI_Device_property prop, dou
         return QDMI_ERROR_FATAL;
     }
     */
+    return QDMI_ERROR_NOTIMPL;
 }
 
 int QDMI_populate_gateset(int num_gates, json_t *basis_gates)
@@ -445,21 +449,22 @@ int QDMI_query_gate_name(QDMI_Device dev, QDMI_Gate gate, char* name, int* len)
 }
 
 
-int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits)
+int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, QDMI_Job job,
+                              int *numbits)
 {
     //printf("   [Backend]..............Returning size\n");
     *numbits = 5;//QDMI_query_qubits_num(dev, *numbits);
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_id, int *num)
+int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status,  QDMI_Job job, int *num)
 {
     //printf("   [Backend]..............Returning raw numbers\n");
 
     int err = 0, numbits = 0;
     long i;
 
-    err = QDMI_control_readout_size(dev, status, &numbits);
+    err = QDMI_control_readout_size(dev, status, job, &numbits);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     for (i = 0; i < ((long)1 << numbits); i++)

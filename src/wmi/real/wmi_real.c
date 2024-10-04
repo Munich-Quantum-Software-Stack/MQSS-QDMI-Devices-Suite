@@ -125,7 +125,7 @@ int QDMI_backend_init(QInfo info)
 }
 
 // num classical bits in measurement, same as qubits. Why status needed?
-int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits)
+int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, QDMI_Job job, int *numbits)
 {
     printf("   [Backend].............Returning size\n");
 
@@ -343,12 +343,12 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
     response.size = 0;
 
     // task_id as string
-    int job_id = (*job)->task_id;
+    char* job_id = (*job)->task_id;
     char *job_id_json;
     size_t sz;
-    sz = snprintf(NULL, 0, "\"%i\"", job_id);
+    sz = snprintf(NULL, 0, "\"%s\"", job_id);
     job_id_json = (char *)malloc(sz + 1);
-    snprintf(job_id_json, sz + 1, "\"%i\"", job_id);
+    snprintf(job_id_json, sz + 1, "\"%s\"", job_id);
 
     form = curl_mime_init(curl);
 
@@ -432,7 +432,7 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
 }
 
 // looks like this returns the number of measured bitstrings for each outcome
-int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_id, int *num)
+int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, QDMI_Job job, int *num)
 {
     printf("   [Backend].............Returning results\n");
 
@@ -446,7 +446,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
 
     int err = 0, numbits = 0;
 
-    err = QDMI_control_readout_size(dev, status, &numbits);
+    err = QDMI_control_readout_size(dev, status, job, &numbits);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     // make sure results are an array of zeros
@@ -463,10 +463,11 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
     char *token_header = get_token();
 
     char *job_id_json;
+    char* task_id = job->task_id;
     size_t sz;
-    sz = snprintf(NULL, 0, "{\"job_id\": \"%i\"}", task_id);
+    sz = snprintf(NULL, 0, "{\"job_id\": \"%s\"}", task_id);
     job_id_json = (char *)malloc(sz + 1);
-    snprintf(job_id_json, sz + 1, "{\"job_id\": \"%i\"}", task_id);
+    snprintf(job_id_json, sz + 1, "{\"job_id\": \"%s\"}", task_id);
 
     struct ResponseStruct response;
     response.json = NULL;
@@ -556,16 +557,16 @@ int QDMI_control_test(QDMI_Device dev, QDMI_Job *job, int *flag, QDMI_Status *st
 
     int err = 0, numbits = 0;
 
-    err = QDMI_control_readout_size(dev, status, &numbits);
+    err = QDMI_control_readout_size(dev, status, *job, &numbits);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     char *token_header = get_token();
 
     char *job_id_json;
     size_t sz;
-    sz = snprintf(NULL, 0, "{\"job_id\": \"%i\"}", (*job)->task_id);
+    sz = snprintf(NULL, 0, "{\"job_id\": \"%s\"}", (*job)->task_id);
     job_id_json = (char *)malloc(sz + 1);
-    snprintf(job_id_json, sz + 1, "{\"job_id\": \"%i\"}", (*job)->task_id);
+    snprintf(job_id_json, sz + 1, "{\"job_id\": \"%s\"}", (*job)->task_id);
 
     struct ResponseStruct response;
     response.json = NULL;

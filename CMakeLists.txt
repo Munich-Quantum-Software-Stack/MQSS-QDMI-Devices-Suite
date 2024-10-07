@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19...3.30)
 project(Backends
         VERSION 0.1
         DESCRIPTION "QDMI Backends"
-        LANGUAGES C)
+        LANGUAGES C CXX)
 
 # Generate compile_commands.json to make it easier to work with clang based tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS

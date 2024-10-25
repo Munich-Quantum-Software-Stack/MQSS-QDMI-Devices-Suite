@@ -1,0 +1,3 @@
+add_executable(QaptivaBackendTest QaptivaBackendTest.c)
+target_link_libraries(QaptivaBackendTest PRIVATE backend_qaptiva_iqm qdmi)
+add_test(QaptivaBackendTest QaptivaBackendTest)

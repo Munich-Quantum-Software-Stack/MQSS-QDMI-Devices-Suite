@@ -4,30 +4,15 @@ include(FetchContent)
 set(FETCH_PACKAGES "")
 
 set(QDMI_URL "https://github.com/Munich-Quantum-Software-Stack/QDMI.git" CACHE STRING "QDMI URL")
+set(QDMI_COMMIT "85cd91b" CACHE STRING "QDMI COMMIT")
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-	FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG develop)
+	FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG ${QDMI_COMMIT})
 	list(APPEND FETCH_PACKAGES qdmi)
 else()
 	find_package(qdmi QUIET)
 	if(NOT qdmi_FOUND)
-		FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG develop)
+		FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG ${QDMI_COMMIT})
 		list(APPEND FETCH_PACKAGES qdmi)
-	endif()
-endif()
-
-set(JANSSON_VERSION "2.14" CACHE STRING "Jansson version")
-set(JANSSON_URL "https://github.com/akheron/jansson/releases/download/v${JANSSON_VERSION}/jansson-${JANSSON_VERSION}.tar.gz" CACHE STRING "Jansson URL")
-set(JANSSON_BUILD_DOCS OFF CACHE INTERNAL "Do not build Jansson documentation")
-set(JANSSON_WITHOUT_TESTS ON CACHE INTERNAL "Do not build Jansson tests")
-
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-	FetchContent_Declare(jansson URL ${JANSSON_URL} FIND_PACKAGE_ARGS ${JANSSON_VERSION})
-	list(APPEND FETCH_PACKAGES jansson)
-else()
-	find_package(jansson ${JANSSON_VERSION} QUIET)
-	if(NOT jansson_FOUND)
-		FetchContent_Declare(jansson URL ${JANSSON_URL})
-		list(APPEND FETCH_PACKAGES jansson)
 	endif()
 endif()
 
@@ -48,12 +33,6 @@ endif()
 
 if(FETCH_PACKAGES)
 	FetchContent_MakeAvailable(${FETCH_PACKAGES})
-
-	# QDMI currently requires access to internal headers
-	target_include_directories(qdmi PUBLIC $<BUILD_INTERFACE:${qdmi_SOURCE_DIR}/src>)
-
-	# jansson does not set the include directory on the target
-	target_include_directories(jansson PUBLIC $<BUILD_INTERFACE:${jansson_BINARY_DIR}/include>)
 
 	# cJSON does not set the include directory on the target
 	target_include_directories(cjson PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)

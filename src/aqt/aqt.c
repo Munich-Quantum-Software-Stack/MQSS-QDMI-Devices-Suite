@@ -10,7 +10,7 @@
 #include <cJSON.h>
 #include <curl/curl.h>
 
-#include "private/qdmi_internal.h"
+#include <qdmi/device.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -28,6 +28,83 @@ struct ResponseStruct {
   size_t size;
 };
 
+
+int QDMI_query_get_sites_dev(size_t num_entries, QDMI_Site *sites,
+                             size_t *num_sites) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_query_get_operations_dev(size_t num_entries,
+                                  QDMI_Operation *operations,
+                                  size_t *num_operations) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_query_device_property_dev(QDMI_Device_Property prop, size_t size,
+                                   void *value, size_t *size_ret) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_query_site_property_dev(QDMI_Site site, QDMI_Site_Property prop,
+                                 size_t size, void *value, size_t *size_ret) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_query_operation_property_dev(QDMI_Operation operation,
+                                      size_t num_sites, const QDMI_Site *sites,
+                                      QDMI_Operation_Property prop, size_t size,
+                                      void *value, size_t *size_ret) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+////////////////////////// Control
+int QDMI_control_create_job_dev(QDMI_Program_Format format, size_t size,
+                                const void *prog, QDMI_Job *job) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_control_set_parameter_dev(QDMI_Job job, QDMI_Job_Parameter param,
+                                   size_t size, const void *value) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_control_submit_job_dev(QDMI_Job job) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_control_cancel_dev(QDMI_Job job) { return QDMI_ERROR_NOTIMPLEMENTED; }
+
+int QDMI_control_check_dev(QDMI_Job job, QDMI_Job_Status *status) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_control_wait_dev(QDMI_Job job) { return QDMI_ERROR_NOTIMPLEMENTED; }
+
+int QDMI_control_get_data_dev(QDMI_Job job, QDMI_Job_Result result, size_t size,
+                              void *data, size_t *size_ret) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+void QDMI_control_free_job_dev(QDMI_Job job) {
+  // return QDMI_ERROR_NOTIMPLEMENTED;
+}
+
+int QDMI_control_initialize_dev(void) { return QDMI_ERROR_NOTIMPLEMENTED; }
+
+int QDMI_control_finalize_dev(void) { return QDMI_ERROR_NOTIMPLEMENTED; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 const char *getUrl() { return getenv(AQT_URL); }
 
 const char *getToken() { return getenv(AQT_TOKEN); }
@@ -601,3 +678,5 @@ int QDMI_device_quality_limit(QDMI_Device dev, double *result) {
 int QDMI_device_quality_calibrate(QDMI_Device dev) {
   return QDMI_ERROR_NOTIMPL;
 }
+
+*/

@@ -34,11 +34,14 @@ global WORKDIR
 if 'QAPTIVA_WORK_DIR' in os.environ:
     WORKDIR = os.environ['QAPTIVA_WORK_DIR']
 else:
-    sys.exit('The environment variable QAPTIVA_WORK_DIR has to be defined!')
+    WORKDIR = "/home/ubuntu/update/backend_update/jobfiles"
+    #sys.exit('The environment variable QAPTIVA_WORK_DIR has to be defined!')
 
 
 global DEFAULT_REMOTEQPU_PORT, DEFAULT_REMOTEQPU_HOSTNAME
-DEFAULT_REMOTEQPU_PORT = 20500
+#DEFAULT_REMOTEQPU_PORT = 20500
+
+DEFAULT_REMOTEQPU_PORT = 443
 DEFAULT_REMOTEQPU_HOSTNAME = 'qlm3.for.lrz.de'
 
 global CIRCUIT_FILENAME
@@ -70,12 +73,15 @@ def main():
     circuit_filename, remote_qpu, args, input_file_is_openqasm = parse_commandline()
     change_to_workdir(WORKDIR)
     swap_status('running')
+    print(input_file_is_openqasm)
     json_data_raw = read_circuit_file(circuit_filename, input_file_is_openqasm)
+    print(json_data_raw)
     job_data, circuit = parse_circuit(json_data_raw)
     job = create_job(job_data, circuit)
+    #print(job)
     result = submit_job(job, remote_qpu)
     success = write_circuit_file(result, json_data_raw, circuit_filename)
-    sys.exit(success)
+    #sys.exit(1)
 
 
 def print_usage():

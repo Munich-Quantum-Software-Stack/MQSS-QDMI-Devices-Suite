@@ -20,4 +20,4 @@ set(BACKENDS_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(cmake/ExternalDependencies.cmake)
 
 add_subdirectory(src)
-#add_subdirectory(tests)
+add_subdirectory(tests)

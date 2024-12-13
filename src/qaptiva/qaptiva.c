@@ -54,7 +54,8 @@ int QDMI_backend_init(QInfo info)
 }
 
 // num classical bits in measurement, same as qubits. Why status needed?
-int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits)
+int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, QDMI_Job job,
+                              int *numbits)
 {
     printf("   [Backend].............Returning size\n");
     
@@ -150,8 +151,10 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
     free(task_id_str);
 
     // Open a file for writing
-    FILE *job_file = fopen(filename, "w");
+    printf("%s\n%s\n", job_string, filename);
+    FILE *job_file = fopen(filename, "w+");
     if (job_file == NULL) {
+        perror("error");
         printf("jobfile cannot be created");
         free(filename);
         free(job_string);  // Free job_string since we're not using buffer anymore
@@ -199,21 +202,21 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
     //strcpy(terminal_command, source_command);
     //strcat(terminal_command, " && ");
     //strcat(terminal_command, wrapper_command);
-
-    system(system_command);
+    printf("%s\n", system_command);
+    //system(system_command);
 
     free(filename);
 
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_id, int *num)
+int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, 
+                                QDMI_Job job, int *num)
 {
     printf("   [Backend].............Returning results\n");
 
     int err = 0, numbits = 0;
-
-    err = QDMI_control_readout_size(dev, status, &numbits);
+    err = QDMI_control_readout_size(dev, status, job, &numbits);
     CHECK_ERR(err, "QDMI_control_readout_raw_num");
 
     // Initialize the array to zeros
@@ -222,6 +225,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
 
     // Get filename using task_id
     char *filedict_name = get_json_file_path();
+    int task_id = job->task_id;
     size_t size = snprintf(NULL, 0, "%d", task_id);
     char *task_id_str = (char *)malloc(size + 1);
     sprintf(task_id_str, "%d", task_id);
@@ -368,7 +372,7 @@ int key_exists(cJSON *json_object, const char *key_name) {
 
 char * get_json_file_path(){
     char *qaptiva_work_dir = NULL;
-    char *qaptiva_work_dir_default = "./jobfiles";
+    char *qaptiva_work_dir_default = "/home/ubuntu/update/backend_update/jobfiles";
 
     char *qaptiva_work_dir_varname = "QAPTIVA_WORK_DIR";
     qaptiva_work_dir = getenv(qaptiva_work_dir_varname);

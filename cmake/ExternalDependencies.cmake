@@ -4,6 +4,7 @@ include(FetchContent)
 set(FETCH_PACKAGES "")
 
 set(QDMI_URL "https://github.com/Munich-Quantum-Software-Stack/QDMI.git" CACHE STRING "QDMI URL")
+#set(QDMI_COMMIT "0a77bea" CACHE STRING "QDMI COMMIT")
 set(QDMI_COMMIT "85cd91b" CACHE STRING "QDMI COMMIT")
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
 	FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG ${QDMI_COMMIT})
@@ -34,6 +35,8 @@ endif()
 if(FETCH_PACKAGES)
 	FetchContent_MakeAvailable(${FETCH_PACKAGES})
 
+	# QDMI currently requires access to internal headers
+	#target_include_directories(qdmi PUBLIC $<BUILD_INTERFACE:${qdmi_SOURCE_DIR}/src>)
 	# cJSON does not set the include directory on the target
 	target_include_directories(cjson PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)
 endif()

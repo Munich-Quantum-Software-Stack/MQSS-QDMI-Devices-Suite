@@ -1,4 +1,4 @@
-def create_aqt_job_from_qir(token , qir_bitcode: bytes, shots: int):
+def create_aqt_job_from_qir(token, qir_bitcode: bytes, shots: int):
     from qir_qiskit.translate import to_qiskit_circuit
     from qiskit_aqt_provider.aqt_provider import AQTProvider
     from qiskit import transpile
@@ -6,7 +6,8 @@ def create_aqt_job_from_qir(token , qir_bitcode: bytes, shots: int):
 
     qiskit_circuit = to_qiskit_circuit(qir_bitcode)
     qiskit_circuit.data = [
-        instruction for instruction in qiskit_circuit.data
+        instruction
+        for instruction in qiskit_circuit.data
         if instruction.operation.name != "reset"
     ]
 
@@ -15,5 +16,5 @@ def create_aqt_job_from_qir(token , qir_bitcode: bytes, shots: int):
 
     transpiled_circuit = transpile(qiskit_circuit, backend)
     job = circuits_to_aqt_job([transpiled_circuit], shots)
-    
+
     return job.json()

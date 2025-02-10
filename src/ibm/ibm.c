@@ -156,7 +156,7 @@ int QDMI_control_pack_qir(QDMI_Device dev, void *qirmod, QDMI_Fragment *frag)
 
 int fetch_backend_configuration()
 {
-    // For retriving backend specific information
+    // For retrieving backend specific information
     char *conf_ibm = getenv("CONF_IBM");
     if (conf_ibm == NULL)
     {
@@ -185,7 +185,7 @@ file\n"); return QDMI_ERROR_CONFIG;
         return QDMI_ERROR_CONFIG;
     }
 
-    // For retriving qubit and gate properties
+    // For retrieving qubit and gate properties
     char *prop_ibm = getenv("PROP_IBM");
     if (prop_ibm == NULL)
     {
@@ -799,7 +799,7 @@ exists\n"); return QDMI_SUCCESS;
     }
     else{
         prop->type = QDMI_NULL;
-        printf("    [Backend]..............Unknown proprty queried: %d",
+        printf("    [Backend]..............Unknown property queried: %d",
 prop->name); return QDMI_ERROR_FATAL;
     }
 

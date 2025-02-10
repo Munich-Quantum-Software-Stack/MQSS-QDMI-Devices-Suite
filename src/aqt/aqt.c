@@ -17,7 +17,7 @@
 #define PRINT(a) printf("[AQT Backend]............%s\n", a)
 #define AQT_TOKEN "AQT_TOKEN"
 #define AQT_URL "AQT_URL"
-#define SCRIPT_LOCATION "SCRIPT_LOCATION" 
+#define SCRIPT_LOCATION "SCRIPT_LOCATION"
 #define SCRIPT_NAME "SCRIPT_NAME"
 #define FUNCTION_NAME "FUNCTION_NAME"
 #define WORKSPACE_ID "lrz"
@@ -27,7 +27,6 @@ struct ResponseStruct {
   char *response;
   size_t size;
 };
-
 
 int QDMI_query_get_sites_dev(size_t num_entries, QDMI_Site *sites,
                              size_t *num_sites) {
@@ -91,18 +90,6 @@ void QDMI_control_free_job_dev(QDMI_Job job) {
 int QDMI_control_initialize_dev(void) { return QDMI_ERROR_NOTIMPLEMENTED; }
 
 int QDMI_control_finalize_dev(void) { return QDMI_ERROR_NOTIMPLEMENTED; }
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
 const char *getUrl() { return getenv(AQT_URL); }
@@ -269,7 +256,7 @@ int QDMI_control_pause(QDMI_Device dev, QDMI_Job *job, QInfo info) {
 }
 int QDMI_control_wait(QDMI_Device dev, QDMI_Job *job, QDMI_Status *status) {
   PRINT("QDMI_control_wait");
-  
+
   char *url_fmt = "%s/result/%s";
   int number_of_try = 0;
   char *response_status;
@@ -506,7 +493,7 @@ int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status,
 
 int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status,
                                  QDMI_Job job, int *num) {
-  PRINT("QDMI_control_readout_raw_num");                  
+  PRINT("QDMI_control_readout_raw_num");
 
   char *url_fmt = "%s/result/%s";
   char *task_id = job->task_id;
@@ -560,7 +547,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status,
   cJSON *single_result_json = cJSON_GetArrayItem(json_sub_result, 0);
   if (single_result_json == NULL)
     return QDMI_ERROR_BACKEND;
-  int nunber_of_qubit = cJSON_GetArraySize(single_result_json);
+  int number_of_qubit = cJSON_GetArraySize(single_result_json);
 
   for (int index = 0; index < number_of_shots; index++) {
     cJSON *single_result_json = cJSON_GetArrayItem(json_sub_result, index);
@@ -568,11 +555,11 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status,
       return QDMI_ERROR_BACKEND;
 
     int qubit = 0;
-    for (int qubit_index = 0; qubit_index < nunber_of_qubit; qubit_index++) {
+    for (int qubit_index = 0; qubit_index < number_of_qubit; qubit_index++) {
       cJSON *digit_json = cJSON_GetArrayItem(single_result_json, qubit_index);
       int digit = cJSON_GetNumberValue(digit_json);
       if (digit)
-        qubit += 1 << (nunber_of_qubit - (qubit_index + 1));
+        qubit += 1 << (number_of_qubit - (qubit_index + 1));
     }
 
     num[qubit] += 1;

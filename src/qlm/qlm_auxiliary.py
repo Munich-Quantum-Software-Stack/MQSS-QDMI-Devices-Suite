@@ -6,11 +6,11 @@ def get_port_and_hostname():
     return 20501, "localhost"
 
 
-def create_remote_qpu(hostname, port):
+def create_remote_qpu(host):
     from qat.core.qpu import RemoteQPU
-
+    url, port = host.split(":")
     try:
-        qpu = RemoteQPU(port, hostname)
+        qpu = RemoteQPU(port, url)
     except:
         return None
     return qpu

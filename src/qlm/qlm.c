@@ -14,8 +14,7 @@ enum QLM_QDMI_DEVICE_SESSION_STATUS { ALLOCATED, INITIALIZED };
 enum QDMI_Device_Session_Parameter { QDMI_DEVICE_SESSION_PARAMETER_PORT };
 
 typedef struct QLM_QDMI_Device_Session_impl_d {
-  char *base_url;
-  int port;
+  char *url;
   enum QLM_QDMI_DEVICE_SESSION_STATUS status;
 } QLM_QDMI_Device_Session_impl_t;
 
@@ -236,7 +235,7 @@ int QLM_QDMI_device_session_create_device_job(QLM_QDMI_Device_Session session,
 
   *job = (QLM_QDMI_Device_Job)malloc(sizeof(QLM_QDMI_Device_Job_impl_t));
   (*job)->session = session;
-  // set job id to random number for demonstration purposes
+
   (*job)->id = rand();
   (*job)->status = QDMI_JOB_STATUS_CREATED;
   (*job)->num_shots = DEFAULT_NUM_SHOT;
@@ -247,7 +246,6 @@ int QLM_QDMI_device_session_create_device_job(QLM_QDMI_Device_Session session,
   (*job)->probability_dense = NULL;
   (*job)->probability_keys = NULL;
   (*job)->probability_values = NULL;
-  // pthread_rwlock_init(&(*job)->mutex, NULL);
 
   return QDMI_SUCCESS;
 }
@@ -356,12 +354,11 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job) {
 
   job->status = QDMI_JOB_STATUS_SUBMITTED;
 
-  // pthread_rwlock_rdlock(&job->mutex);
   int isErr =
       pthread_create(&(job->offload_thread), NULL, submit_job, (void *)job);
 
-  // if (isErr)
-  //   return QDMI_ERROR_FATAL;
+  if (isErr)
+    return QDMI_ERROR_FATAL;
 
   return QDMI_SUCCESS;
 }
@@ -386,7 +383,7 @@ int QLM_QDMI_device_job_cancel(QLM_QDMI_Device_Job job) {
 
 int QLM_QDMI_device_job_check(QLM_QDMI_Device_Job job,
                               QDMI_Job_Status *status) {
-  // pthread_rwlock_rdlock(&job->mutex);
+
   if (job == NULL)
     return QDMI_ERROR_INVALIDARGUMENT;
 
@@ -396,7 +393,6 @@ int QLM_QDMI_device_job_check(QLM_QDMI_Device_Job job,
     return QDMI_ERROR_INVALIDARGUMENT;
 
   *status = job->status;
-  // pthread_rwlock_unlock(&job->mutex);
 
   return QDMI_SUCCESS;
 }
@@ -532,7 +528,7 @@ int initialize_python(void) {
   return QDMI_SUCCESS;
 }
 
-int create_remote_qpu(const char *hostname, const int port) {
+int create_remote_qpu(const char *hostname) {
 
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -541,8 +537,7 @@ int create_remote_qpu(const char *hostname, const int port) {
 
   CHECK_PYTHON_ERROR(pFunc)
 
-  PyObject *pArgs =
-      PyTuple_Pack(2, PyUnicode_FromString(hostname), PyLong_FromLong(port));
+  PyObject *pArgs = PyTuple_Pack(1, PyUnicode_FromString(hostname));
   CHECK_PYTHON_ERROR(pArgs)
 
   PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
@@ -588,8 +583,7 @@ int QLM_QDMI_device_session_alloc(QLM_QDMI_Device_Session *session) {
   }
   *session =
       (QLM_QDMI_Device_Session)malloc(sizeof(QLM_QDMI_Device_Session_impl_t));
-  (*session)->base_url = NULL;
-  (*session)->port = PORT_INIT_VALUE;
+  (*session)->url = NULL;
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
 }
@@ -608,11 +602,11 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session) {
     break;
   }
 
-  if (session->base_url == NULL || session->port == PORT_INIT_VALUE) {
+  if (session->url == NULL) {
     return QDMI_ERROR_BADSTATE;
   }
 
-  int err = create_remote_qpu(session->base_url, session->port);
+  int err = create_remote_qpu(session->url);
   CHECK_QDMI_ERROR(err)
 
   session->status = INITIALIZED;
@@ -621,7 +615,7 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session) {
 
 void QLM_QDMI_device_session_free(QLM_QDMI_Device_Session session) {
   if (session != NULL) {
-    free(session->base_url);
+    free(session->url);
     free(session);
   }
 }
@@ -646,12 +640,8 @@ int QLM_QDMI_device_session_set_parameter(
   }
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
-    session->base_url = (char *)malloc(size);
-    strcpy(session->base_url, (const char *)value);
-  }
-
-  if (param == QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1) {
-    session->port = *(int *)value;
+    session->url = (char *)malloc(size);
+    strcpy(session->url, (const char *)value);
   }
 
   return QDMI_SUCCESS;

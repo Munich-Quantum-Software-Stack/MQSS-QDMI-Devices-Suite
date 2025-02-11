@@ -39,7 +39,6 @@ private:
 protected:
   static QLM_QDMI_Device_Session session;
   static char hostname[];
-  static int port;
 
   static void SetUpTestSuite() {
     ASSERT_EQ(QLM_QDMI_device_initialize(), QDMI_SUCCESS)
@@ -53,12 +52,6 @@ protected:
                   strlen(hostname) * sizeof(char), hostname),
               QDMI_SUCCESS)
         << "Failed to set baseurl for the session";
-
-    ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
-                  session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1, sizeof(port),
-                  &port),
-              QDMI_SUCCESS)
-        << "Failed to set port for the session";
 
     ASSERT_EQ(QLM_QDMI_device_session_init(session), QDMI_SUCCESS)
         << "Failed to initialize a session. Potential errors: Wrong or missing "
@@ -75,8 +68,7 @@ protected:
 };
 
 QLM_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-char QDMIImplementationTest::hostname[] = "localhost";
-int QDMIImplementationTest::port = 20501;
+char QDMIImplementationTest::hostname[] = "localhost:20501";
 
 TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
   ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
@@ -85,10 +77,10 @@ TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
 }
 
 TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated) {
-  int _port = 8080;
+  char dummy_hostname[] = "qlm.lrz.de";
   ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
-                session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1, sizeof(_port),
-                &_port),
+                session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
+                sizeof(dummy_hostname), &dummy_hostname),
             QDMI_ERROR_BADSTATE);
 }
 

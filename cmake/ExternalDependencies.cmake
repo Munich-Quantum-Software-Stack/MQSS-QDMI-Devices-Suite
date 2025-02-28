@@ -9,6 +9,8 @@ set(QDMI_VERSION
 set(QDMI_URL
     "https://github.com/Munich-Quantum-Software-Stack/QDMI/archive/refs/tags/v${QDMI_VERSION}.tar.gz"
     CACHE STRING "QDMI URL")
+
+set(BUILD_QDMI_DOCS OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(qdmi URL ${QDMI_URL} FIND_PACKAGE_ARGS ${QDMI_VERSION})
   list(APPEND FETCH_PACKAGES qdmi)

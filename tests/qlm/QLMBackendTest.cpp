@@ -60,7 +60,6 @@ protected:
         << (__LINE__ - 4);
   }
 
-  // Tüm testler bittikten sonra Python temizlenir
   static void TearDownTestSuite() {
     QLM_QDMI_device_session_free(session);
     QLM_QDMI_device_finalize();

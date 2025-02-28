@@ -168,6 +168,11 @@ void QLM_QDMI_set_device_status(QDMI_Device_Status status) {
   *QLM_QDMI_get_device_status() = status;
 }
 
+static int *isFromPython(void) {
+  static int isFromPython = 0;
+  return &isFromPython;
+}
+
 int QLM_QDMI_device_session_query_operation_property(
     QLM_QDMI_Device_Session session, QLM_QDMI_Operation operation,
     const size_t num_sites, const QLM_QDMI_Site *sites, const size_t num_params,
@@ -194,7 +199,7 @@ int QLM_QDMI_device_session_query_device_property(
   ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_STATUS, QDMI_Device_Status,
                             QLM_QDMI_read_device_status(), prop, size, value,
                             size_ret)
-  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, QLM_QDMI_Site, DEVICE_SITES, 5,
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, QLM_QDMI_Site, DEVICE_SITES, 38,
                     prop, size, value, size_ret)
   // Since it is a emulator, there is no coupling map.
   return QDMI_ERROR_NOTSUPPORTED;
@@ -228,9 +233,6 @@ int QLM_QDMI_device_session_create_device_job(QLM_QDMI_Device_Session session,
 
   if (session == NULL || job == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
-  }
-  if (session->status != INITIALIZED) {
-    return QDMI_ERROR_BADSTATE;
   }
 
   *job = (QLM_QDMI_Device_Job)malloc(sizeof(QLM_QDMI_Device_Job_impl_t));
@@ -301,7 +303,9 @@ static PyObject **get_custom_python_module(void) {
 void *submit_job(void *arg) {
   QLM_QDMI_Device_Job pJob = arg;
   PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+
+  if (!*isFromPython())
+    gstate = PyGILState_Ensure();
 
   PyObject *custom_python_module = *get_custom_python_module();
 
@@ -336,9 +340,11 @@ void *submit_job(void *arg) {
   }
   pJob->results_size = resultSize - 1;
 
-  PyGILState_Release(gstate);
   pJob->status = QDMI_JOB_STATUS_DONE;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+
+  if (!*isFromPython())
+    PyGILState_Release(gstate);
 
   return 0;
 }
@@ -353,7 +359,6 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
 
   job->status = QDMI_JOB_STATUS_SUBMITTED;
-
   int isErr =
       pthread_create(&(job->offload_thread), NULL, submit_job, (void *)job);
 
@@ -368,10 +373,13 @@ int QLM_QDMI_device_job_cancel(QLM_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
 
   if (job->status != QDMI_JOB_STATUS_RUNNING &&
-      job->status != QDMI_JOB_STATUS_SUBMITTED)
+      job->status != QDMI_JOB_STATUS_SUBMITTED &&
+      job->status != QDMI_JOB_STATUS_CREATED)
     return QDMI_ERROR_INVALIDARGUMENT;
   int isErr = 0;
-  isErr = pthread_cancel(job->offload_thread);
+  if (job->status != QDMI_JOB_STATUS_CREATED)
+    isErr = pthread_join(job->offload_thread, NULL);
+
   if (isErr)
     return QDMI_ERROR_FATAL;
 
@@ -401,11 +409,13 @@ int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job) {
   if (job == NULL)
     return QDMI_ERROR_INVALIDARGUMENT;
 
-  if (job->status != QDMI_JOB_STATUS_RUNNING &&
-      job->status != QDMI_JOB_STATUS_SUBMITTED)
+  if (job->status == QDMI_JOB_STATUS_CANCELED)
     return QDMI_ERROR_INVALIDARGUMENT;
 
-  pthread_join(job->offload_thread, NULL);
+  if (job->status != QDMI_JOB_STATUS_DONE &&
+      job->status != QDMI_JOB_STATUS_CREATED)
+    pthread_join(job->offload_thread, NULL);
+
   job->status = QDMI_JOB_STATUS_DONE;
 
   return QDMI_SUCCESS;
@@ -484,6 +494,11 @@ int QLM_QDMI_device_job_get_results(QLM_QDMI_Device_Job job,
 }
 
 void QLM_QDMI_device_job_free(QLM_QDMI_Device_Job job) {
+  if (job->status == QDMI_JOB_STATUS_SUBMITTED ||
+      job->status == QDMI_JOB_STATUS_RUNNING) {
+    pthread_join(job->offload_thread, NULL);
+  }
+
   free(job->probability_dense);
   job->probability_dense = NULL;
   free(job->probability_keys);
@@ -504,12 +519,16 @@ int initialize_python(void) {
 
   char *script_location = getenv(SCRIPT_LOCATION);
   char *script_name = getenv(SCRIPT_NAME);
-  if (!Py_IsInitialized())
+
+  *isFromPython() = Py_IsInitialized();
+  PyGILState_STATE gstate;
+  if (!*isFromPython()) {
     Py_Initialize();
+    PyThreadState *_save = PyEval_SaveThread();
+    gstate = PyGILState_Ensure();
+  }
 
-  PyThreadState *_save = PyEval_SaveThread();
-  PyGILState_STATE gstate = PyGILState_Ensure();
-
+  printf("%s\n", Py_GetVersion());
   PyObject *sysPath = PyImport_ImportModule("sys");
   PyObject *path = PyObject_GetAttrString(sysPath, "path");
 
@@ -524,14 +543,15 @@ int initialize_python(void) {
 
   Py_XDECREF(pName);
 
-  PyGILState_Release(gstate);
+  if (!*isFromPython())
+    PyGILState_Release(gstate);
+
   return QDMI_SUCCESS;
 }
 
 int create_remote_qpu(const char *hostname) {
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  PyGILState_STATE gstate = PyGILState_Ensure();
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
                                            REMOTE_QPU_CREATE_FUNCTION_NAME);
 
@@ -555,7 +575,6 @@ int check_env_variable(void) {
 }
 
 int QLM_QDMI_device_initialize(void) {
-
   int err = check_env_variable();
   CHECK_QDMI_ERROR(err)
 
@@ -567,10 +586,16 @@ int QLM_QDMI_device_initialize(void) {
 }
 
 int QLM_QDMI_device_finalize(void) {
+
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
+
   Py_DECREF(*get_custom_python_module());
-  Py_DECREF(get_remote_qpu());
-  if (!_Py_IsFinalizing()) {
+  *get_custom_python_module() = NULL;
+
+  Py_DECREF(*get_remote_qpu());
+  *get_remote_qpu() = NULL;
+
+  if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython()) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Py_Finalize();
   }

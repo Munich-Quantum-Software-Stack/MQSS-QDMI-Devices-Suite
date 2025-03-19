@@ -6,7 +6,6 @@
 #define REMOTE_QPU_CREATE_FUNCTION_NAME "create_remote_qpu"
 #define SUBMIT_JOB_FUNCTION_NAME "submit_job"
 
-#define PORT_INIT_VALUE -1
 #define DEFAULT_NUM_SHOT 0
 
 enum QLM_QDMI_DEVICE_SESSION_STATUS { ALLOCATED, INITIALIZED };
@@ -120,12 +119,12 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
     }                                                                          \
   }
 
-#define CHECK_PYTHON_ERROR(value)                                              \
+#define CHECK_PYTHON_ERROR(value, ret_val)                                     \
   {                                                                            \
     if (value == NULL) {                                                       \
       PyErr_Print();                                                           \
       Py_Finalize();                                                           \
-      return NULL;                                                             \
+      return ret_val;                                                          \
     }                                                                          \
   }
 
@@ -222,6 +221,8 @@ int QLM_QDMI_device_session_query_site_property(QLM_QDMI_Device_Session session,
 
   ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_ID, uint64_t, site->id, prop,
                             size, value, size_ret)
+
+  return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /* QUERY INTERFACE ENDS*/
@@ -311,22 +312,22 @@ void *submit_job(void *arg) {
 
   PyObject *pFunc =
       PyObject_GetAttrString(custom_python_module, SUBMIT_JOB_FUNCTION_NAME);
-  CHECK_PYTHON_ERROR(pFunc)
+  CHECK_PYTHON_ERROR(pFunc, NULL)
 
   PyObject **remote_qpu = get_remote_qpu();
-  CHECK_PYTHON_ERROR(*remote_qpu)
+  CHECK_PYTHON_ERROR(*remote_qpu, NULL)
   PyObject *qasm_string = PyUnicode_FromString(pJob->program);
-  CHECK_PYTHON_ERROR(qasm_string)
+  CHECK_PYTHON_ERROR(qasm_string, NULL)
   PyObject *num_shot = PyLong_FromUnsignedLong(pJob->num_shots);
-  CHECK_PYTHON_ERROR(num_shot)
+  CHECK_PYTHON_ERROR(num_shot, NULL)
 
   PyObject *pArgs = PyTuple_Pack(3, *remote_qpu, qasm_string, num_shot);
-  CHECK_PYTHON_ERROR(pArgs)
+  CHECK_PYTHON_ERROR(pArgs, NULL)
 
   pJob->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pResults)
+  CHECK_PYTHON_ERROR(pResults, NULL)
 
   unsigned long resultSize = (unsigned long)PyList_GET_SIZE(pResults);
   PyObject *pBitring = PyList_GET_ITEM(pResults, 0);
@@ -535,11 +536,11 @@ int initialize_python(void) {
   PyList_Append(path, PyUnicode_FromString(script_location));
 
   PyObject *pName = PyUnicode_DecodeFSDefault(script_name);
-  CHECK_PYTHON_ERROR(pName)
+  CHECK_PYTHON_ERROR(pName, QDMI_ERROR_FATAL)
 
   *get_custom_python_module() = PyImport_Import(pName);
 
-  CHECK_PYTHON_ERROR(*get_custom_python_module());
+  CHECK_PYTHON_ERROR(*get_custom_python_module(), QDMI_ERROR_FATAL);
 
   Py_XDECREF(pName);
 
@@ -555,13 +556,13 @@ int create_remote_qpu(const char *hostname) {
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
                                            REMOTE_QPU_CREATE_FUNCTION_NAME);
 
-  CHECK_PYTHON_ERROR(pFunc)
+  CHECK_PYTHON_ERROR(pFunc, QDMI_ERROR_FATAL)
 
   PyObject *pArgs = PyTuple_Pack(1, PyUnicode_FromString(hostname));
-  CHECK_PYTHON_ERROR(pArgs)
+  CHECK_PYTHON_ERROR(pArgs, QDMI_ERROR_FATAL)
 
   PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pResult)
+  CHECK_PYTHON_ERROR(pResult, QDMI_ERROR_FATAL)
 
   *get_remote_qpu() = pResult;
   PyGILState_Release(gstate);

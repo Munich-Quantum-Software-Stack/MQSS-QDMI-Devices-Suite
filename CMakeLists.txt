@@ -21,15 +21,15 @@ set(BACKENDS_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Declare all external dependencies and make sure that they are available.
 include(cmake/ExternalDependencies.cmake)
 
-option(BUILD_BACKEND_QLM "Build QLM Backend" TRUE)
+option(BUILD_BACKEND_QLM "Build QLM Backend" ON)
 
-option(BUILD_BACKEND_IQM "Build QLM Backend" FALSE)
+option(BUILD_BACKEND_IQM "Build QLM Backend" OFF)
 
-option(BUILD_BACKEND_AQT "Build QLM Backend" FALSE)
+option(BUILD_BACKEND_AQT "Build QLM Backend" OFF)
 
-option(BUILD_BACKEND_TESTS "Also build tests for the backends" TRUE)
+option(BUILD_BACKEND_TESTS "Also build tests for the backends" ON)
 
-option(ENABLE_COVERAGE "Enable coverage reporting" TRUE)
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 
 # Require C standard
 set(CMAKE_C_STANDARD 11)
@@ -40,11 +40,7 @@ if(BUILD_BACKEND_QLM)
   set(QLM_QDMI_PREFIX "QLM")
 endif()
 
-if(ENABLE_COVERAGE)
-  set(CMAKE_C_FLAGS
-      "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
-endif()
+include(cmake/ExternalDependencies.cmake)
 
 add_subdirectory(src)
 add_subdirectory(tests)

@@ -74,8 +74,8 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size) - 1);                      \
-        ((char *)(value))[(size) - 1] = '\0';                                  \
+        strncpy((char *)(value), prop_value, (size)-1);                        \
+        ((char *)(value))[(size)-1] = '\0';                                    \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -589,12 +589,15 @@ int QLM_QDMI_device_initialize(void) {
 int QLM_QDMI_device_finalize(void) {
 
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
+  if (*get_custom_python_module() != NULL) {
+    Py_DECREF(*get_custom_python_module());
+    *get_custom_python_module() = NULL;
+  }
 
-  Py_DECREF(*get_custom_python_module());
-  *get_custom_python_module() = NULL;
-
-  Py_DECREF(*get_remote_qpu());
-  *get_remote_qpu() = NULL;
+  if (*get_remote_qpu() != NULL) {
+    Py_DECREF(*get_remote_qpu());
+    *get_remote_qpu() = NULL;
+  }
 
   if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython()) {
     PyGILState_STATE gstate = PyGILState_Ensure();

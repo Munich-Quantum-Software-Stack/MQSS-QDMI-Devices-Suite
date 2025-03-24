@@ -1,0 +1,12 @@
+FROM python:3.10-bookworm
+
+ENV TZ="Europe/Berlin"
+
+RUN apt-get update -y && \
+    apt-get autoremove -y
+RUN apt-get install -y bash-completion cmake build-essential
+RUN pip install uv --break-system-packages
+
+WORKDIR /home
+
+CMD ["bash"]

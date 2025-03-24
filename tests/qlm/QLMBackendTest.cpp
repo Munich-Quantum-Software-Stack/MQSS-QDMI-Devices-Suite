@@ -34,6 +34,14 @@
         QDMI_SUCCESS);                                                         \
   }
 
+#define EXIT_ON_FAIL(err, msg)                                                 \
+  {                                                                            \
+    if (err != QDMI_SUCCESS) {                                                 \
+      std::cout << msg << std::endl;                                           \
+      exit(err);                                                               \
+    }                                                                          \
+  }
+
 class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
@@ -41,23 +49,24 @@ protected:
   static char hostname[];
 
   static void SetUpTestSuite() {
-    ASSERT_EQ(QLM_QDMI_device_initialize(), QDMI_SUCCESS)
-        << "Failed to initialize the device";
 
-    ASSERT_EQ(QLM_QDMI_device_session_alloc(&session), QDMI_SUCCESS)
-        << "Failed to allocate a session";
+    EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
+                 "Failed to initialize the device")
 
-    ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
-                  session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
-                  strlen(hostname) * sizeof(char), hostname),
-              QDMI_SUCCESS)
-        << "Failed to set baseurl for the session";
+    EXIT_ON_FAIL(QLM_QDMI_device_session_alloc(&session),
+                 "Failed to allocate a session")
 
-    ASSERT_EQ(QLM_QDMI_device_session_init(session), QDMI_SUCCESS)
-        << "Failed to initialize a session. Potential errors: Wrong or missing "
-           "authentication information, device status is offline, or in "
-           "maintenance. To provide credentials, take a look in " __FILE__
-        << (__LINE__ - 4);
+    EXIT_ON_FAIL(QLM_QDMI_device_session_set_parameter(
+                     session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
+                     strlen(hostname) * sizeof(char), hostname),
+                 "Failed to set baseurl for the session")
+
+    EXIT_ON_FAIL(
+        QLM_QDMI_device_session_init(session),
+        "Failed to initialize a session. Potential errors: Wrong or missing "
+        "authentication information, or missing Python packages or device status is offline, or in "
+        "maintenance. To provide credentials, take a look in " __FILE__
+            << (__LINE__ - 4));
   }
 
   static void TearDownTestSuite() {

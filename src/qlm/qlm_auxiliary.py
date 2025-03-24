@@ -7,9 +7,9 @@ def get_port_and_hostname():
 
 
 def create_remote_qpu(host):
-    from qat.core.qpu import RemoteQPU
-    url, port = host.split(":")
     try:
+        from qat.core.qpu import RemoteQPU
+        url, port = host.split(":")
         qpu = RemoteQPU(port, url)
     except:
         return None
@@ -25,8 +25,10 @@ def parse(qasm_string):
 
 
 def submit_job(remote_qpu, qasm_string, nshots):
-    from qat.interop.openqasm import OqasmParser
-
+    try:
+        from qat.interop.openqasm import OqasmParser
+    except:
+        return None
     parser = OqasmParser()
     circuit = parser.compile(qasm_string)
     if circuit is None:

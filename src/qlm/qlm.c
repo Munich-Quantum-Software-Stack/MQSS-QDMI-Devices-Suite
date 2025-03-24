@@ -121,7 +121,7 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
 
 #define CHECK_PYTHON_ERROR(value, ret_val)                                     \
   {                                                                            \
-    if (value == NULL) {                                                       \
+    if (value == Py_None) {                                                       \
       PyErr_Print();                                                           \
       Py_Finalize();                                                           \
       return ret_val;                                                          \
@@ -529,7 +529,6 @@ int initialize_python(void) {
     gstate = PyGILState_Ensure();
   }
 
-  printf("%s\n", Py_GetVersion());
   PyObject *sysPath = PyImport_ImportModule("sys");
   PyObject *path = PyObject_GetAttrString(sysPath, "path");
 

@@ -7,7 +7,7 @@
     "dockerfile": "Dockerfile"
   },
   "remoteEnv": {
-    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/backends/src/qlm",
+    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/qlm",
     "QLM_AUXILIARY_SCRIPT_NAME": "qlm_auxiliary"
   }
 }

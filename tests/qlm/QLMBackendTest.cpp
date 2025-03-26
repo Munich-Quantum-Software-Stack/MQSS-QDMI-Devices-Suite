@@ -34,8 +34,9 @@
         QDMI_SUCCESS);                                                         \
   }
 
-#define EXIT_ON_FAIL(err, msg)                                                 \
+#define EXIT_ON_FAIL(func, msg)                                                \
   {                                                                            \
+    err = func;                                                                \
     if (err != QDMI_SUCCESS) {                                                 \
       std::cout << msg << std::endl;                                           \
       exit(err);                                                               \
@@ -49,6 +50,7 @@ protected:
   static char hostname[];
 
   static void SetUpTestSuite() {
+    int err;
 
     EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
                  "Failed to initialize the device")
@@ -64,7 +66,8 @@ protected:
     EXIT_ON_FAIL(
         QLM_QDMI_device_session_init(session),
         "Failed to initialize a session. Potential errors: Wrong or missing "
-        "authentication information, or missing Python packages or device status is offline, or in "
+        "authentication information, or missing Python packages or device "
+        "status is offline, or in "
         "maintenance. To provide credentials, take a look in " __FILE__
             << (__LINE__ - 4));
   }

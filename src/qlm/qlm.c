@@ -1,3 +1,4 @@
+#include "qdmi/constants.h"
 #include <Python.h>
 #include <qlm_qdmi/device.h>
 
@@ -119,11 +120,15 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
     }                                                                          \
   }
 
-#define CHECK_PYTHON_ERROR(value, ret_val)                                     \
+#define CHECK_PYTHON_ERROR(value, ret_val, from_python)                        \
   {                                                                            \
-    if (value == Py_None) {                                                       \
+    if (value == Py_None || value == NULL) {                                   \
+      \                                       
       PyErr_Print();                                                           \
-      Py_Finalize();                                                           \
+      if (!from_python) {                                                      \
+        PyGILState_Release(gstate);                                            \
+      }                                                                        \
+      QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);                     \
       return ret_val;                                                          \
     }                                                                          \
   }
@@ -312,22 +317,23 @@ void *submit_job(void *arg) {
 
   PyObject *pFunc =
       PyObject_GetAttrString(custom_python_module, SUBMIT_JOB_FUNCTION_NAME);
-  CHECK_PYTHON_ERROR(pFunc, NULL)
+  CHECK_PYTHON_ERROR(pFunc, (void *)(QDMI_ERROR_FATAL), *isFromPython())
 
   PyObject **remote_qpu = get_remote_qpu();
-  CHECK_PYTHON_ERROR(*remote_qpu, NULL)
+  CHECK_PYTHON_ERROR(*remote_qpu, (void *)(QDMI_ERROR_FATAL), *isFromPython())
   PyObject *qasm_string = PyUnicode_FromString(pJob->program);
-  CHECK_PYTHON_ERROR(qasm_string, NULL)
+  CHECK_PYTHON_ERROR(qasm_string, (void *)(QDMI_ERROR_FATAL), *isFromPython())
   PyObject *num_shot = PyLong_FromUnsignedLong(pJob->num_shots);
-  CHECK_PYTHON_ERROR(num_shot, NULL)
+  CHECK_PYTHON_ERROR(num_shot, (void *)(QDMI_ERROR_FATAL), *isFromPython())
 
   PyObject *pArgs = PyTuple_Pack(3, *remote_qpu, qasm_string, num_shot);
-  CHECK_PYTHON_ERROR(pArgs, NULL)
+  CHECK_PYTHON_ERROR(pArgs, (void *)(QDMI_ERROR_FATAL), *isFromPython())
 
   pJob->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
+
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pResults, NULL)
+  CHECK_PYTHON_ERROR(pResults, (void *)(QDMI_ERROR_FATAL), *isFromPython())
 
   unsigned long resultSize = (unsigned long)PyList_GET_SIZE(pResults);
   PyObject *pBitring = PyList_GET_ITEM(pResults, 0);
@@ -377,12 +383,13 @@ int QLM_QDMI_device_job_cancel(QLM_QDMI_Device_Job job) {
       job->status != QDMI_JOB_STATUS_SUBMITTED &&
       job->status != QDMI_JOB_STATUS_CREATED)
     return QDMI_ERROR_INVALIDARGUMENT;
-  int isErr = 0;
-  if (job->status != QDMI_JOB_STATUS_CREATED)
-    isErr = pthread_join(job->offload_thread, NULL);
+  if (job->status != QDMI_JOB_STATUS_CREATED) {
+    void *ret_val;
+    int isErr = pthread_join(job->offload_thread, &(ret_val));
 
-  if (isErr)
-    return QDMI_ERROR_FATAL;
+    if (ret_val != NULL || isErr)
+      return QDMI_ERROR_FATAL;
+  }
 
   job->status = QDMI_JOB_STATUS_CANCELED;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
@@ -414,11 +421,14 @@ int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
 
   if (job->status != QDMI_JOB_STATUS_DONE &&
-      job->status != QDMI_JOB_STATUS_CREATED)
-    pthread_join(job->offload_thread, NULL);
-
-  job->status = QDMI_JOB_STATUS_DONE;
-
+      job->status != QDMI_JOB_STATUS_CREATED) {
+    void *ret_val = NULL;
+    pthread_join(job->offload_thread, &ret_val);
+    if (ret_val != NULL)
+      job->status = QDMI_JOB_STATUS_CANCELED;
+    else
+      job->status = QDMI_JOB_STATUS_DONE;
+  }
   return QDMI_SUCCESS;
 }
 
@@ -535,11 +545,12 @@ int initialize_python(void) {
   PyList_Append(path, PyUnicode_FromString(script_location));
 
   PyObject *pName = PyUnicode_DecodeFSDefault(script_name);
-  CHECK_PYTHON_ERROR(pName, QDMI_ERROR_FATAL)
+  CHECK_PYTHON_ERROR(pName, QDMI_ERROR_FATAL, *isFromPython())
 
   *get_custom_python_module() = PyImport_Import(pName);
 
-  CHECK_PYTHON_ERROR(*get_custom_python_module(), QDMI_ERROR_FATAL);
+  CHECK_PYTHON_ERROR(*get_custom_python_module(), QDMI_ERROR_FATAL,
+                     *isFromPython());
 
   Py_XDECREF(pName);
 
@@ -555,13 +566,13 @@ int create_remote_qpu(const char *hostname) {
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
                                            REMOTE_QPU_CREATE_FUNCTION_NAME);
 
-  CHECK_PYTHON_ERROR(pFunc, QDMI_ERROR_FATAL)
+  CHECK_PYTHON_ERROR(pFunc, QDMI_ERROR_FATAL, *isFromPython())
 
   PyObject *pArgs = PyTuple_Pack(1, PyUnicode_FromString(hostname));
-  CHECK_PYTHON_ERROR(pArgs, QDMI_ERROR_FATAL)
+  CHECK_PYTHON_ERROR(pArgs, QDMI_ERROR_FATAL, *isFromPython())
 
   PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pResult, QDMI_ERROR_FATAL)
+  CHECK_PYTHON_ERROR(pResult, QDMI_ERROR_FATAL, *isFromPython())
 
   *get_remote_qpu() = pResult;
   PyGILState_Release(gstate);

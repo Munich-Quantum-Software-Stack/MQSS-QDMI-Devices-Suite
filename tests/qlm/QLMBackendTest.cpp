@@ -54,6 +54,10 @@ protected:
   static void SetUpTestSuite() {
     int err;
     hostname = std::getenv(QLM_HOST_URL);
+    if(!hostname){
+      std::cout << "Please provide a hostname by using enviroment variable QLM_HOST_URL." << std::endl;
+      exit(1);
+    }
     
     EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
                  "Failed to initialize the device")

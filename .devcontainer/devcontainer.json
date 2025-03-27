@@ -8,6 +8,7 @@
   },
   "remoteEnv": {
     "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/qlm",
-    "QLM_AUXILIARY_SCRIPT_NAME": "qlm_auxiliary"
+    "QLM_AUXILIARY_SCRIPT_NAME": "qlm_auxiliary",
+    "QLM_HOST_URL": "host.docker.internal:20501"
   }
 }

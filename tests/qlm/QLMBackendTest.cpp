@@ -1,6 +1,8 @@
 #include "qlm_qdmi/device.h"
 #include <gtest/gtest.h>
 
+#define QLM_HOST_URL "QLM_HOST_URL"
+
 #define CHECK_DEVICE_STATUS(device_status, expected_value)                     \
   {                                                                            \
     ASSERT_EQ(QLM_QDMI_device_session_query_device_property(                   \
@@ -47,11 +49,12 @@ class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
   static QLM_QDMI_Device_Session session;
-  static char hostname[];
+  static char* hostname;
 
   static void SetUpTestSuite() {
     int err;
-
+    hostname = std::getenv(QLM_HOST_URL);
+    
     EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
                  "Failed to initialize the device")
 
@@ -79,7 +82,7 @@ protected:
 };
 
 QLM_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-char QDMIImplementationTest::hostname[] = "localhost:20501";
+char* QDMIImplementationTest::hostname = nullptr;
 
 TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
   ASSERT_EQ(QLM_QDMI_device_session_set_parameter(

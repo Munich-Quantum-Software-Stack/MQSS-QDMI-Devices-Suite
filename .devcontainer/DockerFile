@@ -1,11 +1,11 @@
-FROM --platform=x86_64 python:3.10-bookworm
+FROM --platform=x86_64 python:3.11-bookworm
 
 ENV TZ="Europe/Berlin"
 
 RUN apt-get update -y && \
     apt-get autoremove -y
 RUN apt-get install -y software-properties-common bash-completion cmake build-essential iputils-ping
-RUN pip install myqlm myqlm-interop[all]
+RUN pip install myqlm-interop[all]
 
 WORKDIR /home
 

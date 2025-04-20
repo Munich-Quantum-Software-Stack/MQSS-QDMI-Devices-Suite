@@ -1,4 +1,4 @@
-find_package(Python3 3.10...3.11 REQUIRED COMPONENTS Interpreter Development)
+find_package(Python3 3.10...3.12 REQUIRED COMPONENTS Interpreter Development)
 
 add_library(qlm_device SHARED qlm.c)
 

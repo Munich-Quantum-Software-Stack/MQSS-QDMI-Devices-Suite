@@ -7,12 +7,16 @@ set(QDMI_VERSION
     "1.1.0"
     CACHE STRING "QDMI version")
 set(QDMI_URL
-    "https://github.com/Munich-Quantum-Software-Stack/QDMI/archive/refs/tags/v${QDMI_VERSION}.tar.gz"
+    "https://github.com/kayaercument/QDMI.git"
     CACHE STRING "QDMI URL")
 
 set(BUILD_QDMI_DOCS OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(qdmi URL ${QDMI_URL} FIND_PACKAGE_ARGS ${QDMI_VERSION})
+FetchContent_Declare(
+    qdmi
+    GIT_REPOSITORY  https://github.com/kayaercument/QDMI.git
+    GIT_TAG 152-env-prop
+)
   list(APPEND FETCH_PACKAGES qdmi)
 else()
   find_package(qdmi ${QDMI_VERSION} QUIET)
@@ -78,4 +82,5 @@ if(FETCH_PACKAGES)
   # cJSON does not set the include directory on the target
   target_include_directories(cjson
                              PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)
+                            
 endif()

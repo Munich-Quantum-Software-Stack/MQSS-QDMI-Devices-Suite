@@ -6,9 +6,15 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools", 
+
   "remoteEnv": {
     "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/qlm",
     "QLM_AUXILIARY_SCRIPT_NAME": "qlm_auxiliary",
-    "QLM_HOST_URL": "host.docker.internal:20501"
+    "QLM_HOST_URL": "host.docker.internal:20501",
+    
+    "DCDB_HOST_URL": "host.docker.internal:9042",
+    "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
+    "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib"
   }
 }

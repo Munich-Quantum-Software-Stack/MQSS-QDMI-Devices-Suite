@@ -6,7 +6,7 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools", 
+  "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools SUB_DIRS=lib tools PLUGINS= OPERATORS=", 
 
   "remoteEnv": {
     "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/qlm",

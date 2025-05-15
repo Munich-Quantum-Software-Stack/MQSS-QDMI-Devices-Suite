@@ -434,7 +434,7 @@ TEST_F(QDMIImplementationTest, QueyJobAndCancel) {
             QDMI_SUCCESS);
   ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
                 query,
-                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENTVARIABLES,
+                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
                 sizeof(DCDB_QDMI_Environment), &env),
             QDMI_SUCCESS);
 
@@ -484,7 +484,7 @@ TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
             QDMI_SUCCESS);
   ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
                 query,
-                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENTVARIABLES,
+                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
                 sizeof(DCDB_QDMI_Environment), &env),
             QDMI_SUCCESS);
 

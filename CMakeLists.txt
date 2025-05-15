@@ -25,11 +25,6 @@ option(BUILD_BACKEND_QLM "Build QLM Backend" OFF)
 
 option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
 
-option(BUILD_BACKEND_IQM "Build IQM Backend" OFF)
-
-option(BUILD_BACKEND_AQT "Build AQT Backend" OFF)
-
-
 option(BUILD_BACKEND_TESTS "Also build tests for the backends" ON)
 
 option(ENABLE_COVERAGE "Enable coverage reporting" ON)

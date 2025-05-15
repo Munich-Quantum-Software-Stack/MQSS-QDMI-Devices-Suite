@@ -26,31 +26,6 @@ else()
   endif()
 endif()
 
-set(CJSON_VERSION
-    "1.7.18"
-    CACHE STRING "cJSON version")
-set(CJSON_URL
-    "https://github.com/DaveGamble/cJSON/archive/refs/tags/v${CJSON_VERSION}.tar.gz"
-    CACHE STRING "cJSON URL")
-set(ENABLE_CJSON_TEST
-    OFF
-    CACHE INTERNAL "Do not build cJSON tests")
-set(ENABLE_CJSON_UNINSTALL
-    OFF
-    CACHE INTERNAL "Do not add cJSON uninstall target")
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(cjson URL ${CJSON_URL} FIND_PACKAGE_ARGS
-                                 ${CJSON_VERSION})
-  list(APPEND FETCH_PACKAGES cjson)
-else()
-  find_package(cjson ${CJSON_VERSION} QUIET)
-  if(NOT cjson_FOUND)
-    FetchContent_Declare(cjson URL ${CJSON_URL})
-    list(APPEND FETCH_PACKAGES cjson)
-  endif()
-endif()
-
-
 if(BUILD_BACKEND_TESTS)
   set(gtest_force_shared_crt
       ON
@@ -76,11 +51,5 @@ endif()
 
 if(FETCH_PACKAGES)
   FetchContent_MakeAvailable(${FETCH_PACKAGES})
-
-  target_include_directories(
-    cjson PUBLIC $<BUILD_INTERFACE:${QDMI_INCLUDE_BUILD_DIR}>)
-  # cJSON does not set the include directory on the target
-  target_include_directories(cjson
-                             PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)
-                            
+  
 endif()

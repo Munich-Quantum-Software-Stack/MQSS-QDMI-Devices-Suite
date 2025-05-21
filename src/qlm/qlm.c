@@ -93,8 +93,8 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size)-1);                        \
-        ((char *)(value))[(size)-1] = '\0';                                    \
+        strncpy((char *)(value), prop_value, (size) - 1);                      \
+        ((char *)(value))[(size) - 1] = '\0';                                  \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -141,7 +141,7 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
 #define CHECK_PYTHON_ERROR(value, ret_val, from_python)                        \
   {                                                                            \
     if (value == Py_None || value == NULL) {                                   \
-      \                                       
+                                                                               \
       PyErr_Print();                                                           \
       if (!from_python) {                                                      \
         PyGILState_Release(gstate);                                            \

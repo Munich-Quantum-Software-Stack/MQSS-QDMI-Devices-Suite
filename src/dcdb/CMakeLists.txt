@@ -33,22 +33,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(dcdb_device SHARED dcdb.cpp session.cpp sensors.cpp)
 
-target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::project_warnings ${DCDB_LIBRARY})
+target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::project_warnings
+                                         ${DCDB_LIBRARY})
 
 generate_prefixed_qdmi_headers(${DCDB_QDMI_PREFIX})
 
-target_include_directories(dcdb_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include  ${CMAKE_CURRENT_SRC_DIR}/include 
-    ${DCDB_INCLUDE_DIRS}
-)
+target_include_directories(
+  dcdb_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
+                     ${CMAKE_CURRENT_SRC_DIR}/include ${DCDB_INCLUDE_DIRS})
 
 add_library(qdmi::dcdb_device ALIAS dcdb_device)
 
-
 if(ENABLE_COVERAGE)
-    target_compile_options(dcdb_device INTERFACE --coverage -fprofile-arcs
-                                         -ftest-coverage -O0)
-    target_link_libraries(dcdb_device INTERFACE gcov --coverage)
+  target_compile_options(dcdb_device INTERFACE --coverage -fprofile-arcs
+                                               -ftest-coverage -O0)
+  target_link_libraries(dcdb_device INTERFACE gcov --coverage)
 endif()
-
-
-

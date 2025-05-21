@@ -44,8 +44,8 @@ endif()
 
 if(ENABLE_COVERAGE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -O0 -g")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -O0 -g")
 endif()
 
 include(cmake/ExternalDependencies.cmake)

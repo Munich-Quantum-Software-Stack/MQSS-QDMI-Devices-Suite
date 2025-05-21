@@ -16,7 +16,6 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
 
-
 #include "qlm_qdmi/device.h"
 #include <gtest/gtest.h>
 
@@ -68,16 +67,18 @@ class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
   static QLM_QDMI_Device_Session session;
-  static char* hostname;
+  static char *hostname;
 
   static void SetUpTestSuite() {
     int err;
     hostname = std::getenv(QLM_HOST_URL);
-    if(!hostname){
-      std::cout << "Please provide a hostname by using enviroment variable QLM_HOST_URL." << std::endl;
+    if (!hostname) {
+      std::cout << "Please provide a hostname by using environment variable "
+                   "QLM_HOST_URL."
+                << std::endl;
       exit(1);
     }
-    
+
     EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
                  "Failed to initialize the device")
 
@@ -105,7 +106,7 @@ protected:
 };
 
 QLM_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-char* QDMIImplementationTest::hostname = nullptr;
+char *QDMIImplementationTest::hostname = nullptr;
 
 TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
   ASSERT_EQ(QLM_QDMI_device_session_set_parameter(

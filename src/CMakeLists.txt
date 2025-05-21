@@ -22,5 +22,3 @@ endif()
 if(BUILD_BACKEND_DCDB)
   add_subdirectory(dcdb)
 endif()
-
-

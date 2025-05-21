@@ -27,7 +27,7 @@ target_include_directories(qlm_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
 add_library(qdmi::qlm_device ALIAS qlm_device)
 
 if(ENABLE_COVERAGE)
-    target_compile_options(qlm_device INTERFACE --coverage -fprofile-arcs
-                                          -ftest-coverage -O0)
-    target_link_libraries(qlm_device INTERFACE gcov --coverage)
+  target_compile_options(qlm_device INTERFACE --coverage -fprofile-arcs
+                                              -ftest-coverage -O0)
+  target_link_libraries(qlm_device INTERFACE gcov --coverage)
 endif()

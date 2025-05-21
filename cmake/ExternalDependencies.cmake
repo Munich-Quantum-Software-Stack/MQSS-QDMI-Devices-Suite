@@ -16,7 +16,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
@@ -29,11 +28,10 @@ set(QDMI_URL
 
 set(BUILD_QDMI_DOCS OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-FetchContent_Declare(
+  FetchContent_Declare(
     qdmi
-    GIT_REPOSITORY  https://github.com/kayaercument/QDMI.git
-    GIT_TAG 152-env-prop
-)
+    GIT_REPOSITORY https://github.com/kayaercument/QDMI.git
+    GIT_TAG 152-env-prop)
   list(APPEND FETCH_PACKAGES qdmi)
 else()
   find_package(qdmi ${QDMI_VERSION} QUIET)
@@ -68,5 +66,5 @@ endif()
 
 if(FETCH_PACKAGES)
   FetchContent_MakeAvailable(${FETCH_PACKAGES})
-  
+
 endif()

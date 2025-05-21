@@ -231,7 +231,6 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyImplemented) {
             QDMI_ERROR_NOTSUPPORTED);
 }
 
-
 TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported) {
   // Since it is a emulator
   ASSERT_EQ(DCDB_QDMI_device_session_query_operation_property(
@@ -289,17 +288,16 @@ TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented) {
   ASSERT_FALSE(value.empty()) << "Devices must provide a library version";
 }
 
-
 TEST_F(QDMIImplementationTest, QueryDeviceStatusImplemented) {
   QDMI_Device_Status device_status;
-  ASSERT_EQ(
-      DCDB_QDMI_device_session_query_device_property(
-          session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(QDMI_Device_Status), static_cast<void *>(&device_status), nullptr),
-      QDMI_SUCCESS);
-      
+  ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_STATUS,
+                sizeof(QDMI_Device_Status), static_cast<void *>(&device_status),
+                nullptr),
+            QDMI_SUCCESS);
+
   ASSERT_EQ(device_status, QDMI_DEVICE_STATUS_IDLE);
 }
-
 
 TEST_F(QDMIImplementationTest, QueryEnvironmentPropertySupported) {
 
@@ -415,7 +413,6 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesSamplingRate) {
   }
 }
 
-
 TEST_F(QDMIImplementationTest, QueyJobAndCancel) {
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
@@ -450,8 +447,7 @@ TEST_F(QDMIImplementationTest, QueyJobAndCancel) {
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
   ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query,
-                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
+                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
                 sizeof(DCDB_QDMI_Environment), &env),
             QDMI_SUCCESS);
 
@@ -500,8 +496,7 @@ TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
   ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query,
-                QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
+                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
                 sizeof(DCDB_QDMI_Environment), &env),
             QDMI_SUCCESS);
 
@@ -523,18 +518,16 @@ TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
                 static_cast<void *>(timestamps.data()), nullptr),
             QDMI_SUCCESS);
 
-
-
   ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-    query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, 0, nullptr,
-    &result_size),
-QDMI_SUCCESS);
+                query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, 0, nullptr,
+                &result_size),
+            QDMI_SUCCESS);
 
-std::vector<int64_t> values(result_size / sizeof(int64_t));
-ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-    query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, result_size,
-    static_cast<void *>(values.data()), nullptr),
-QDMI_SUCCESS);
+  std::vector<int64_t> values(result_size / sizeof(int64_t));
+  ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
+                query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, result_size,
+                static_cast<void *>(values.data()), nullptr),
+            QDMI_SUCCESS);
 
   DCDB_QDMI_device_environment_query_free(query);
 }

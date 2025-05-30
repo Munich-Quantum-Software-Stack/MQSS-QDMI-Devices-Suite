@@ -28,9 +28,6 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <dcdb/sensor.h>
 
-int DCDB_QDMI_Device_Session_impl_d::connect() {
-  return connect(hostname, port, username, password);
-}
 void DCDB_QDMI_Device_Session_impl_d::setHostnameAndPort(
     const std::string &baseUrl) {
   size_t index = 0;
@@ -48,35 +45,13 @@ void DCDB_QDMI_Device_Session_impl_d::setHostnameAndPort(
   }
 }
 
-void DCDB_QDMI_Device_Session_impl_d::setHostname(
-    const std::string &new_hostname) {
-  hostname = new_hostname;
-}
-
-void DCDB_QDMI_Device_Session_impl_d::setPort(uint16_t new_port) {
-  port = new_port;
-}
-
-void DCDB_QDMI_Device_Session_impl_d::setUsername(std::string _username) {
-  username = _username;
-}
-
-void DCDB_QDMI_Device_Session_impl_d::setPassword(std::string _password) {
-  password = _password;
-}
-DCDB_QDMI_Device_Session_impl_d::~DCDB_QDMI_Device_Session_impl_d() {
-  disconnect();
-}
-
-void DCDB_QDMI_Device_Session_impl_d::disconnect() { connection->disconnect(); }
-
 int DCDB_QDMI_Device_Session_impl_d::connect(std::string hostname,
                                              uint16_t port,
                                              std::string username,
                                              std::string password) {
 
   if (connection != nullptr) {
-    return 0;
+    return QDMI_ERROR_FATAL;
   }
   connection = new DCDB::Connection(hostname, port, username, password);
 

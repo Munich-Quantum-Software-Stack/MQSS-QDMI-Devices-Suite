@@ -16,7 +16,6 @@
 # ------------------------------------------------------------------------------
 
 set(DCDB_SOURCE_DIR $ENV{DCDB_SOURCE_LOCATION})
-message(${DCDB_SOURCE_DIR})
 
 set(DCDB_LIBRARY "${DCDB_SOURCE_DIR}/lib/libdcdb.so")
 set(DCDB_QUERY_OBJECT "${DCDB_SOURCE_DIR}/tools/dcdbquery/query.o")

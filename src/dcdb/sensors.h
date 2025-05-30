@@ -25,11 +25,37 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <iostream>
 #include <string>
 
-typedef struct DCDB_QDMI_Environment_impl_d {
-  const std::string id;
-  const std::string unit;
-  const std::chrono::duration<int> sampling_rate{}; // in seconds
+/** @file
+ * @brief The header file for sensor implementation
+ */
 
+/**
+ * @brief The implementation of the encapsulated type
+ * QDMI_Environment on the device-side.
+ * @details Implemented to hold all the required input to query a
+ * `QDMI_Environment` using DCDB and its output. In this device, the
+ * `QDMI_Environment`s corresponses to the sensors at the HPC Environment
+ * located at the LRZ.
+ * @note QDMI_Device_Environment_Query
+ * is encapsulated in the QDMI Device Environment Query interface to allow the
+ * device implement the type as needed.
+ */
+typedef struct DCDB_QDMI_Environment_impl_d {
+  /// The unique ID to identify the environment.
+  const std::string id;
+  /// The unit of an environment variable, e.g., Kelvin for temperature.
+  const std::string unit;
+  /// `float` The samples per second of an environment.
+  const std::chrono::duration<float> sampling_rate{};
+  /**
+   @brief This function is used to query the environment data from the DCDB.
+   @details This function queries environmental data in a given time interval
+   using DCDB's sensor interface.
+   @param[in] connection The connection object that used to connect DCDB host.
+   @param[in] start The start time as an UNIX timestamp of the time interval
+   @param[in] end The end time as an UNIX timestamp of the time interval
+
+  */
   std::list<DCDB::SensorDataStoreReading> query(DCDB::Connection *connection,
                                                 uint64_t start, uint64_t end);
 } DCDB_QDMI_Environment_impl_t;
@@ -263,3 +289,4 @@ constexpr std::array<const DCDB_QDMI_Environment_impl_t *, 97>
         &ENV72, &ENV73, &ENV74, &ENV75, &ENV76, &ENV77, &ENV78, &ENV79, &ENV80,
         &ENV81, &ENV82, &ENV83, &ENV84, &ENV85, &ENV86, &ENV87, &ENV88, &ENV89,
         &ENV90, &ENV91, &ENV92, &ENV93, &ENV94, &ENV95, &ENV96};
+        

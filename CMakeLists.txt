@@ -25,9 +25,11 @@ option(BUILD_BACKEND_QLM "Build QLM Backend" OFF)
 
 option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
 
-option(BUILD_BACKEND_TESTS "Also build tests for the backends" ON)
+option(BUILD_DOCUMENTATION "Also build documentation" ON)
 
-option(ENABLE_COVERAGE "Enable coverage reporting" ON)
+option(BUILD_BACKEND_TESTS "Also build tests for the backends" OFF)
+
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 
 # Require C standard
 set(CMAKE_C_STANDARD 11)
@@ -43,7 +45,6 @@ if(BUILD_BACKEND_DCDB)
 endif()
 
 if(ENABLE_COVERAGE)
-
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -O0 -g")
 endif()
@@ -51,4 +52,11 @@ endif()
 include(cmake/ExternalDependencies.cmake)
 
 add_subdirectory(src)
-add_subdirectory(tests)
+
+if(BUILD_BACKEND_TESTS)
+  add_subdirectory(tests)
+endif()
+
+if(BUILD_DOCUMENTATION)
+  add_subdirectory(docs)
+endif()

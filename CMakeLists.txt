@@ -21,13 +21,13 @@ set(BACKENDS_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Declare all external dependencies and make sure that they are available.
 include(cmake/ExternalDependencies.cmake)
 
-option(BUILD_BACKEND_QLM "Build QLM Backend" OFF)
+option(BUILD_BACKEND_QLM "Build QLM Backend" ON)
 
 option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
 
 option(BUILD_DOCUMENTATION "Also build documentation" ON)
 
-option(BUILD_BACKEND_TESTS "Also build tests for the backends" OFF)
+option(BUILD_BACKEND_TESTS "Also build tests for the backends" ON)
 
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 

@@ -36,9 +36,9 @@ While Qaptiva is capable of executing quantum circuits, DCDB allows the QDMI Cli
 
 ### The Properties of Devices {#device-properties}
 
-Every implemented devices has different proterties, i.e. `QDMI_DEVICE_PROPERTY_NAME`, the number of `QDMI_Site` or `QDMI_Environment`.
+Every implemented devices has different proterties, i.e. `QDMI_DEVICE_PROPERTY_NAME`, the number of `QDMI_Site` or `QDMI_EnvironmentSensor`.
 
-The properties might be of composite type such as `QDMI_Environment` or `QDMI_Site` or primitive type such as `int`, `char*` (string).
+The properties might be of composite type such as `QDMI_EnvironmentSensor` or `QDMI_Site` or primitive type such as `int`, `char*` (string).
 i.e `char*` (string), `int`, `QDMI_Site`.
 
 The `QDMI_Client` can query the device to get the proterties using `QDMI_device_query_device_property`.

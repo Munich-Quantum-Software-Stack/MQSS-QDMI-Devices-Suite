@@ -175,7 +175,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented) {
   ASSERT_EQ(DCDB_QDMI_device_session_create_device_job(session, &job),
             QDMI_ERROR_NOTSUPPORTED);
   ASSERT_EQ(DCDB_QDMI_device_job_submit(job), QDMI_ERROR_NOTSUPPORTED);
-  ASSERT_EQ(DCDB_QDMI_device_job_wait(job), QDMI_ERROR_NOTSUPPORTED);
+  ASSERT_EQ(DCDB_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTSUPPORTED);
   DCDB_QDMI_device_job_free(job);
 }
 
@@ -203,7 +203,7 @@ TEST_F(QDMIImplementationTest, ControlWaitImplemented) {
 
   ASSERT_EQ(DCDB_QDMI_device_session_create_device_job(session, &job),
             QDMI_ERROR_NOTSUPPORTED);
-  ASSERT_EQ(DCDB_QDMI_device_job_wait(job), QDMI_ERROR_NOTSUPPORTED);
+  ASSERT_EQ(DCDB_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTSUPPORTED);
   DCDB_QDMI_device_job_free(job);
 }
 
@@ -303,13 +303,13 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentPropertySupported) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
@@ -317,13 +317,13 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentPropertySupported) {
   for (auto env : envs) {
     size_t id_size;
     ASSERT_EQ(
-        DCDB_QDMI_device_session_query_environment_property(
-            session, env, QDMI_ENVIRONMENT_PROPERTY_ID, 0, nullptr, &id_size),
+        DCDB_QDMI_device_session_query_environmentsensor_property(
+            session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
         QDMI_SUCCESS);
 
     std::string id(id_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environment_property(
-                  session, env, QDMI_ENVIRONMENT_PROPERTY_ID, id_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
+                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, id_size,
                   static_cast<void *>(id.data()), nullptr),
               QDMI_SUCCESS);
   }
@@ -333,13 +333,13 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesID) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
@@ -347,13 +347,13 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesID) {
   for (auto env : envs) {
     size_t id_size;
     ASSERT_EQ(
-        DCDB_QDMI_device_session_query_environment_property(
-            session, env, QDMI_ENVIRONMENT_PROPERTY_ID, 0, nullptr, &id_size),
+        DCDB_QDMI_device_session_query_environmentsensor_property(
+            session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
         QDMI_SUCCESS);
 
     std::string id(id_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environment_property(
-                  session, env, QDMI_ENVIRONMENT_PROPERTY_ID, id_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
+                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, id_size,
                   static_cast<void *>(id.data()), nullptr),
               QDMI_SUCCESS);
   }
@@ -363,27 +363,27 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesUnit) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
 
   for (auto env : envs) {
     size_t unit_size;
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environment_property(
-                  session, env, QDMI_ENVIRONMENT_PROPERTY_UNIT, 0, nullptr,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
+                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_UNIT, 0, nullptr,
                   &unit_size),
               QDMI_SUCCESS);
 
     std::string unit(unit_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environment_property(
-                  session, env, QDMI_ENVIRONMENT_PROPERTY_UNIT, unit_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
+                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_UNIT, unit_size,
                   static_cast<void *>(unit.data()), nullptr),
               QDMI_SUCCESS);
   }
@@ -393,21 +393,21 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesSamplingRate) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
 
   for (auto env : envs) {
     size_t sampling_rate;
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environment_property(
-                  session, env, QDMI_ENVIRONMENT_PROPERTY_SAMPLING_RATE,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
+                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_SAMPLINGRATE,
                   sizeof(int), (void *)&sampling_rate, nullptr),
               QDMI_SUCCESS);
   }
@@ -416,118 +416,119 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesSamplingRate) {
 TEST_F(QDMIImplementationTest, QueyJobAndCancel) {
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
 
-  DCDB_QDMI_Environment env = envs.at(0);
+  DCDB_QDMI_EnvironmentSensor env = envs.at(0);
 
-  DCDB_QDMI_Device_Environment_Query query;
-  DCDB_QDMI_device_session_create_environment_query(session, &query);
+  DCDB_QDMI_Device_EnvironmentSensor_Query query;
+  DCDB_QDMI_device_session_create_environmentsensor_query(session, &query);
 
   uint64_t start_ts = 1745644603;
   uint64_t end_ts = 1746817403;
 
-  QDMI_Environment_Query_Status status;
+  QDMI_EnvironmentSensor_Query_Status status;
   size_t result_size;
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_START_TIME,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_STARTTIME,
                 sizeof(uint64_t), &start_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_END_TIME,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENDTIME,
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
-                sizeof(DCDB_QDMI_Environment), &env),
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENVIRONMENTSENSOR,
+                sizeof(DCDB_QDMI_EnvironmentSensor), &env),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_submit(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_submit(query), QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_cancel(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_cancel(query), QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environment_query_check_status(query, &status);
+  DCDB_QDMI_device_environmentsensor_query_check_status(query, &status);
 
-  ASSERT_EQ(status, QDMI_ENVIRONMENT_QUERY_STATUS_CANCELED);
+  ASSERT_EQ(status, QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_CANCELED);
 
-  DCDB_QDMI_device_environment_query_free(query);
+  DCDB_QDMI_device_environmentsensor_query_free(query);
 }
 
 TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_Environment> envs(size / sizeof(DCDB_QDMI_Environment));
+  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTVARIABLES, size,
+                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of environment variables";
 
-  DCDB_QDMI_Environment env = envs.at(0);
+  DCDB_QDMI_EnvironmentSensor env = envs.at(0);
 
-  DCDB_QDMI_Device_Environment_Query query;
-  DCDB_QDMI_device_session_create_environment_query(session, &query);
+  DCDB_QDMI_Device_EnvironmentSensor_Query query;
+  DCDB_QDMI_device_session_create_environmentsensor_query(session, &query);
 
   uint64_t start_ts = 1745644603;
   uint64_t end_ts = 1745817403;
 
-  QDMI_Environment_Query_Status status;
+  QDMI_EnvironmentSensor_Query_Status status;
+  
   size_t result_size;
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_START_TIME,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_STARTTIME,
                 sizeof(uint64_t), &start_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_END_TIME,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENDTIME,
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENT_QUERY_PARAMETER_ENVIRONMENT,
-                sizeof(DCDB_QDMI_Environment), &env),
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
+                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENVIRONMENTSENSOR,
+                sizeof(DCDB_QDMI_EnvironmentSensor), &env),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_submit(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_submit(query), QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_wait(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_wait(query, 0), QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environment_query_check_status(query, &status);
-  ASSERT_EQ(status, QDMI_ENVIRONMENT_QUERY_STATUS_DONE);
+  DCDB_QDMI_device_environmentsensor_query_check_status(query, &status);
+  ASSERT_EQ(status, QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-                query, QDMI_ENVIRONMENT_QUERY_RESULT_TIMESTAMPS, 0, nullptr,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
+                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_TIMESTAMPS, 0, nullptr,
                 &result_size),
             QDMI_SUCCESS);
 
   std::vector<uint64_t> timestamps(result_size / sizeof(uint64_t));
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-                query, QDMI_ENVIRONMENT_QUERY_RESULT_TIMESTAMPS, result_size,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
+                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_TIMESTAMPS, result_size,
                 static_cast<void *>(timestamps.data()), nullptr),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-                query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, 0, nullptr,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
+                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_VALUES, 0, nullptr,
                 &result_size),
             QDMI_SUCCESS);
 
   std::vector<int64_t> values(result_size / sizeof(int64_t));
-  ASSERT_EQ(DCDB_QDMI_device_environment_query_get_results(
-                query, QDMI_ENVIRONMENT_QUERY_RESULT_VALUES, result_size,
+  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
+                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_VALUES, result_size,
                 static_cast<void *>(values.data()), nullptr),
             QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environment_query_free(query);
+  DCDB_QDMI_device_environmentsensor_query_free(query);
 }

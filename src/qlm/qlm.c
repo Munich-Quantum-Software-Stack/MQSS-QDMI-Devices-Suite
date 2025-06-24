@@ -239,10 +239,10 @@ int QLM_QDMI_device_session_query_site_property(QLM_QDMI_Device_Session session,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  if (prop != QDMI_SITE_PROPERTY_ID)
+  if (prop != QDMI_SITE_PROPERTY_INDEX)
     return QDMI_ERROR_NOTSUPPORTED;
 
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_ID, uint64_t, site->id, prop,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, uint64_t, site->id, prop,
                             size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
@@ -431,7 +431,7 @@ int QLM_QDMI_device_job_check(QLM_QDMI_Device_Job job,
   return QDMI_SUCCESS;
 }
 
-int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job) {
+int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job, size_t timeout) {
   if (job == NULL)
     return QDMI_ERROR_INVALIDARGUMENT;
 
@@ -703,3 +703,8 @@ int QLM_QDMI_device_session_set_parameter(
 
   return QDMI_SUCCESS;
 }
+int QLM_QDMI_device_job_query_property(QLM_QDMI_Device_Job job,
+                                   QDMI_Device_Job_Property prop, size_t size,
+                                   void *value, size_t *size_ret){
+                                    return QDMI_ERROR_NOTIMPLEMENTED;
+                                   }

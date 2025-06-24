@@ -106,8 +106,8 @@ public:
   /**
    * @brief Public function to connect to the DCDB server
    *
-   * @details This function calls the privated function
-   * @ref DCDB_QDMI_Device_Session_impl_d::connect with setted parameters using
+   * @details This function calls the privated function 
+   * @ref DCDB_QDMI_Device_Session_impl_d::connectt with setted parameters using
    * the @ref DCDB_QDMI_device_session_set_parameter
    *
    * @return <a

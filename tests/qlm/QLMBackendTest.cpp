@@ -186,7 +186,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented) {
   ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
   ASSERT_NE(QLM_QDMI_device_job_submit(job), QDMI_ERROR_NOTIMPLEMENTED);
-  ASSERT_NE(QLM_QDMI_device_job_wait(job), QDMI_ERROR_NOTIMPLEMENTED);
+  ASSERT_NE(QLM_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
   QLM_QDMI_device_job_free(job);
 }
 
@@ -240,7 +240,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
 
   CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
 
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
@@ -272,7 +272,7 @@ TEST_F(QDMIImplementationTest, ControlWaitImplemented) {
 
   ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QLM_QDMI_device_job_wait(job), QDMI_ERROR_NOTIMPLEMENTED);
+  ASSERT_NE(QLM_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
   QLM_QDMI_device_job_free(job);
 }
 
@@ -299,7 +299,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   char *histogram_keys;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS, 0,
                                             nullptr, &histogram_size),
@@ -328,7 +328,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   int *histogram_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
                                             nullptr, &histogram_values_size),
@@ -356,7 +356,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
   char *probability_keys;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   ASSERT_EQ(QLM_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, 0, nullptr,
@@ -385,7 +385,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   double *probability_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   ASSERT_EQ(QLM_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, 0, nullptr,
@@ -414,7 +414,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
   double *probability_dense;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job), QDMI_SUCCESS);
+  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   ASSERT_EQ(
       QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
@@ -537,7 +537,7 @@ TEST_F(QDMIImplementationTest, QuerySiteIDImplemented) {
   for (auto *site : sites) {
     ASSERT_EQ(
         QLM_QDMI_device_session_query_site_property(
-            session, site, QDMI_SITE_PROPERTY_ID, sizeof(size_t), &id, nullptr),
+            session, site, QDMI_SITE_PROPERTY_INDEX, sizeof(size_t), &id, nullptr),
         QDMI_SUCCESS)
         << "Devices must provide a site id";
   }

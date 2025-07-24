@@ -200,7 +200,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob) {
 
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
-  CREATE_JOB(job, nShot, qasmFormat, c_t_c);
+   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
 
   ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
 
@@ -209,6 +209,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob) {
   ASSERT_EQ(QLM_QDMI_device_job_cancel(job), QDMI_SUCCESS);
 
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CANCELED);
+  
   QLM_QDMI_device_job_free(job);
 }
 
@@ -550,3 +551,4 @@ TEST_F(QDMIImplementationTest, QubitNum) {
                 &num_qubits, nullptr),
             QDMI_SUCCESS);
 }
+

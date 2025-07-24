@@ -253,7 +253,10 @@ void DCDB_QDMI_set_device_status(QDMI_Device_Status status) {
  *
  * @details This function is called to turn on the device's functionalities. The
  * device can only be used after this function is called.
- * @return `QDMI_SUCCESS`
+ *
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>.
+ *
  */
 int DCDB_QDMI_device_initialize() {
   DCDB_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
@@ -265,7 +268,10 @@ int DCDB_QDMI_device_initialize() {
  *
  * @details The `QDMI_Client` calls this function to turn off the device's
  * functionalities. After this function is called, the device cannot be used.
- * @return `QDMI_SUCCESS`
+ *
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>.
+ *
  */
 int DCDB_QDMI_device_finalize() {
   DCDB_QDMI_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
@@ -513,6 +519,12 @@ int DCDB_QDMI_device_job_wait(DCDB_QDMI_Device_Job job, size_t timeout) {
 /**
  * @brief Gets the results of the job.
  *
+ * @param[in] job The job to retrieve the results from.
+ * @param[in] result The result to retrieve.
+ * @param[in] size The size of the buffer pointed to by @p data in bytes.
+ * @param[out] data A pointer to the memory location where the results will be
+ * stored.
+ * @param[out] size_ret The actual size of the data being queried in bytes.
  * @details @see DCDB_QDMI_device_session_create_device_job
  * @param[in] job The job to retrieve the results from.
  * @param[in] result The result to retrieve.
@@ -595,9 +607,17 @@ int DCDB_QDMI_device_session_query_device_property(
 /**
  * @brief Queries a site property.
  *
+ * @param[in] session The session used for the query.
+ * @param[in] site The site to query.
+ * @param[in] prop The property to query.
+ * @param[in] size The size of the memory pointed to by @p value in bytes.
+ * @param[out] value A pointer to the memory location where the value of the
+ * property will be stored.
+ * @param[out] size_ret The actual size of the data being queried in bytes.
  * @details The DCDB device does not have any <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/types_8h.html#ab26279159380e378f258cb663968b9ec">QDMI_Site</a>
- * to query, therefore this function always returns <a
+ * to query.
+ * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
  * @param[in] session The session used for the query.
  * @param[in] site The site to query.
@@ -617,11 +637,24 @@ int DCDB_QDMI_device_session_query_site_property(
 }
 
 /**
- * @brief Queries an operation property.
+ * @brief Queries a operation property.
  *
+ * @param[in] session The session used for the query.
+ * @param[in] operation The operation to query.
+ * @param[in] num_sites The number of sites that the operation is applied to.
+ * @param[in] sites A pointer to a list of handles where the sites that the
+ * operation is applied to are stored.
+ * @param[in] num_params The number of parameters that the operation takes.
+ * @param[in] params A pointer to a list of parameters the operation takes.
+ * @param[in] prop The property to query.
+ * @param[in] size The size of the memory pointed to by @p value in bytes.
+ * @param[out] value A pointer to the memory location where the value of the
+ * property will be stored.
+ * @param[out] size_ret The actual size of the data being queried in bytes.
  * @details The DCDB device does not have any <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/types_8h.html#ae777e8f92186c1e6f836eeaa53b149d7">QDMI_Operation</a>
- * to query, therefore this function always returns <a
+ * to query.
+ * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
  *
  * @param[in] session The session used for the query.
@@ -649,29 +682,24 @@ int DCDB_QDMI_device_session_query_operation_property(
 }
 
 /**
- * @brief Query an environment sensor property.
- * @param[in] session The session used for the query. Must not be @c NULL.
- * @param[in] environmentsensor The environment sensor to query. Must not be @c
- * NULL.
- * @param[in] prop The property to query. Must be one of the values specified
- * for QDMI_EnvironmentSensor_Property.
- * @param[in] size The size of the memory pointed to by @p value in bytes. Must
- * be greater or equal to the size of the return type specified for @p prop,
- * except when @p value is @c NULL, in which case it is ignored.
+ * @brief Query an environment property.
+ * @param[in] session The session used for the query.
+ * @param[in] environment The environment to query.
+ * @param[in] prop The property to query.
+ * @param[in] size The size of the memory pointed to by @p value in bytes.
  * @param[out] value A pointer to the memory location where the value of the
- * property will be stored. If this is @c NULL, it is ignored.
- * @param[out] size_ret The actual size of the data being queried in bytes. If
- * this is @c NULL, it is ignored.
+ * property will be stored.
+ * @param[out] size_ret The actual size of the data being queried in bytes.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  if the device supports the specified property and,
  * when @p value is not @c NULL, the property was successfully retrieved.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
-if the device does not support the
+ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
+ if the device does not support the
  * property.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
  if
  *  - @p session or @p query is @c NULL,
  *  - @p prop is invalid, or
@@ -791,7 +819,7 @@ param.
  * safely reused after this function returns. If this is @c NULL, it is ignored.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- if the device supports the specified @ref
+ if the device supports the specified
  * QDMI_Device_Environment_Query_Parameter @p param and, when @p value is not @c
  * NULL, the parameter was successfully set.
  * @return <a

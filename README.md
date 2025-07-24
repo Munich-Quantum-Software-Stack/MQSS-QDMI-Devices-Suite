@@ -1,8 +1,10 @@
+<!-- [DOXYGEN MAIN] -->
+
 # QDMI Devices
 
 This repository contains various QDMI device implementations for the different quantum devices. It
 serves as a hardware abstraction layer that enables QDMI clients to communicate with the devices'
-systems through a standardized interface.
+systems through QDMI drivers.
 
 ## 🚀 Overview
 
@@ -18,15 +20,16 @@ The QDMI Devices provides device-specific logic for:
   variables).
 - Querying the environmental variables' data
 - Creating and executing quantum jobs on the devices.
+- Workflow sessions
 
 ## ⚙️ Build Instructions
 
 The devices are built using CMake as its build system.
 
-The following commands configure the project.
+The following commands configure the project to build all devices.
 
 ```bash
-cmake -S . -B build
+cmake -S . -B build -DBUILD_ALL_DEVICE=ON
 ```
 
 After the build system is generated in the `build` directory, the devices can be built by calling.
@@ -38,10 +41,22 @@ cmake --build build
 After the build process is complete, the device libraries can be found in the
 `build\name-of-the-device` directory.
 
-## 📄 License
+In case of building spesifc device, please use the following commanded to configure the project:
 
-QDMI is released under the Apache License v2.0 with LLVM Exceptions. See LICENSE for more
-information. Any contribution to the project is assumed to be under the same license.
+```bash
+cmake --build build -DBUILD_ALL_NAME_OF_THE_DEVICE=ON
+```
+
+The possible option for `BUILD_ALL_NAME_OF_THE_BACKEND` are as follows:
+
+- `BUILD_BACKEND_QLM` : Builds the QDMI Backend for Qaptiva Device
+- `BUILD_BACKEND_DCDB` : Builds the QDMI Backend for DCDB
+
+The other options are as follows:
+
+- `BUILD_BACKEND_TESTS` : Builds the tests for the enables backends
+- `BUILD_DOCUMENTATION` : Builds the documentation for the all backends
+- `ENABLE_COVERAGE` : Enable coverage collection options
 
 ## 📬 Contact
 
@@ -54,3 +69,10 @@ Please try to use the publicly accessible GitHub channels
 [discussions](https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/discussions),
 [pull requests](https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/pulls)) to allow for a
 transparent and open discussion as much as possible.
+
+<!-- [DOXYGEN MAIN] -->
+
+## 📄 License
+
+QDMI is released under the Apache License v2.0 with LLVM Exceptions. See LICENSE for more
+information. Any contribution to the project is assumed to be under the same license.

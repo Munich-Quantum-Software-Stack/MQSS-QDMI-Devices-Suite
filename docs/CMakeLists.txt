@@ -22,18 +22,21 @@
 set(DOXYGEN_CONFIG_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 # Set the input directories for doxygen, i.e., all files that contain source
 # code with documentation.
-set(DOXYGEN_INPUT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/dcdb)
+set(DOXYGEN_INPUT_DIRS ${PROJECT_SOURCE_DIR}/src/dcdb
+                       ${PROJECT_SOURCE_DIR}/src/qlm)
 # This variable is only needed to setup the dependency tracking of CMake
 # correctly and is not passed to Doxygen. Whenever such a file is modified,
 # CMake detects that change and will rerun the Doxygen command instead of using
 # the cached result when the target `qdmi_docs` is built.
-file(GLOB_RECURSE DOXYGEN_INPUT_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../src/dcdb/dcdb.cpp)
+file(GLOB_RECURSE DOXYGEN_INPUT_FILES ${PROJECT_SOURCE_DIR}/src/dcdb/dcdb.cpp
+     ${PROJECT_SOURCE_DIR}/src/qlm/qlm.c
+     ${PROJECT_SOURCE_DIR}/src/qlm/qlm_auxiliary.py)
 # After the variable above is correctly initialized, we can add the additional
 # files that are not source code but still part of the documentation. IMPORTANT:
 # The order the files with the static content are added here influences their
 # order in the generated documentation.
-set(DOXYGEN_INPUT_DIRS
-    ${DOXYGEN_INPUT_DIRS})
+set(DOXYGEN_INPUT_DIRS ${DOXYGEN_INPUT_DIRS}
+                       ${CMAKE_CURRENT_SOURCE_DIR}/index.md)
 # By default the files are separated by a semicolon. This is not what Doxygen
 # wants, so we replace it with a space.
 string(REPLACE ";" " " DOXYGEN_INPUT_DIRS "${DOXYGEN_INPUT_DIRS}")
@@ -46,15 +49,12 @@ set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 # that is written out by CMake with all placeholders substituted.
 set(DOXYGEN_CONFIG_FILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-
 # Such that the content of other files than files listed in DOXYGEN_INPUT_DIRS
 # can be included with the `\include`or `\snippet` command, we need to add the
 # directories where these files are located.
 set(DOXYGEN_EXAMPLE_DIRS
-    #${CMAKE_CURRENT_SOURCE_DIR}/../src/qlm
-    #${CMAKE_CURRENT_SOURCE_DIR}/../src/dcdb
-    ${PROJECT_SOURCE_DIR}/.github
-    ${PROJECT_SOURCE_DIR}/README.md)
+    ${PROJECT_SOURCE_DIR}/src/qlm ${PROJECT_SOURCE_DIR}/src/dcdb
+    ${PROJECT_SOURCE_DIR}/.github ${PROJECT_SOURCE_DIR}/README.md)
 # Again, replace the semicolon with a space such that Doxygen can handle it.
 string(REPLACE ";" " " DOXYGEN_EXAMPLE_DIRS "${DOXYGEN_EXAMPLE_DIRS}")
 
@@ -66,6 +66,13 @@ FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 # Ensure the output directory exists
 file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/html)
 
+# Copy over the dark mode logos as they are not automatically copied by Doxygen.
+# `configure_file` is used here because `file(COPY ...)` does not detect changes
+# and copies the files again after they have changed.
+configure_file(_static/mqss_logo_dark.svg ${DOXYGEN_OUTPUT_DIR}/html COPYONLY)
+configure_file(_static/qdmi_schematic_dark.svg ${DOXYGEN_OUTPUT_DIR}/html
+               COPYONLY)
+configure_file(_static/qdmi_dark.svg ${DOXYGEN_OUTPUT_DIR}/html COPYONLY)
 # Set the logo for the project.
 set(PROJECT_LOGO "mqss_logo.svg")
 
@@ -77,12 +84,12 @@ configure_file(${DOXYGEN_CONFIG_FILE_IN} ${DOXYGEN_CONFIG_FILE_OUT} @ONLY)
 # Create a custom command to run Doxygen
 add_custom_command(
   OUTPUT ${DOXYGEN_OUTPUT_DIR}/html/index.html
-  DEPENDS ${DOXYGEN_INPUT_FILES}
-          ${DOXYGEN_CONFIG_FILE_IN}
-  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG_FILE_OUT} -v
+  DEPENDS ${DOXYGEN_INPUT_FILES} ${DOXYGEN_CONFIG_FILE_IN}
+  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG_FILE_OUT}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating API documentation with Doxygen"
   VERBATIM)
 
 # Create a custom target
-add_custom_target(backends_docs ALL DEPENDS ${DOXYGEN_OUTPUT_DIR}/html/index.html)
+add_custom_target(backends_docs ALL
+                  DEPENDS ${DOXYGEN_OUTPUT_DIR}/html/index.html)

@@ -28,11 +28,14 @@ This page contains the implementations of the QDMI devices.
 
 ## Implemented Devices {#device}
 
-Currently, there are two QDMI device implementations: Qaptiva and DCDB. While Qaptiva is implemented using C with Python components, DCDB is implemented using C++.
+Currently, there are two QDMI device implementations: Qaptiva and DCDB. While Qaptiva is implemented
+using C with Python components, DCDB is implemented using C++.
 
-Qaptiva is a quantum computing emulator that has 38 qubits. On the other hand, DCDB is a database of the LRZ that monitors HPC environments.
+Qaptiva is a quantum computing emulator that has 38 qubits. On the other hand, DCDB is a database of
+the LRZ that monitors HPC environments.
 
-While Qaptiva is capable of executing quantum circuits, DCDB allows the QDMI Client to query the surroundings of quantum and HPC devices located at LRZ.
+While Qaptiva is capable of executing quantum circuits, DCDB allows the QDMI Client to query the
+surroundings of quantum and HPC devices located at LRZ.
 
 ### The Properties of Devices {#device-properties}
 
@@ -41,8 +44,9 @@ Every implemented devices has different proterties, i.e. `QDMI_DEVICE_PROPERTY_N
 The properties might be of composite type such as `QDMI_EnvironmentSensor` or `QDMI_Site` or primitive type such as `int`, `char*` (string).
 i.e `char*` (string), `int`, `QDMI_Site`.
 
-The `QDMI_Client` can query the device to get the proterties using `QDMI_device_query_device_property`.
-If the device does not the property it would return `QDMI_ERROR_NOTSUPPORTED`. Below you can find the respective implementation in DCDB and Qaptiva.
+The `QDMI_Client` can query the device to get the properties using
+`QDMI_device_query_device_property`. If the device does not support the property it would return
+`QDMI_ERROR_NOTSUPPORTED`. Below you can find the respective implementation in DCDB and Qaptiva.
 
 <!-- prettier-ignore-start -->
 <div class="tabbed">
@@ -62,8 +66,9 @@ If the device does not the property it would return `QDMI_ERROR_NOTSUPPORTED`. B
 <!-- prettier-ignore-end -->
 
 Both implementations use an auxiliary macro to add the string properties to the device. For an
-explanation of the macros, see the QDMI Documentation on <a href="https://munich-quantum-software-stack.github.io/QDMI/md_docs_2examples.html#device-macros">Auxiliary Macros</a>.
-
+explanation of the macros, see the QDMI Documentation on
+<a href="https://munich-quantum-software-stack.github.io/QDMI/md_docs_2examples.html#device-macros">Auxiliary
+Macros</a>.
 
 ### The Sites of the devices {#device-sites}
 
@@ -73,10 +78,10 @@ TODO
 
 TODO
 
-### Submiting a job {#device-job}
+### Submitting a job {#device-job}
 
 TODO
 
-### Submiting an environment query {#device-environment-query}
+### Submitting an environment query {#device-environment-query}
 
 TODO

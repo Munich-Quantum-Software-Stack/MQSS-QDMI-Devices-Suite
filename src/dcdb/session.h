@@ -38,7 +38,7 @@ enum class DCDB_QDMI_DEVICE_SESSION_STATUS : uint8_t {
   /// The session is allocated but not yet initialized
   ALLOCATED,
 
-  /// The session is succefully initialized
+  /// The session is successfully initialized
   INITIALIZED
 };
 
@@ -87,10 +87,10 @@ public:
    * @brief Public function to set hostname and port number for the DCDB server
    *
    * @details This function calls privated functions @ref setHostname and @ref
-   * setPort. Setted values are used to connect to the DCDB server using @ref
+   * setPort. Set values are used to connect to the DCDB server using @ref
    * DCDB_QDMI_Device_Session_impl_d::connect
    *
-   * @param[in] baseUrl The base url to be setted, i.e, example:8080
+   * @param[in] baseUrl The base url to be set, i.e, example:8080
    */
   void setHostnameAndPort(const std::string &baseUrl);
 

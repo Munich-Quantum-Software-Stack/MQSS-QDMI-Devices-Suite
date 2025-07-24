@@ -15,7 +15,14 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-def create_remote_qpu(host):
+"""! @brief QPU bağlantı ve iş gönderme yardımcı fonksiyonları."""
+
+def create_remote_qpu(host, noise_model):
+    """! Creates a remote QPU connection.
+
+    @param host Hostname and port in the form "host:port".
+    @return A RemoteQPU instance or None if the connection fails.
+    """
     try:
         from qat.core.qpu import RemoteQPU
         url, port = host.split(":")
@@ -24,7 +31,15 @@ def create_remote_qpu(host):
         return None
     return qpu
 
+
 def submit_job(remote_qpu, qasm_string, nshots):
+    """! Submits a quantum job to a remote QPU.
+
+    @param remote_qpu A RemoteQPU instance.
+    @param qasm_string QASM code string.
+    @param nshots Number of shots to run the job.
+    @return A list containing measurement states and their probabilities, or None if submission fails.
+    """
     try:
         from qat.interop.openqasm import OqasmParser
         parser = OqasmParser()

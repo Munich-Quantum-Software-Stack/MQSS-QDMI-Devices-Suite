@@ -289,4 +289,3 @@ constexpr std::array<const DCDB_QDMI_EnvironmentSensor_impl_t *, 97>
         &ENV72, &ENV73, &ENV74, &ENV75, &ENV76, &ENV77, &ENV78, &ENV79, &ENV80,
         &ENV81, &ENV82, &ENV83, &ENV84, &ENV85, &ENV86, &ENV87, &ENV88, &ENV89,
         &ENV90, &ENV91, &ENV92, &ENV93, &ENV94, &ENV95, &ENV96};
-        

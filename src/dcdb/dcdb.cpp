@@ -31,9 +31,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  * @brief The QDMI Device implementation of the DCDB at Leibniz Supercomputing
  * Centre.
  * @details The Data Center Data Base (DCDB) is a modular, continuous, and
- * holistic monitoring framework targeted at HPC environments. This device
- * implementation allows a `QDMI Client` to query the environmental variables
- * located at LRZ.
+ * holistic monitoring framework targeted at HPC telemetries. This device
+ * implementation allows a `QDMI Client` to query the telemetry data from LRZ's DCDB Instance.
  */
 
 /**
@@ -169,39 +168,39 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 /**
  * @brief Device-side implementation of the encapsulated type
- * `QDMI_Device_EnvironmentSensor_Query`.
+ * `QDMI_Device_TelemetrySensor_Query`.
  *
  * @details This struct holds all necessary inputs to perform a
- * `QDMI_EnvironmentSensor_Query` using DCDB, as well as the query results.
+ * `QDMI_TelemetrySensor_Query` using DCDB, as well as the query results.
  *
- * @note The `QDMI_Device_EnvironmentSensor_Query` type is encapsulated within
- * the `QDMI Device Environment Sensor Query` interface. This design allows
+ * @note The `QDMI_Device_TelemetrySensor_Query` type is encapsulated within
+ * the `QDMI Device Telemetry Sensor Query` interface. This design allows
  * devices to implement the query type in a device-specific manner. This struct
  * represents the opaque pointer type used on the device side, encapsulating all
- * information required for an environment sensor query.
+ * information required for an telemetry sensor query.
  */
-struct DCDB_QDMI_Device_EnvironmentSensor_Query_impl_d {
+struct DCDB_QDMI_Device_TelemetrySensor_Query_impl_d {
   /**
-   * @brief The start time of the `QDMI_EnvironmentSensor_Query` to be queried.
+   * @brief The start time of the `QDMI_TelemetrySensor_Query` to be queried.
    *
    * @details Both the `start_time and the `end_time` needs to be valid UNIX
    * timestamp
    */
   uint64_t start_time;
 
-  /// @see DCDB_QDMI_Device_EnvironmentSensor_Query_impl_d::start_time
+  /// @see DCDB_QDMI_Device_TelemetrySensor_Query_impl_d::start_time
   uint64_t end_time;
 
-  /// The `QDMI_EnvironmentSensor` being queried.
-  DCDB_QDMI_EnvironmentSensor environmentsensor{};
+  /// The `QDMI_TelemetrySensor` being queried.
+  DCDB_QDMI_TelemetrySensor telemetrysensor{};
 
-  /// Status of the `QDMI_EnvironmentSensor_Query`.
-  QDMI_EnvironmentSensor_Query_Status status{};
+  /// Status of the `QDMI_TelemetrySensor_Query`.
+  QDMI_TelemetrySensor_Query_Status status{};
 
   /// Pointer to the session used for authentication and connection metadata.
   DCDB_QDMI_Device_Session_impl_d *session;
 
-  /// Results of the `QDMI_EnvironmentSensor_Query`.
+  /// Results of the `QDMI_TelemetrySensor_Query`.
   std::list<DCDB::SensorDataStoreReading> results;
 
   /// Number of elements in `results`.
@@ -212,7 +211,7 @@ struct DCDB_QDMI_Device_EnvironmentSensor_Query_impl_d {
    *
    * This variable represents the asynchronous task. For more information, refer
    * to
-   * @ref DCDB_QDMI_device_environmentsensor_query_submit.
+   * @ref DCDB_QDMI_device_telemetrysensor_query_submit.
    */
   std::future<void> async_query;
 };
@@ -309,7 +308,7 @@ int DCDB_QDMI_device_session_alloc(DCDB_QDMI_Device_Session *session) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   *session = new DCDB_QDMI_Device_Session_impl_d();
-  if (*session != nullptr)
+  if (*session == nullptr)
     return QDMI_ERROR_OUTOFMEM;
   (*session)->setStatus(DCDB_QDMI_DEVICE_SESSION_STATUS::ALLOCATED);
   return QDMI_SUCCESS;
@@ -598,8 +597,8 @@ int DCDB_QDMI_device_session_query_device_property(
   ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_STATUS, QDMI_Device_Status,
                             DCDB_QDMI_read_device_status(), prop, size, value,
                             size_ret)
-  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS,
-                    DCDB_QDMI_EnvironmentSensor, DCDB_DEVICE_ENVIRONMENTSENSORS, prop,
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS,
+                    DCDB_QDMI_TelemetrySensor, DCDB_DEVICE_TELEMETRYSENSORS, prop,
                     size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
@@ -682,9 +681,9 @@ int DCDB_QDMI_device_session_query_operation_property(
 }
 
 /**
- * @brief Query an environment property.
+ * @brief Query an telemetry property.
  * @param[in] session The session used for the query.
- * @param[in] environment The environment to query.
+ * @param[in] telemetry The telemetry to query.
  * @param[in] prop The property to query.
  * @param[in] size The size of the memory pointed to by @p value in bytes.
  * @param[out] value A pointer to the memory location where the value of the
@@ -716,52 +715,52 @@ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a45
  * @see ADD_LIST_PROPERTY
  */
 
-int DCDB_QDMI_device_session_query_environmentsensor_property(
+int DCDB_QDMI_device_session_query_telemetrysensor_property(
     DCDB_QDMI_Device_Session session,
-    DCDB_QDMI_EnvironmentSensor environmentsensor,
-    QDMI_EnvironmentSensor_Property prop, size_t size, void *value,
+    DCDB_QDMI_TelemetrySensor telemetrysensor,
+    QDMI_TelemetrySensor_Property prop, size_t size, void *value,
     size_t *size_ret) {
 
-  if (session == nullptr || environmentsensor == nullptr ||
+  if (session == nullptr || telemetrysensor == nullptr ||
       (value != nullptr && size == 0) ||
-      (prop >= QDMI_ENVIRONMENTSENSOR_PROPERTY_MAX &&
-       prop != QDMI_ENVIRONMENTSENSOR_PROPERTY_CUSTOM1 &&
-       prop != QDMI_ENVIRONMENTSENSOR_PROPERTY_CUSTOM2 &&
-       prop != QDMI_ENVIRONMENTSENSOR_PROPERTY_CUSTOM3 &&
-       prop != QDMI_ENVIRONMENTSENSOR_PROPERTY_CUSTOM4 &&
-       prop != QDMI_ENVIRONMENTSENSOR_PROPERTY_CUSTOM5)) {
+      (prop >= QDMI_TELEMETRYSENSOR_PROPERTY_MAX &&
+       prop != QDMI_TELEMETRYSENSOR_PROPERTY_CUSTOM1 &&
+       prop != QDMI_TELEMETRYSENSOR_PROPERTY_CUSTOM2 &&
+       prop != QDMI_TELEMETRYSENSOR_PROPERTY_CUSTOM3 &&
+       prop != QDMI_TELEMETRYSENSOR_PROPERTY_CUSTOM4 &&
+       prop != QDMI_TELEMETRYSENSOR_PROPERTY_CUSTOM5)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  ADD_STRING_PROPERTY(QDMI_ENVIRONMENTSENSOR_PROPERTY_ID,
-                      environmentsensor->id.c_str(), prop, size, value,
+  ADD_STRING_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_ID,
+                      telemetrysensor->id.c_str(), prop, size, value,
                       size_ret)
-  ADD_STRING_PROPERTY(QDMI_ENVIRONMENTSENSOR_PROPERTY_UNIT,
-                      environmentsensor->unit.c_str(), prop, size, value,
+  ADD_STRING_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_UNIT,
+                      telemetrysensor->unit.c_str(), prop, size, value,
                       size_ret)
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_ENVIRONMENTSENSOR_PROPERTY_SAMPLINGRATE, int,
-                            environmentsensor->sampling_rate.count(), prop,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_SAMPLINGRATE, int,
+                            telemetrysensor->sampling_rate.count(), prop,
                             size, value, size_ret)
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /**
- * @brief Create an environment sensor query.
- * @details This is the main entry point for a driver to create an environment
+ * @brief Create an telemetry sensor query.
+ * @details This is the main entry point for a driver to create an telemetry
  sensor
  * query for a device. The returned handle can be used throughout the "device
- * environment sensor query interface" to refer to the environment sensor query.
- * @param[in] session The session to create the environment sensor query on.
+ * telemetry sensor query interface" to refer to the telemetry sensor query.
+ * @param[in] session The session to create the telemetry sensor query on.
  Must not
  * be @c NULL.
  * @param[out] query A pointer to a handle that will store the created
- * environment sensor query. Must not be @c NULL. The environment sensor query
+ * telemetry sensor query. Must not be @c NULL. The telemetry sensor query
  must be freed
  * by calling
- * @ref DCDB_QDMI_device_environmentsensor_query_free when it is no longer used.
+ * @ref DCDB_QDMI_device_telemetrysensor_query_free when it is no longer used.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- if the environment sensor query was successfully created.
+ if the telemetry sensor query was successfully created.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
  if @p session or @p query are @c
@@ -769,26 +768,26 @@ int DCDB_QDMI_device_session_query_environmentsensor_property(
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
  if the session is not in a state allowing
- * the creation of an environment sensor query, for example, because the session
+ * the creation of an telemetry sensor query, for example, because the session
  is not
  * initialized.
  *
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
- * if environment sensor query creation failed due to a
+ * if telemetry sensor query creation failed due to a
  * fatal error.
  *
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_device_environmentsensor_query_free
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_device_telemetrysensor_query_free
  */
-int DCDB_QDMI_device_session_create_environmentsensor_query(
+int DCDB_QDMI_device_session_create_telemetrysensor_query(
     DCDB_QDMI_Device_Session session,
-    DCDB_QDMI_Device_EnvironmentSensor_Query *query) {
+    DCDB_QDMI_Device_TelemetrySensor_Query *query) {
 
   if (session == nullptr || query == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -796,8 +795,8 @@ int DCDB_QDMI_device_session_create_environmentsensor_query(
   if (session->getStatus() != DCDB_QDMI_DEVICE_SESSION_STATUS::INITIALIZED) {
     return QDMI_ERROR_BADSTATE;
   }
-  *query = new DCDB_QDMI_Device_EnvironmentSensor_Query_impl_d();
-  (*query)->environmentsensor = new DCDB_QDMI_EnvironmentSensor_impl_d();
+  *query = new DCDB_QDMI_Device_TelemetrySensor_Query_impl_d();
+  (*query)->telemetrysensor = new DCDB_QDMI_TelemetrySensor_impl_d();
   (*query)->start_time = 0;
   (*query)->end_time = 0;
 
@@ -806,12 +805,12 @@ int DCDB_QDMI_device_session_create_environmentsensor_query(
 }
 
 /**
- * @brief Set a parameter for an environment sensor query.
- * @param[in] query A handle to an environment sensor query for which to set @p
+ * @brief Set a parameter for an telemetry sensor query.
+ * @param[in] query A handle to an telemetry sensor query for which to set @p
 param.
  * Must not be @c NULL.
  * @param[in] param The parameter whose value will be set. Must be one of the
- * values specified for QDMI_Device_EnvironmentSensor_Query_Parameter.
+ * values specified for QDMI_Device_TelemetrySensor_Query_Parameter.
  * @param[in] size The size of the data pointed to by @p value in bytes. Must
  * not be zero, except when @p value is @c NULL, in which case it is ignored.
  * @param[in] value A pointer to the memory location that contains the value of
@@ -820,7 +819,7 @@ param.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  if the device supports the specified
- * QDMI_Device_Environment_Query_Parameter @p param and, when @p value is not @c
+ * QDMI_Device_Telemetry_Query_Parameter @p param and, when @p value is not @c
  * NULL, the parameter was successfully set.
  * @return <a
 href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
@@ -833,13 +832,13 @@ if
  *  - @p param is invalid, or
  *  - @p value is not @c NULL and @p size is zero or not the expected size for
  *    the parameter (if specified by the
- * QDMI_Device_Environment_Query_Parameter documentation).
+ * QDMI_Device_Telemetry_Query_Parameter documentation).
  * @return
 <a
 href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
 if the parameter cannot be set in the
- * current state of the environment sensor query, for example, because the
-environment sensor
+ * current state of the telemetry sensor query, for example, because the
+telemetry sensor
  * query is already submitted.
  * @return
 <a
@@ -847,47 +846,47 @@ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a45
  * if setting the parameter failed due to a fatal
  * error.
  *
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_impl_d
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_device_environmentsensor_query_free
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_impl_d
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_device_telemetrysensor_query_free
  */
 
-int DCDB_QDMI_device_environmentsensor_query_set_parameter(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query,
-    QDMI_Device_EnvironmentSensor_Query_Parameter param, size_t size,
+int DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+    DCDB_QDMI_Device_TelemetrySensor_Query query,
+    QDMI_Device_TelemetrySensor_Query_Parameter param, size_t size,
     const void *value) {
 
   if (query == nullptr || (value != nullptr && size == 0) ||
-      (param >= QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_MAX &&
-       param != QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_CUSTOM1 &&
-       param != QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_CUSTOM2 &&
-       param != QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_CUSTOM3 &&
-       param != QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_CUSTOM4 &&
-       param != QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_CUSTOM5)) {
+      (param >= QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_MAX &&
+       param != QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_CUSTOM1 &&
+       param != QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_CUSTOM2 &&
+       param != QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_CUSTOM3 &&
+       param != QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_CUSTOM4 &&
+       param != QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_CUSTOM5)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
   /* TODO check state*/
   switch (param) {
 
-  case QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_STARTTIME: {
+  case QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_STARTTIME: {
     query->start_time = *(uint64_t *)value;
     return QDMI_SUCCESS;
   }
-  case QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENDTIME: {
+  case QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_ENDTIME: {
     query->end_time = *(uint64_t *)value;
     return QDMI_SUCCESS;
   }
 
-  case QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENVIRONMENTSENSOR: {
-    const auto *environment_ptr =
-        static_cast<const DCDB_QDMI_EnvironmentSensor *>(value);
-    query->environmentsensor = *environment_ptr;
+  case QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_TELEMETRYSENSOR: {
+    const auto *telemetry_ptr =
+        static_cast<const DCDB_QDMI_TelemetrySensor *>(value);
+    query->telemetrysensor = *telemetry_ptr;
     return QDMI_SUCCESS;
   }
   default:
@@ -895,35 +894,35 @@ int DCDB_QDMI_device_environmentsensor_query_set_parameter(
   }
 }
 /**
- * @brief The auxiliary function to submit an environment sensor query.
+ * @brief The auxiliary function to submit an telemetry sensor query.
  *
  * @details This function is used in the @ref
- * DCDB_QDMI_device_environmentsensor_query_submit to submit an environment
+ * DCDB_QDMI_device_telemetrysensor_query_submit to submit an telemetry
  * sensor query asynchronously
  *
- * @param[in] query The environment sensor query to submit. Must not be @c NULL.
+ * @param[in] query The telemetry sensor query to submit. Must not be @c NULL.
  *
- * @see DCDB_QDMI_device_environmentsensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
  */
-void submit_query(DCDB_QDMI_Device_EnvironmentSensor_Query query) {
-  query->status = QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_RUNNING;
+void submit_query(DCDB_QDMI_Device_TelemetrySensor_Query query) {
+  query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_RUNNING;
   auto connection = query->session->getConnection();
-  query->results = query->environmentsensor->query(
+  query->results = query->telemetrysensor->query(
       connection, query->start_time, query->end_time);
 
-  if (query->status != QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_CANCELED)
-    query->status = QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE;
+  if (query->status != QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED)
+    query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE;
 }
 
 /**
- * @brief Submit an environment sensor query to the device.
- * @details This functions asynchronously submit the environment sensor query
+ * @brief Submit an telemetry sensor query to the device.
+ * @details This functions asynchronously submit the telemetry sensor query
  using
  * the @ref submit_query function. The @ref
- * DCDB_QDMI_device_environmentsensor_query_check_status function can be used to
+ * DCDB_QDMI_device_telemetrysensor_query_check_status function can be used to
  check
- * the status of the `environment sensor query`.
- * @param[in] query The environment sensor query to submit. Must not be @c NULL.
+ * the status of the `telemetry sensor query`.
+ * @param[in] query The telemetry sensor query to submit. Must not be @c NULL.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  if the job was successfully submitted.
@@ -937,38 +936,38 @@ void submit_query(DCDB_QDMI_Device_EnvironmentSensor_Query query) {
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
  if the job submission failed.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_free
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_free
  *
  */
-int DCDB_QDMI_device_environmentsensor_query_submit(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query) {
+int DCDB_QDMI_device_telemetrysensor_query_submit(
+    DCDB_QDMI_Device_TelemetrySensor_Query query) {
 
-  if (query == nullptr || query->environmentsensor == nullptr ||
+  if (query == nullptr || query->telemetrysensor == nullptr ||
       (query->start_time > query->end_time)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   /* TODO status check*/
-  query->status = QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_SUBMITTED;
+  query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_SUBMITTED;
   query->async_query = std::async(submit_query, query);
 
   return QDMI_SUCCESS;
 }
 /**
- * @brief Retrieve the results of an environment sensor query.
- * @param[in] query The environment sensor query to retrieve the results from.
+ * @brief Retrieve the results of an telemetry sensor query.
+ * @param[in] query The telemetry sensor query to retrieve the results from.
  Must not
  * be @c NULL.
  * @param[in] result The result to retrieve. Must be one of the values specified
- * for @ref QDMI_EnvironmentSensor_Query_Result.
+ * for @ref QDMI_TelemetrySensor_Query_Result.
  * @param[in] size The size of the buffer pointed to by @p data in bytes. Must
  * be greater or equal to the size of the return type specified for the @ref
- * QDMI_EnvironmentSensor_Query_Result @p result, except when @p data is @c
+ * QDMI_TelemetrySensor_Query_Result @p result, except when @p data is @c
  NULL, in
  * which case it is ignored.
  * @param[out] data A pointer to the memory location where the results will be
@@ -992,32 +991,32 @@ int DCDB_QDMI_device_environmentsensor_query_submit(
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
  * if @p result is not supported.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_free
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_free
  */
-int DCDB_QDMI_device_environmentsensor_query_get_results(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query,
-    QDMI_EnvironmentSensor_Query_Result result, size_t size, void *data,
+int DCDB_QDMI_device_telemetrysensor_query_get_results(
+    DCDB_QDMI_Device_TelemetrySensor_Query query,
+    QDMI_TelemetrySensor_Query_Result result, size_t size, void *data,
     size_t *size_ret) {
 
   if (query == nullptr || (data != nullptr && size == 0) ||
-      (result >= QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_MAX &&
-       result != QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_CUSTOM1 &&
-       result != QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_CUSTOM2 &&
-       result != QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_CUSTOM3 &&
-       result != QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_CUSTOM4 &&
-       result != QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_CUSTOM5) ||
-      query->status != QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE) {
+      (result >= QDMI_TELEMETRYSENSOR_QUERY_RESULT_MAX &&
+       result != QDMI_TELEMETRYSENSOR_QUERY_RESULT_CUSTOM1 &&
+       result != QDMI_TELEMETRYSENSOR_QUERY_RESULT_CUSTOM2 &&
+       result != QDMI_TELEMETRYSENSOR_QUERY_RESULT_CUSTOM3 &&
+       result != QDMI_TELEMETRYSENSOR_QUERY_RESULT_CUSTOM4 &&
+       result != QDMI_TELEMETRYSENSOR_QUERY_RESULT_CUSTOM5) ||
+      query->status != QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   size_t req_size = query->results.size();
   switch (result) {
-  case QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_TIMESTAMPS:
+  case QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS:
     req_size *= sizeof(uint64_t);
     if (data != nullptr) {
       if (size < req_size) {
@@ -1033,7 +1032,7 @@ int DCDB_QDMI_device_environmentsensor_query_get_results(
       *(size_ret) = req_size;
     }
     return QDMI_SUCCESS;
-  case QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_VALUES:
+  case QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES:
 
     req_size *= sizeof(float);
     if (data != nullptr) {
@@ -1057,39 +1056,39 @@ int DCDB_QDMI_device_environmentsensor_query_get_results(
 }
 
 /**
- * @brief Check the status of the environment sensor query.
+ * @brief Check the status of the telemetry sensor query.
  * @details This function is non-blocking and returns immediately with the
- * environment sensor query status. Since @ref
- * DCDB_QDMI_device_environmentsensor_query_submit submits the environment
+ * telemetry sensor query status. Since @ref
+ * DCDB_QDMI_device_telemetrysensor_query_submit submits the telemetry
  sensor query
- * asynchronously, The `QDMI_Client` must check the status of the environment
+ * asynchronously, The `QDMI_Client` must check the status of the telemetry
  sensor
  * query before calling the @ref
- DCDB_QDMI_device_environmentsensor_query_get_results.
- * @param[in] query The environment sensor query to check the status of. Must
+ DCDB_QDMI_device_telemetrysensor_query_get_results.
+ * @param[in] query The telemetry sensor query to check the status of. Must
  not be @c
  * NULL.
- * @param[out] status The status of the environment sensor query. Must not be @c
+ * @param[out] status The status of the telemetry sensor query. Must not be @c
  NULL.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- if the environment sensor query status was successfully
+ if the telemetry sensor query status was successfully
  * checked.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
  if @p query or @p status is @c NULL.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_free
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_free
  */
-int DCDB_QDMI_device_environmentsensor_query_check_status(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query,
-    QDMI_EnvironmentSensor_Query_Status *status) {
+int DCDB_QDMI_device_telemetrysensor_query_check_status(
+    DCDB_QDMI_Device_TelemetrySensor_Query query,
+    QDMI_TelemetrySensor_Query_Status *status) {
   if (query == nullptr || status == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
@@ -1099,30 +1098,30 @@ int DCDB_QDMI_device_environmentsensor_query_check_status(
 }
 
 /**
- * @brief Wait for an environment sensor query to finish.
+ * @brief Wait for an telemetry sensor query to finish.
  * @details This function blocks until the @ref submit_function function has
  * finished or has been canceled.
- * @param[in] query The environment sensor query to wait for. Must not be @c
+ * @param[in] query The telemetry sensor query to wait for. Must not be @c
  NULL.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- if the environment sensor query is finished or canceled.
+ if the telemetry sensor query is finished or canceled.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
  if @p query is @c NULL.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_free
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_free
  *
  */
 
-int DCDB_QDMI_device_environmentsensor_query_wait(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query, size_t timeout) {
+int DCDB_QDMI_device_telemetrysensor_query_wait(
+    DCDB_QDMI_Device_TelemetrySensor_Query query, size_t timeout) {
 
   if (query == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -1130,58 +1129,58 @@ int DCDB_QDMI_device_environmentsensor_query_wait(
 
   query->async_query.wait();
 
-  query->status = QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE;
+  query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE;
   return QDMI_SUCCESS;
 }
 
 /**
- * @brief Cancel an already submitted environment sensor query.
- * @details This changes the status of the environment sensor query to
- * QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_CANCELED.
- * @param[in] query The environment sensor query to cancel. Must not be @c NULL.
- * @return @ref QDMI_SUCCESS if the environment sensor query was successfully
+ * @brief Cancel an already submitted telemetry sensor query.
+ * @details This changes the status of the telemetry sensor query to
+ * QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED.
+ * @param[in] query The telemetry sensor query to cancel. Must not be @c NULL.
+ * @return @ref QDMI_SUCCESS if the telemetry sensor query was successfully
  * canceled.
  * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p query is @c NULL or the job
- * already has the status @ref QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE.
+ * already has the status @ref QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_Device_EnvironmentSensor_Query_free
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_Device_TelemetrySensor_Query_free
  */
-int DCDB_QDMI_device_environmentsensor_query_cancel(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query) {
+int DCDB_QDMI_device_telemetrysensor_query_cancel(
+    DCDB_QDMI_Device_TelemetrySensor_Query query) {
 
   if (query == nullptr ||
-      query->status == QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE) {
+      query->status == QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  query->status = QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_CANCELED;
+  query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED;
 
   return QDMI_SUCCESS;
 }
 
 /**
- * @brief Free an environment sensor query.
- * @details Free the resources associated with a environment sensor query. Using
- * a environment sensor query handle after it has been freed is undefined
+ * @brief Free an telemetry sensor query.
+ * @details Free the resources associated with a telemetry sensor query. Using
+ * a telemetry sensor query handle after it has been freed is undefined
  * behavior.
- * @param[in] query The environment sensor query to free.
+ * @param[in] query The telemetry sensor query to free.
  *
- * @see DCDB_QDMI_device_session_create_environment_query
- * @see DCDB_QDMI_device_environmentsensor_query_set_parameter
- * @see DCDB_QDMI_device_environmentsensor_query_submit
- * @see DCDB_QDMI_device_environmentsensor_query_check_status
- * @see DCDB_QDMI_device_environmentsensor_query_get_results
- * @see DCDB_QDMI_device_environmentsensor_query_wait
- * @see DCDB_QDMI_device_environmentsensor_query_cancel
+ * @see DCDB_QDMI_device_session_create_telemetry_query
+ * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
+ * @see DCDB_QDMI_device_telemetrysensor_query_submit
+ * @see DCDB_QDMI_device_telemetrysensor_query_check_status
+ * @see DCDB_QDMI_device_telemetrysensor_query_get_results
+ * @see DCDB_QDMI_device_telemetrysensor_query_wait
+ * @see DCDB_QDMI_device_telemetrysensor_query_cancel
  */
-void DCDB_QDMI_device_environmentsensor_query_free(
-    DCDB_QDMI_Device_EnvironmentSensor_Query query) {
+void DCDB_QDMI_device_telemetrysensor_query_free(
+    DCDB_QDMI_Device_TelemetrySensor_Query query) {
   delete query;
 }
 /**

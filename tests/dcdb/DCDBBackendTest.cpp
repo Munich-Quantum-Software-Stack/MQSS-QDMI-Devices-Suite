@@ -62,8 +62,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #define EXIT_ON_FAIL(func, msg)                                                \
   {                                                                            \
     err = func;                                                                \
-    if (err != QDMI_SUCCESS) {                                                 \
-      std::cout << msg << std::endl;                                           \
+    if (err != QDMI_SUCCESS) {                                         \
       exit(err);                                                               \
     }                                                                          \
   }
@@ -299,115 +298,115 @@ TEST_F(QDMIImplementationTest, QueryDeviceStatusImplemented) {
   ASSERT_EQ(device_status, QDMI_DEVICE_STATUS_IDLE);
 }
 
-TEST_F(QDMIImplementationTest, QueryEnvironmentPropertySupported) {
+TEST_F(QDMIImplementationTest, QueryTelemetryPropertySupported) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
   for (auto env : envs) {
     size_t id_size;
     ASSERT_EQ(
-        DCDB_QDMI_device_session_query_environmentsensor_property(
-            session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
+        DCDB_QDMI_device_session_query_telemetrysensor_property(
+            session, env, QDMI_TELEMETRYSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
         QDMI_SUCCESS);
 
     std::string id(id_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
-                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, id_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_telemetrysensor_property(
+                  session, env, QDMI_TELEMETRYSENSOR_PROPERTY_ID, id_size,
                   static_cast<void *>(id.data()), nullptr),
               QDMI_SUCCESS);
   }
 }
 
-TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesID) {
+TEST_F(QDMIImplementationTest, QueryTelemetryQueryPropertiesID) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
   for (auto env : envs) {
     size_t id_size;
     ASSERT_EQ(
-        DCDB_QDMI_device_session_query_environmentsensor_property(
-            session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
+        DCDB_QDMI_device_session_query_telemetrysensor_property(
+            session, env, QDMI_TELEMETRYSENSOR_PROPERTY_ID, 0, nullptr, &id_size),
         QDMI_SUCCESS);
 
     std::string id(id_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
-                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_ID, id_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_telemetrysensor_property(
+                  session, env, QDMI_TELEMETRYSENSOR_PROPERTY_ID, id_size,
                   static_cast<void *>(id.data()), nullptr),
               QDMI_SUCCESS);
   }
 }
 
-TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesUnit) {
+TEST_F(QDMIImplementationTest, QueryTelemetryQueryPropertiesUnit) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
   for (auto env : envs) {
     size_t unit_size;
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
-                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_UNIT, 0, nullptr,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_telemetrysensor_property(
+                  session, env, QDMI_TELEMETRYSENSOR_PROPERTY_UNIT, 0, nullptr,
                   &unit_size),
               QDMI_SUCCESS);
 
     std::string unit(unit_size - 1, '\0');
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
-                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_UNIT, unit_size,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_telemetrysensor_property(
+                  session, env, QDMI_TELEMETRYSENSOR_PROPERTY_UNIT, unit_size,
                   static_cast<void *>(unit.data()), nullptr),
               QDMI_SUCCESS);
   }
 }
 
-TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesSamplingRate) {
+TEST_F(QDMIImplementationTest, QueryTelemetryQueryPropertiesSamplingRate) {
 
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
   for (auto env : envs) {
     size_t sampling_rate;
-    ASSERT_EQ(DCDB_QDMI_device_session_query_environmentsensor_property(
-                  session, env, QDMI_ENVIRONMENTSENSOR_PROPERTY_SAMPLINGRATE,
+    ASSERT_EQ(DCDB_QDMI_device_session_query_telemetrysensor_property(
+                  session, env, QDMI_TELEMETRYSENSOR_PROPERTY_SAMPLINGRATE,
                   sizeof(int), (void *)&sampling_rate, nullptr),
               QDMI_SUCCESS);
   }
@@ -416,119 +415,119 @@ TEST_F(QDMIImplementationTest, QueryEnvironmentQueryPropertiesSamplingRate) {
 TEST_F(QDMIImplementationTest, QueyJobAndCancel) {
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
-  DCDB_QDMI_EnvironmentSensor env = envs.at(0);
+  DCDB_QDMI_TelemetrySensor env = envs.at(0);
 
-  DCDB_QDMI_Device_EnvironmentSensor_Query query;
-  DCDB_QDMI_device_session_create_environmentsensor_query(session, &query);
+  DCDB_QDMI_Device_TelemetrySensor_Query query;
+  DCDB_QDMI_device_session_create_telemetrysensor_query(session, &query);
 
   uint64_t start_ts = 1745644603;
   uint64_t end_ts = 1746817403;
 
-  QDMI_EnvironmentSensor_Query_Status status;
+  QDMI_TelemetrySensor_Query_Status status;
   size_t result_size;
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_STARTTIME,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_STARTTIME,
                 sizeof(uint64_t), &start_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENDTIME,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_ENDTIME,
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENVIRONMENTSENSOR,
-                sizeof(DCDB_QDMI_EnvironmentSensor), &env),
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_TELEMETRYSENSOR,
+                sizeof(DCDB_QDMI_TelemetrySensor), &env),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_submit(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_submit(query), QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_cancel(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_cancel(query), QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environmentsensor_query_check_status(query, &status);
+  DCDB_QDMI_device_telemetrysensor_query_check_status(query, &status);
 
-  ASSERT_EQ(status, QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_CANCELED);
+  ASSERT_EQ(status, QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED);
 
-  DCDB_QDMI_device_environmentsensor_query_free(query);
+  DCDB_QDMI_device_telemetrysensor_query_free(query);
 }
 
 TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
   size_t size = 0;
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, 0, nullptr,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr,
                 &size),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
-  std::vector<DCDB_QDMI_EnvironmentSensor> envs(size / sizeof(DCDB_QDMI_EnvironmentSensor));
+      << "Devices must provide a list of telemetry variables";
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(size / sizeof(DCDB_QDMI_TelemetrySensor));
   ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
-                session, QDMI_DEVICE_PROPERTY_ENVIRONMENTSENSORS, size,
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
                 static_cast<void *>(envs.data()), nullptr),
             QDMI_SUCCESS)
-      << "Devices must provide a list of environment variables";
+      << "Devices must provide a list of telemetry variables";
 
-  DCDB_QDMI_EnvironmentSensor env = envs.at(0);
+  DCDB_QDMI_TelemetrySensor env = envs.at(0);
 
-  DCDB_QDMI_Device_EnvironmentSensor_Query query;
-  DCDB_QDMI_device_session_create_environmentsensor_query(session, &query);
+  DCDB_QDMI_Device_TelemetrySensor_Query query;
+  DCDB_QDMI_device_session_create_telemetrysensor_query(session, &query);
 
   uint64_t start_ts = 1745644603;
   uint64_t end_ts = 1745817403;
 
-  QDMI_EnvironmentSensor_Query_Status status;
+  QDMI_TelemetrySensor_Query_Status status;
   
   size_t result_size;
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_STARTTIME,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_STARTTIME,
                 sizeof(uint64_t), &start_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENDTIME,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_ENDTIME,
                 sizeof(uint64_t), &end_ts),
             QDMI_SUCCESS);
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_set_parameter(
-                query, QDMI_DEVICE_ENVIRONMENTSENSOR_QUERY_PARAMETER_ENVIRONMENTSENSOR,
-                sizeof(DCDB_QDMI_EnvironmentSensor), &env),
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_TELEMETRYSENSOR,
+                sizeof(DCDB_QDMI_TelemetrySensor), &env),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_submit(query), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_submit(query), QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_wait(query, 0), QDMI_SUCCESS);
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_wait(query, 0), QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environmentsensor_query_check_status(query, &status);
-  ASSERT_EQ(status, QDMI_ENVIRONMENTSENSOR_QUERY_STATUS_DONE);
+  DCDB_QDMI_device_telemetrysensor_query_check_status(query, &status);
+  ASSERT_EQ(status, QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
-                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_TIMESTAMPS, 0, nullptr,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS, 0, nullptr,
                 &result_size),
             QDMI_SUCCESS);
 
   std::vector<uint64_t> timestamps(result_size / sizeof(uint64_t));
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
-                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_TIMESTAMPS, result_size,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS, result_size,
                 static_cast<void *>(timestamps.data()), nullptr),
             QDMI_SUCCESS);
 
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
-                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_VALUES, 0, nullptr,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES, 0, nullptr,
                 &result_size),
             QDMI_SUCCESS);
 
   std::vector<int64_t> values(result_size / sizeof(int64_t));
-  ASSERT_EQ(DCDB_QDMI_device_environmentsensor_query_get_results(
-                query, QDMI_ENVIRONMENTSENSOR_QUERY_RESULT_VALUES, result_size,
+  ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES, result_size,
                 static_cast<void *>(values.data()), nullptr),
             QDMI_SUCCESS);
 
-  DCDB_QDMI_device_environmentsensor_query_free(query);
+  DCDB_QDMI_device_telemetrysensor_query_free(query);
 }

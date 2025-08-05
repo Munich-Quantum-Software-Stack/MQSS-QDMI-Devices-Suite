@@ -31,25 +31,25 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 /**
  * @brief The implementation of the encapsulated type
- * QDMI_EnvironmentSensor on the device-side.
+ * QDMI_TelemetrySensor on the device-side.
  * @details Implemented to hold all the required input to query a
- * `QDMI_EnvironmentSensor` using DCDB and its output. In this device, the
- * `QDMI_EnvironmentSensor`s corresponses to the sensors at the HPC Environment
+ * `QDMI_TelemetrySensor` using DCDB and its output. In this device, the
+ * `QDMI_TelemetrySensor`s corresponses to the sensors at the HPC Telemetry
  * located at the LRZ.
- * @note QDMI_Device_Environment_Query
- * is encapsulated in the QDMI Device Environment Query interface to allow the
+ * @note QDMI_Device_Telemetry_Query
+ * is encapsulated in the QDMI Device Telemetry Query interface to allow the
  * device implement the type as needed.
  */
-typedef struct DCDB_QDMI_EnvironmentSensor_impl_d {
-  /// The unique ID to identify the environment.
+typedef struct DCDB_QDMI_TelemetrySensor_impl_d {
+  /// The unique ID to identify the telemetry.
   const std::string id;
-  /// The unit of an environment variable, e.g., Kelvin for temperature.
+  /// The unit of an telemetry variable, e.g., Kelvin for temperature.
   const std::string unit;
-  /// `float` The samples per second of an environment.
+  /// `float` The samples per second of an telemetry.
   const std::chrono::duration<float> sampling_rate{};
   /**
-   @brief This function is used to query the environment data from the DCDB.
-   @details This function queries environmental data in a given time interval
+   @brief This function is used to query the telemetry data from the DCDB.
+   @details This function queries telemetryal data in a given time interval
    using DCDB's sensor interface.
    @param[in] connection The connection object that used to connect DCDB host.
    @param[in] start The start time as an UNIX timestamp of the time interval
@@ -58,234 +58,234 @@ typedef struct DCDB_QDMI_EnvironmentSensor_impl_d {
   */
   std::list<DCDB::SensorDataStoreReading> query(DCDB::Connection *connection,
                                                 uint64_t start, uint64_t end);
-} DCDB_QDMI_EnvironmentSensor_impl_t;
+} DCDB_QDMI_TelemetrySensor_impl_t;
 
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV0{"/qct/q-exa/bluefors/tmixing", "uK",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL0{"/qct/q-exa/bluefors/tmixing", "uK",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV1{"/qct/daqc/bluefors/tmixing", "uK",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL1{"/qct/daqc/bluefors/tmixing", "uK",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV2{"/qct/q-exa/bluefors/t4k", "K",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL2{"/qct/q-exa/bluefors/t4k", "K",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV3{"/qct/daqc/bluefors/t4k", "K",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL3{"/qct/daqc/bluefors/t4k", "K",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV4{"/qct/daqc/bluefors/p1", "Pa",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL4{"/qct/daqc/bluefors/p1", "Pa",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV5{"/qct/q-exa/bluefors/p1", "Pa",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL5{"/qct/q-exa/bluefors/p1", "Pa",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV6{"/qic/warmlab/liquidN2", "L",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL6{"/qic/warmlab/liquidN2", "L",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV7{"/qic/NSR1/liquidN2", "L",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL7{"/qic/NSR1/liquidN2", "L",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV8{"/qic/warmlab/light", "lux",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL8{"/qic/warmlab/light", "lux",
                                         std::chrono::duration<int>{0}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV9{"/qic/warmlab/loudness", "dB",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL9{"/qic/warmlab/loudness", "dB",
                                         std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV10{"/qic/warmlab/movement", "movement",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL10{"/qic/warmlab/movement", "movement",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV11{"/qic/warmlab/door/east/lock", "lock",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL11{"/qic/warmlab/door/east/lock", "lock",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV12{"/qic/warmlab/door/west/lock", "lock",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL12{"/qic/warmlab/door/west/lock", "lock",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV13{"/qic/warmlab/door/west/ajar", "lock",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL13{"/qic/warmlab/door/west/ajar", "lock",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV14{"/qic/warmlab/door/east/ajar", "lock",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL14{"/qic/warmlab/door/east/ajar", "lock",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV15{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL15{
     "/qct/daqc/daqc1pdu1/energy1", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV16{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL16{
     "/qct/daqc/daqc1pdu1/energy2", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV17{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL17{
     "/qct/daqc/daqc1pdu1/energy3", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV18{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL18{
     "/qct/daqc/daqc1pdu1/energy4", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV19{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL19{
     "/qct/daqc/daqc1pdu1/energy5", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV20{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL20{
     "/qct/daqc/daqc1pdu1/energy6", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV21{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL21{
     "/qct/daqc/daqc1pdu1/energy7", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV22{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL22{
     "/qct/daqc/daqc1pdu1/energy8", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV23{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL23{
     "/qct/daqc/daqc1pdu1/energy9", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV24{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL24{
     "/qct/daqc/daqc1pdu1/energy10", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV25{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL25{
     "/qct/daqc/daqc1pdu1/energy11", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV26{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL26{
     "/qct/daqc/daqc1pdu1/energy12", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV27{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL27{
     "/qct/daqc/daqc1pdu1/energy13", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV28{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL28{
     "/qct/daqc/daqc1pdu1/energy14", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV29{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL29{
     "/qct/daqc/daqc1pdu1/energy15", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV30{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL30{
     "/qct/daqc/daqc1pdu1/energy16", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV31{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL31{
     "/qct/daqc/daqc1pdu1/energy17", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV32{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL32{
     "/qct/daqc/daqc1pdu1/energy18", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV33{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL33{
     "/qct/daqc/daqc1pdu1/energy19", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV34{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL34{
     "/qct/daqc/daqc1pdu1/energy20", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV35{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL35{
     "/qct/daqc/daqc1pdu1/energy21", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV36{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL36{
     "/qct/daqc/daqc1pdu1/energy22", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV37{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL37{
     "/qct/daqc/daqc1pdu1/energy23", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV38{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL38{
     "/qct/daqc/daqc1pdu1/energy24", "energy", std::chrono::duration<int>{60}};
 
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV39{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL39{
     "/qic/warmlab/temperature", "temperature", std::chrono::duration<int>{60}};
 
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV40{"/qic/warmlab/pressure", "pressure",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL40{"/qic/warmlab/pressure", "pressure",
                                          std::chrono::duration<int>{60}};
 
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV41{"/qic/warmlab/DAQC/heat/temp-fwd",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL41{"/qic/warmlab/DAQC/heat/temp-fwd",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV42{"/qic/warmlab/DAQC/heat/temp-ret",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL42{"/qic/warmlab/DAQC/heat/temp-ret",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV43{"/qic/warmlab/UKG1/heat/temp-fwd",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL43{"/qic/warmlab/UKG1/heat/temp-fwd",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV44{"/qic/warmlab/UKG2/heat/temp-ret",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL44{"/qic/warmlab/UKG2/heat/temp-ret",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV45{"/qic/warmlab/UKG1/heat/temp-fwd",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL45{"/qic/warmlab/UKG1/heat/temp-fwd",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV46{"/qic/warmlab/UKG2/heat/temp-ret",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL46{"/qic/warmlab/UKG2/heat/temp-ret",
                                          "temperature",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV47{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL47{
     "/qic/warmlab/DAQC/heat/energy", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV48{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL48{
     "/qic/warmlab/UKG1/heat/energy", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV49{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL49{
     "/qic/warmlab/UKG2/heat/energy", "energy", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV50{"/qic/warmlab/humidity", "humidity",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL50{"/qic/warmlab/humidity", "humidity",
                                          std::chrono::duration<int>{60}};
 
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV51{"/qct/daqc/daqc1pdu1/power1", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL51{"/qct/daqc/daqc1pdu1/power1", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV52{"/qct/daqc/daqc1pdu1/power2", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL52{"/qct/daqc/daqc1pdu1/power2", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV53{"/qct/daqc/daqc1pdu1/power3", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL53{"/qct/daqc/daqc1pdu1/power3", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV54{"/qct/daqc/daqc1pdu1/power4", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL54{"/qct/daqc/daqc1pdu1/power4", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV55{"/qct/daqc/daqc1pdu1/power5", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL55{"/qct/daqc/daqc1pdu1/power5", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV56{"/qct/daqc/daqc1pdu1/power6", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL56{"/qct/daqc/daqc1pdu1/power6", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV57{"/qct/daqc/daqc1pdu1/power7", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL57{"/qct/daqc/daqc1pdu1/power7", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV58{"/qct/daqc/daqc1pdu1/power8", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL58{"/qct/daqc/daqc1pdu1/power8", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV59{"/qct/daqc/daqc1pdu1/power9", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL59{"/qct/daqc/daqc1pdu1/power9", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV60{"/qct/daqc/daqc1pdu1/power10", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL60{"/qct/daqc/daqc1pdu1/power10", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV61{"/qct/daqc/daqc1pdu1/power11", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL61{"/qct/daqc/daqc1pdu1/power11", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV62{"/qct/daqc/daqc1pdu1/power12", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL62{"/qct/daqc/daqc1pdu1/power12", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV63{"/qct/daqc/daqc1pdu1/power13", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL63{"/qct/daqc/daqc1pdu1/power13", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV64{"/qct/daqc/daqc1pdu1/power14", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL64{"/qct/daqc/daqc1pdu1/power14", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV65{"/qct/daqc/daqc1pdu1/power15", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL65{"/qct/daqc/daqc1pdu1/power15", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV66{"/qct/daqc/daqc1pdu1/power16", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL66{"/qct/daqc/daqc1pdu1/power16", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV67{"/qct/daqc/daqc1pdu1/power17", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL67{"/qct/daqc/daqc1pdu1/power17", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV68{"/qct/daqc/daqc1pdu1/power18", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL68{"/qct/daqc/daqc1pdu1/power18", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV69{"/qct/daqc/daqc1pdu1/power19", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL69{"/qct/daqc/daqc1pdu1/power19", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV70{"/qct/daqc/daqc1pdu1/power20", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL70{"/qct/daqc/daqc1pdu1/power20", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV71{"/qct/daqc/daqc1pdu1/power21", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL71{"/qct/daqc/daqc1pdu1/power21", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV72{"/qct/daqc/daqc1pdu1/power22", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL72{"/qct/daqc/daqc1pdu1/power22", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV73{"/qct/daqc/daqc1pdu1/power23", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL73{"/qct/daqc/daqc1pdu1/power23", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV74{"/qct/daqc/daqc1pdu1/power24", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL74{"/qct/daqc/daqc1pdu1/power24", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV75{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL75{
     "/qct/daqc/daqc1pdu1/power_total", "power", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV76{"/qct/daqc/daqc1pdu1/energy_total",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL76{"/qct/daqc/daqc1pdu1/energy_total",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV77{"/qct/daqc/daqc1ups1/BatTimeRemaining",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL77{"/qct/daqc/daqc1ups1/BatTimeRemaining",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV78{"/qct/daqc/daqc1ups1/BatteryAbmStatus",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL78{"/qct/daqc/daqc1ups1/BatteryAbmStatus",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV79{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL79{
     "/qct/daqc/daqc1ups1/BatteryAged", "power", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV80{"/qct/daqc/daqc1ups1/BatteryFailure",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL80{"/qct/daqc/daqc1ups1/BatteryFailure",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV81{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL81{
     "/qct/daqc/daqc1ups1/BatteryLowCapacity", "power",
     std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV82{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL82{
     "/qct/daqc/daqc1ups1/BatteryNotPresent", "power",
     std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV83{"/qct/daqc/daqc1ups1/OutputStatus",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL83{"/qct/daqc/daqc1ups1/OutputStatus",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV84{"/qct/daqc/daqc1ups1/apparent_power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL84{"/qct/daqc/daqc1ups1/apparent_power",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV85{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL85{
     "/qct/daqc/daqc1ups1/capacity", "power", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV86{"/qct/daqc/daqc1ups1/load", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL86{"/qct/daqc/daqc1ups1/load", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV87{"/qct/daqc/daqc1ups1/power", "power",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL87{"/qct/daqc/daqc1ups1/power", "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV88{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL88{
     "/qct/daqc/qan01/stats/msgsSent", "power", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV89{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL89{
     "/qct/daqc/qan01/stats/readings", "power", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV90{"/qct/daqc/qan01/stats/readingsSent",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL90{"/qct/daqc/qan01/stats/readingsSent",
                                          "power",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV91{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL91{
     "/qic/warmlab/DAQC/heat/volume", "volume", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV92{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL92{
     "/qic/warmlab/UKG1/heat/volume", "volume", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV93{
+const DCDB_QDMI_TelemetrySensor_impl_t TEL93{
     "/qic/warmlab/UKG2/heat/volume", "volume", std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV94{"/qic/warmlab/magnetometer/X",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL94{"/qic/warmlab/magnetometer/X",
                                          "magnetometer",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV95{"/qic/warmlab/magnetometer/Y",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL95{"/qic/warmlab/magnetometer/Y",
                                          "magnetometer",
                                          std::chrono::duration<int>{60}};
-const DCDB_QDMI_EnvironmentSensor_impl_t ENV96{"/qic/warmlab/magnetometer/Z",
+const DCDB_QDMI_TelemetrySensor_impl_t TEL96{"/qic/warmlab/magnetometer/Z",
                                          "magnetometer",
                                          std::chrono::duration<int>{60}};
-constexpr std::array<const DCDB_QDMI_EnvironmentSensor_impl_t *, 97>
-    DCDB_DEVICE_ENVIRONMENTSENSORS = {
-        &ENV0,  &ENV1,  &ENV2,  &ENV3,  &ENV4,  &ENV5,  &ENV6,  &ENV7,  &ENV8,
-        &ENV9,  &ENV10, &ENV11, &ENV12, &ENV13, &ENV14, &ENV15, &ENV16, &ENV17,
-        &ENV18, &ENV19, &ENV20, &ENV21, &ENV22, &ENV23, &ENV24, &ENV25, &ENV26,
-        &ENV27, &ENV28, &ENV29, &ENV30, &ENV31, &ENV32, &ENV33, &ENV34, &ENV35,
-        &ENV36, &ENV37, &ENV38, &ENV39, &ENV40, &ENV41, &ENV42, &ENV43, &ENV44,
-        &ENV45, &ENV46, &ENV47, &ENV48, &ENV49, &ENV50, &ENV51, &ENV52, &ENV53,
-        &ENV54, &ENV55, &ENV56, &ENV57, &ENV58, &ENV59, &ENV60, &ENV61, &ENV62,
-        &ENV63, &ENV64, &ENV65, &ENV66, &ENV67, &ENV68, &ENV69, &ENV70, &ENV71,
-        &ENV72, &ENV73, &ENV74, &ENV75, &ENV76, &ENV77, &ENV78, &ENV79, &ENV80,
-        &ENV81, &ENV82, &ENV83, &ENV84, &ENV85, &ENV86, &ENV87, &ENV88, &ENV89,
-        &ENV90, &ENV91, &ENV92, &ENV93, &ENV94, &ENV95, &ENV96};
+constexpr std::array<const DCDB_QDMI_TelemetrySensor_impl_t *, 97>
+    DCDB_DEVICE_TELEMETRYSENSORS = {
+        &TEL0,  &TEL1,  &TEL2,  &TEL3,  &TEL4,  &TEL5,  &TEL6,  &TEL7,  &TEL8,
+        &TEL9,  &TEL10, &TEL11, &TEL12, &TEL13, &TEL14, &TEL15, &TEL16, &TEL17,
+        &TEL18, &TEL19, &TEL20, &TEL21, &TEL22, &TEL23, &TEL24, &TEL25, &TEL26,
+        &TEL27, &TEL28, &TEL29, &TEL30, &TEL31, &TEL32, &TEL33, &TEL34, &TEL35,
+        &TEL36, &TEL37, &TEL38, &TEL39, &TEL40, &TEL41, &TEL42, &TEL43, &TEL44,
+        &TEL45, &TEL46, &TEL47, &TEL48, &TEL49, &TEL50, &TEL51, &TEL52, &TEL53,
+        &TEL54, &TEL55, &TEL56, &TEL57, &TEL58, &TEL59, &TEL60, &TEL61, &TEL62,
+        &TEL63, &TEL64, &TEL65, &TEL66, &TEL67, &TEL68, &TEL69, &TEL70, &TEL71,
+        &TEL72, &TEL73, &TEL74, &TEL75, &TEL76, &TEL77, &TEL78, &TEL79, &TEL80,
+        &TEL81, &TEL82, &TEL83, &TEL84, &TEL85, &TEL86, &TEL87, &TEL88, &TEL89,
+        &TEL90, &TEL91, &TEL92, &TEL93, &TEL94, &TEL95, &TEL96};

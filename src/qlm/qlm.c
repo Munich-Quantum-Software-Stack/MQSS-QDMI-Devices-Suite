@@ -1130,8 +1130,3 @@ int QLM_QDMI_device_session_set_parameter(
 
   return QDMI_SUCCESS;
 }
-int QLM_QDMI_device_job_query_property(QLM_QDMI_Device_Job job,
-                                   QDMI_Device_Job_Property prop, size_t size,
-                                   void *value, size_t *size_ret){
-                                    return QDMI_ERROR_NOTIMPLEMENTED;
-                                   }

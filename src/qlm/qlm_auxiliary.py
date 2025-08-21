@@ -15,9 +15,13 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-"""! @brief QPU bağlantı ve iş gönderme yardımcı fonksiyonları."""
 
-def create_remote_qpu(host, noise_model):
+
+## @file qlm_auxiliary.py
+#  @brief The Custom Module for handling the connection and submitting jobs.
+
+
+def create_remote_qpu(host):
     """! Creates a remote QPU connection.
 
     @param host Hostname and port in the form "host:port".

@@ -12,6 +12,7 @@ ci:
   autofix_commit_msg: "🎨 pre-commit fixes"
 
 repos:
+  # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -28,12 +29,14 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
 
+  # Handling unwanted unicode characters
   - repo: https://github.com/sirosen/texthooks
-    rev: 0.6.8
+    rev: 0.7.1
     hooks:
       - id: fix-ligatures
       - id: fix-smartquotes
 
+  # Check for common mistakes
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
@@ -41,17 +44,21 @@ repos:
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
 
+  # Check for spelling
   - repo: https://github.com/crate-ci/typos
-    rev: typos-dict-v0.12.4
+    rev: v1.35.0
     hooks:
       - id: typos
+        exclude: '^|.*\.svg$'
 
+  # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v19.1.7
+    rev: v20.1.8
     hooks:
       - id: clang-format
-        "types_or": [c++, c, cuda]
+        types_or: [c++, c, cuda]
 
+  # CMake format the CMakeLists.txt files
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
@@ -60,17 +67,19 @@ repos:
         types: [file]
         files: (\.cmake|CMakeLists.txt)(.in)?$
 
+  # Format configuration files with prettier
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.4.2
+    rev: v3.6.2
     hooks:
       - id: prettier
-        "types_or": [yaml, markdown, html, css, scss, javascript, json]
+        types_or: [yaml, markdown, html, css, scss, javascript, json]
         args:
           - --print-width=100
           - --prose-wrap=always
           - --tab-width=2
         exclude: ^docs/header\.html$
 
+  # Catch common capitalization mistakes
   - repo: local
     hooks:
       - id: disallow-caps
@@ -79,8 +88,9 @@ repos:
         entry: PyBind|Numpy|Cmake|CCache|Github|PyTest|Mqt|Tum
         exclude: .pre-commit-config.yaml
 
+  # Check JSON schemata
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.31.1
+    rev: 0.33.2
     hooks:
       - id: check-dependabot
       - id: check-github-workflows

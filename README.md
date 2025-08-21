@@ -29,7 +29,7 @@ The devices are built using CMake as its build system.
 The following commands configure the project to build all devices.
 
 ```bash
-cmake -S . -B build -DBUILD_ALL_DEVICE=ON
+cmake -S . -B build
 ```
 
 After the build system is generated in the `build` directory, the devices can be built by calling.
@@ -41,10 +41,10 @@ cmake --build build
 After the build process is complete, the device libraries can be found in the
 `build\name-of-the-device` directory.
 
-In case of building spesifc device, please use the following commanded to configure the project:
+In case of disable a spesifc device, please use the following commanded to configure the project:
 
 ```bash
-cmake --build build -DBUILD_ALL_NAME_OF_THE_DEVICE=ON
+cmake --build build -DBUILD_THE_NAME_OF_THE_DEVICE=OFF
 ```
 
 The possible option for `BUILD_ALL_NAME_OF_THE_BACKEND` are as follows:
@@ -60,9 +60,9 @@ The other options are as follows:
 
 ## 📬 Contact
 
-The development of this project is led by
-[Ercüment Kaya (LRZ/TUM CAPS)](mailto:ercuement.kaya@lrz.de) and
-[Muhammad Nufail Farooqi (LRZ)](mailto:Muhammad.Farooqi@lrz.de).
+The development of this project is led by QCT Department of the LRZ, a part of the Munich Quantum
+Valley. You can also always reach us at
+[mqss@munich-quantum-valley.de](mailto:mqss@munich-quantum-valley.de).
 
 Please try to use the publicly accessible GitHub channels
 ([issues](https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/issues),

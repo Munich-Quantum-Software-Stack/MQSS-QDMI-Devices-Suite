@@ -22,15 +22,9 @@
 set(DOXYGEN_CONFIG_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 # Set the input directories for doxygen, i.e., all files that contain source
 # code with documentation.
-set(DOXYGEN_INPUT_DIRS ${PROJECT_SOURCE_DIR}/src/dcdb
-                       ${PROJECT_SOURCE_DIR}/src/qlm)
-# This variable is only needed to setup the dependency tracking of CMake
-# correctly and is not passed to Doxygen. Whenever such a file is modified,
-# CMake detects that change and will rerun the Doxygen command instead of using
-# the cached result when the target `qdmi_docs` is built.
-file(GLOB_RECURSE DOXYGEN_INPUT_FILES ${PROJECT_SOURCE_DIR}/src/dcdb/dcdb.cpp
-     ${PROJECT_SOURCE_DIR}/src/qlm/qlm.c
-     ${PROJECT_SOURCE_DIR}/src/qlm/qlm_auxiliary.py)
+set(DOXYGEN_INPUT_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/devices.md ${PROJECT_SOURCE_DIR}/src/dcdb
+    ${PROJECT_SOURCE_DIR}/src/qlm)
 # After the variable above is correctly initialized, we can add the additional
 # files that are not source code but still part of the documentation. IMPORTANT:
 # The order the files with the static content are added here influences their

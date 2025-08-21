@@ -25,7 +25,7 @@ option(BUILD_BACKEND_QLM "Build QLM Backend" ON)
 
 option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
 
-option(BUILD_DOCUMENTATION "Also build documentation" OFF)
+option(BUILD_DOCUMENTATION "Also build documentation" ON)
 
 option(BUILD_BACKEND_TESTS "Also build tests for the backends" ON)
 

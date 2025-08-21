@@ -24,7 +24,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 std::list<DCDB::SensorDataStoreReading>
 DCDB_QDMI_TelemetrySensor_impl_t::query(DCDB::Connection *connection,
-                                    uint64_t start, uint64_t end) {
+                                        uint64_t start, uint64_t end) {
 
   std::list<DCDB::SensorDataStoreReading> readings;
   DCDB::TimeStamp start_ts, end_ts;

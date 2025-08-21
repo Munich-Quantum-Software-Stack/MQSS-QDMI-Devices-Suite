@@ -67,19 +67,38 @@ private:
   /// Pointer to the underlying DCDB connection object
   DCDB::Connection *connection = nullptr;
 
-  /// Internal connection method using provided parameters
+  /**
+   * @brief Internal connection method using provided parameters
+   *
+   * @param[in] hostname The base url to be connected
+   * @param[in] port The port to be connected
+   * @param[in] username The username to be used for authentication
+   * @param[in] password The password to be used for authentication
+   * @return <a
+   * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+   * if the connection established successfully.
+   * @return <a
+   * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+   * if the connection is failed to established.
+   */
   int connect(std::string hostname, uint16_t port, std::string username,
               std::string password);
 
   /// Current status of the session
   DCDB_QDMI_DEVICE_SESSION_STATUS status;
 
-  /// Set a new hostname for the session
+  /**
+   * @brief Set a hostname for the session
+   * @param[in] new_hostname The hostname to be set
+   */
   void setHostname(const std::string &new_hostname) {
     hostname = new_hostname;
   };
 
-  /// Set a new port for the session
+  /**
+   * @brief Set a port for the session
+   * @param[in] new_port The port to be set
+   */
   void setPort(const uint16_t new_port) { port = new_port; }
 
 public:
@@ -94,20 +113,31 @@ public:
    */
   void setHostnameAndPort(const std::string &baseUrl);
 
-  /// Set the username for authentication
+  /**
+   * @brief Set the username for authentication
+   * @param[in] new_username The username to be set, i.e, admin
+   */
   void setUsername(const std::string &new_username) { username = new_username; }
 
-  /// Set the password for authentication
+  /**
+   * @brief Set the password for authentication
+   * @param[in] new_password The password to be set.
+   */
   void setPassword(const std::string &new_password) { password = new_password; }
 
-  /// Get the underlying connection object
+  /**
+   * @brief Get function for the underlying connection object
+   *
+   * @returns the underlying connection object
+   */
+
   DCDB::Connection *getConnection() { return connection; }
 
   /**
    * @brief Public function to connect to the DCDB server
    *
-   * @details This function calls the privated function 
-   * @ref DCDB_QDMI_Device_Session_impl_d::connectt with setted parameters using
+   * @details This function calls the privated function
+   * @ref DCDB_QDMI_Device_Session_impl_d::connect with set parameters using
    * the @ref DCDB_QDMI_device_session_set_parameter
    *
    * @return <a
@@ -124,11 +154,17 @@ public:
 
   /// Disconnect and clean up the session
   void disconnect() { connection->disconnect(); }
-
-  /// Update the session status
+  /**
+   * @brief Set the session's status
+   * @param[in] _status The status to be set.
+   */
   void setStatus(DCDB_QDMI_DEVICE_SESSION_STATUS _status) { status = _status; }
 
-  /// Retrieve the current session status
+  /**
+   * @brief Get function for the current session status
+   *
+   * @returns The current session status
+   */
   DCDB_QDMI_DEVICE_SESSION_STATUS getStatus() { return status; }
 
   /// Destructor

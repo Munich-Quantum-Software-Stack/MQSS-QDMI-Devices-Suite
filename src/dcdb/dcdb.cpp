@@ -32,7 +32,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  * Centre.
  * @details The Data Center Data Base (DCDB) is a modular, continuous, and
  * holistic monitoring framework targeted at HPC telemetries. This device
- * implementation allows a `QDMI Client` to query the telemetry data from LRZ's DCDB Instance.
+ * implementation allows a `QDMI Client` to query the telemetry data from LRZ's
+ * DCDB Instance.
  */
 
 /**
@@ -68,8 +69,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size)-1);                        \
-        ((char *)(value))[(size)-1] = '\0';                                    \
+        strncpy((char *)(value), prop_value, (size) - 1);                      \
+        ((char *)(value))[(size) - 1] = '\0';                                  \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -518,12 +519,6 @@ int DCDB_QDMI_device_job_wait(DCDB_QDMI_Device_Job job, size_t timeout) {
 /**
  * @brief Gets the results of the job.
  *
- * @param[in] job The job to retrieve the results from.
- * @param[in] result The result to retrieve.
- * @param[in] size The size of the buffer pointed to by @p data in bytes.
- * @param[out] data A pointer to the memory location where the results will be
- * stored.
- * @param[out] size_ret The actual size of the data being queried in bytes.
  * @details @see DCDB_QDMI_device_session_create_device_job
  * @param[in] job The job to retrieve the results from.
  * @param[in] result The result to retrieve.
@@ -598,26 +593,17 @@ int DCDB_QDMI_device_session_query_device_property(
                             DCDB_QDMI_read_device_status(), prop, size, value,
                             size_ret)
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS,
-                    DCDB_QDMI_TelemetrySensor, DCDB_DEVICE_TELEMETRYSENSORS, prop,
-                    size, value, size_ret)
+                    DCDB_QDMI_TelemetrySensor, DCDB_DEVICE_TELEMETRYSENSORS,
+                    prop, size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
 }
 /**
  * @brief Queries a site property.
  *
- * @param[in] session The session used for the query.
- * @param[in] site The site to query.
- * @param[in] prop The property to query.
- * @param[in] size The size of the memory pointed to by @p value in bytes.
- * @param[out] value A pointer to the memory location where the value of the
- * property will be stored.
- * @param[out] size_ret The actual size of the data being queried in bytes.
  * @details The DCDB device does not have any <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/types_8h.html#ab26279159380e378f258cb663968b9ec">QDMI_Site</a>
  * to query.
- * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
  * @param[in] session The session used for the query.
  * @param[in] site The site to query.
  * @param[in] prop The property to query.
@@ -626,7 +612,7 @@ int DCDB_QDMI_device_session_query_device_property(
  * property will be stored.
  * @param[out] size_ret The actual size of the data being queried in bytes.
  * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
  */
 int DCDB_QDMI_device_session_query_site_property(
     DCDB_QDMI_Device_Session session, DCDB_QDMI_Site site,
@@ -655,21 +641,6 @@ int DCDB_QDMI_device_session_query_site_property(
  * to query.
  * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
- *
- * @param[in] session The session used for the query.
- * @param[in] operation The operation to query.
- * @param[in] num_sites The number of sites that the operation is applied to.
- * @param[in] sites A pointer to a list of handles where the sites that the
- * operation is applied to are stored.
- * @param[in] num_params The number of parameters that the operation takes.
- * @param[in] params A pointer to a list of parameters the operation takes.
- * @param[in] prop The property to query.
- * @param[in] size The size of the memory pointed to by @p value in bytes.
- * @param[out] value A pointer to the memory location where the value of the
- * property will be stored.
- * @param[out] size_ret The actual size of the data being queried in bytes.
- * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
  */
 int DCDB_QDMI_device_session_query_operation_property(
     DCDB_QDMI_Device_Session session, DCDB_QDMI_Operation operation,
@@ -681,9 +652,9 @@ int DCDB_QDMI_device_session_query_operation_property(
 }
 
 /**
- * @brief Query an telemetry property.
+ * @brief Query an telemetry sensor property.
  * @param[in] session The session used for the query.
- * @param[in] telemetry The telemetry to query.
+ * @param[in] telemetrysensor The telemetry to query.
  * @param[in] prop The property to query.
  * @param[in] size The size of the memory pointed to by @p value in bytes.
  * @param[out] value A pointer to the memory location where the value of the
@@ -704,8 +675,10 @@ int DCDB_QDMI_device_session_query_operation_property(
  *  - @p prop is invalid, or
  *  - @p value is not @c NULL and @p size is less than the size of the data
  *  being queried.
- * @return <a href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a> 
- * if the property cannot be queried in the current state of the session, for example, because the session is not initialized.
+ * @return <a
+href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
+ * if the property cannot be queried in the current state of the session, for
+example, because the session is not initialized.
  * @return <a
 href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
  if an unexpected error occurred.
@@ -716,8 +689,7 @@ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a45
  */
 
 int DCDB_QDMI_device_session_query_telemetrysensor_property(
-    DCDB_QDMI_Device_Session session,
-    DCDB_QDMI_TelemetrySensor telemetrysensor,
+    DCDB_QDMI_Device_Session session, DCDB_QDMI_TelemetrySensor telemetrysensor,
     QDMI_TelemetrySensor_Property prop, size_t size, void *value,
     size_t *size_ret) {
 
@@ -733,14 +705,13 @@ int DCDB_QDMI_device_session_query_telemetrysensor_property(
   }
 
   ADD_STRING_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_ID,
-                      telemetrysensor->id.c_str(), prop, size, value,
-                      size_ret)
+                      telemetrysensor->id.c_str(), prop, size, value, size_ret)
   ADD_STRING_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_UNIT,
                       telemetrysensor->unit.c_str(), prop, size, value,
                       size_ret)
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_SAMPLINGRATE, int,
-                            telemetrysensor->sampling_rate.count(), prop,
-                            size, value, size_ret)
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_TELEMETRYSENSOR_PROPERTY_SAMPLINGRATE, float,
+                            telemetrysensor->sampling_rate.count(), prop, size,
+                            value, size_ret)
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
@@ -785,7 +756,7 @@ int DCDB_QDMI_device_session_query_telemetrysensor_property(
  * @see DCDB_QDMI_device_telemetrysensor_query_cancel
  * @see DCDB_QDMI_device_telemetrysensor_query_free
  */
-int DCDB_QDMI_device_session_create_telemetrysensor_query(
+int DCDB_QDMI_device_session_create_device_telemetrysensor_query(
     DCDB_QDMI_Device_Session session,
     DCDB_QDMI_Device_TelemetrySensor_Query *query) {
 
@@ -907,8 +878,8 @@ int DCDB_QDMI_device_telemetrysensor_query_set_parameter(
 void submit_query(DCDB_QDMI_Device_TelemetrySensor_Query query) {
   query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_RUNNING;
   auto connection = query->session->getConnection();
-  query->results = query->telemetrysensor->query(
-      connection, query->start_time, query->end_time);
+  query->results = query->telemetrysensor->query(connection, query->start_time,
+                                                 query->end_time);
 
   if (query->status != QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED)
     query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE;
@@ -952,7 +923,7 @@ int DCDB_QDMI_device_telemetrysensor_query_submit(
       (query->start_time > query->end_time)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  /* TODO status check*/
+
   query->status = QDMI_TELEMETRYSENSOR_QUERY_STATUS_SUBMITTED;
   query->async_query = std::async(submit_query, query);
 
@@ -964,9 +935,9 @@ int DCDB_QDMI_device_telemetrysensor_query_submit(
  Must not
  * be @c NULL.
  * @param[in] result The result to retrieve. Must be one of the values specified
- * for @ref QDMI_TelemetrySensor_Query_Result.
+ * for QDMI_TelemetrySensor_Query_Result.
  * @param[in] size The size of the buffer pointed to by @p data in bytes. Must
- * be greater or equal to the size of the return type specified for the @ref
+ * be greater or equal to the size of the return type specified for the
  * QDMI_TelemetrySensor_Query_Result @p result, except when @p data is @c
  NULL, in
  * which case it is ignored.
@@ -1099,10 +1070,11 @@ int DCDB_QDMI_device_telemetrysensor_query_check_status(
 
 /**
  * @brief Wait for an telemetry sensor query to finish.
- * @details This function blocks until the @ref submit_function function has
+ * @details This function blocks until the @ref submit_query function has
  * finished or has been canceled.
  * @param[in] query The telemetry sensor query to wait for. Must not be @c
- NULL.
+ * NULL.
+ * @param[in] timeout The timeout in seconds.
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  if the telemetry sensor query is finished or canceled.
@@ -1135,13 +1107,16 @@ int DCDB_QDMI_device_telemetrysensor_query_wait(
 
 /**
  * @brief Cancel an already submitted telemetry sensor query.
- * @details This changes the status of the telemetry sensor query to
+ * @details This function changes the status of the telemetry sensor query to
  * QDMI_TELEMETRYSENSOR_QUERY_STATUS_CANCELED.
  * @param[in] query The telemetry sensor query to cancel. Must not be @c NULL.
- * @return @ref QDMI_SUCCESS if the telemetry sensor query was successfully
- * canceled.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p query is @c NULL or the job
- * already has the status @ref QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the telemetry sensor query was successfully canceled.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p query is @c NULL or the job
+ * already has the status QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE.
  *
  * @see DCDB_QDMI_device_session_create_telemetry_query
  * @see DCDB_QDMI_device_telemetrysensor_query_set_parameter
@@ -1185,8 +1160,21 @@ void DCDB_QDMI_device_telemetrysensor_query_free(
 }
 /**
  * @brief Query a job property.
- *
  * @details @see DCDB_QDMI_device_session_create_device_job
+ * @param[in] job A handle to a job for which to query @p prop. Must not be @c
+ * NULL.
+ * @param[in] prop The property to query. Must be one of the values specified
+ * for <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a6e4d18c7fa5d383bbcc1498abe090d4f">QDMI_Device_Job_Property</a>
+ * @param[in] size The size of the memory pointed to by @p value in bytes. Must
+ * be greater or equal to the size of the return type specified for @p prop,
+ * except when @p value is @c NULL, in which case it is ignored.
+ * @param[out] value A pointer to the memory location where the value of the
+ * property will be stored. If this is @c NULL, it is ignored.
+ * @param[out] size_ret The actual size of the data being queried in bytes. If
+ * this is @c NULL, it is ignored.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
  */
 int DCDB_QDMI_device_job_query_property(DCDB_QDMI_Device_Job job,
                                         QDMI_Device_Job_Property prop,

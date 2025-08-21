@@ -153,6 +153,7 @@ typedef struct QLM_QDMI_Site_impl_d {
 
 } QLM_QDMI_Site_impl_t;
 
+/// The array of the sites
 const QLM_QDMI_Site DEVICE_SITES[] = {
     &(QLM_QDMI_Site_impl_t){0},  &(QLM_QDMI_Site_impl_t){1},
     &(QLM_QDMI_Site_impl_t){2},  &(QLM_QDMI_Site_impl_t){3},
@@ -210,8 +211,8 @@ const QLM_QDMI_Site DEVICE_SITES[] = {
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size)-1);                        \
-        ((char *)(value))[(size)-1] = '\0';                                    \
+        strncpy((char *)(value), prop_value, (size) - 1);                      \
+        ((char *)(value))[(size) - 1] = '\0';                                  \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -312,7 +313,6 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
  * returns the `ret_val`.
  *
  * @param value The value to be checked
- * @param ret_val The value to be returned if `value` is `NULL` or `Py_None`
  * @param from_python True means that the `QDMI_Driver` that initiate the device
  * is written in Python. Therefore, we don't need to release the GIL.
  * @return if the `value`is `NULL` or `Py_None`, it returns the `ret_val`
@@ -332,10 +332,8 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
 
 /** @brief Checks whether the `value` is `QDMI_SUCCESS`.
  *
- * If the `value`is not `QDMI_SUCCESS`, the value itself returns.
- *
  * @param value The value to be checked
- * @return `value` if is is not `QDMI_SUCCESS`
+ * @return `value` if it is not `QDMI_SUCCESS`
  */
 #define CHECK_QDMI_ERROR(value)                                                \
   {                                                                            \
@@ -344,9 +342,12 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
     }                                                                          \
   }
 /**
+ * @brief Writes and casts results to the `data_ptr`
  *
- * TODO
- *
+ * @param type The type to results will be cast.
+ * @param multiplier The value that results will be multiplied by
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  */
 #define GET_VALUE_DATA(type, multiplier)                                       \
   {                                                                            \
@@ -428,6 +429,7 @@ static PyObject **get_remote_qpu(void) {
  * @details The auxiliary Python Module is frequintly used thoughtout the
  * backend after it is imported while initialting the session.
  *
+ * @return The `custom python module` pointer if it is created. Otherwise, NULL;
  * @see create_remote_qpu
  * @see submit_job
  * @see initialize_python
@@ -440,9 +442,20 @@ static PyObject **get_custom_python_module(void) {
 
 /**
  * @brief Queries a operation property.
- *
- * @details Since it is a emulator, there is no native gate set. Therefore this
- * function always returns <a
+ * @details Since it is a emulator, there is no native gate set.
+ * @param[in] session The session used for the query.
+ * @param[in] operation The operation to query.
+ * @param[in] num_sites The number of sites that the operation is applied to.
+ * @param[in] sites A pointer to a list of handles where the sites that the
+ * operation is applied to are stored.
+ * @param[in] num_params The number of parameters that the operation takes.
+ * @param[in] params A pointer to a list of parameters the operation takes.
+ * @param[in] prop The property to query.
+ * @param[in] size The size of the memory pointed to by @p value in bytes.
+ * @param[out] value A pointer to the memory location where the value of the
+ * property will be stored.
+ * @param[out] size_ret The actual size of the data being queried in bytes.
+ * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
  */
 int QLM_QDMI_device_session_query_operation_property(
@@ -450,7 +463,6 @@ int QLM_QDMI_device_session_query_operation_property(
     const size_t num_sites, const QLM_QDMI_Site *sites, const size_t num_params,
     const double *params, const QDMI_Operation_Property prop, const size_t size,
     void *value, size_t *size_ret) {
-  // Since it is a emulator, there is no native gate set.
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
@@ -582,8 +594,12 @@ int QLM_QDMI_device_session_query_site_property(QLM_QDMI_Device_Session session,
  * @param[out] job A pointer to a handle that will store the created job. The
  * job must be freed by calling @ref QLM_QDMI_device_job_free when it is no
  * longer used.
- * @return @ref QDMI_SUCCESS if the job was successfully created.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p session or @p job are @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job was successfully created.
+ * @return @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p session or @p job are @c NULL.
  *
  * @see QLM_QDMI_device_job_submit
  * @see QLM_QDMI_device_job_set_parameter
@@ -643,13 +659,15 @@ if the device supports the specified <a
  *  - @p job is @c NULL,
  *  - @p param is invalid, or
  *  - @p value is not @c NULL and @p size is zero or not the expected size for
- *    the parameter (if specified by the @ref QDMI_Device_Job_Parameter
- *    documentation).
+ *    the parameter (if specified by the <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a40dd25c531ebf99fb4b46469083b609ec">QDMI_Device_Job_Parameter</a>
+ * documentation).
+
  * @return <a
-* href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a> if the parameter cannot be set in the
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a> if the parameter cannot be set in the
  * current state of the job, for example, because the job is already submitted.
  *
-* @see QLM_QDMI_device_job_submit
+ * @see QLM_QDMI_device_job_submit
  * @see QLM_QDMI_device_job_set_parameter
  * @see QLM_QDMI_device_job_cancel
  * @see QLM_QDMI_device_job_check
@@ -701,13 +719,18 @@ int QLM_QDMI_device_job_set_parameter(QLM_QDMI_Device_Job job,
  * @param[in] job A handle to a job to be submitted
  * @details To submit a job this device, we need to use Qaptiva's Python Package
  * named myQLM. Therefore, this function calls the `submit_job` from the
- * `qlm_auxiliary` to submit the given @ref job.
- *
+ * `qlm_auxiliary` to submit the given job.
  *
  * @see QLM_QDMI_device_job_submit
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job submitted successfully
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if an error occur
  */
 
-int submit_job(QLM_QDMI_Device_Job pJob) {
+int submit_job(QLM_QDMI_Device_Job job) {
   PyGILState_STATE gstate;
 
   if (!*isFromPython())
@@ -722,16 +745,16 @@ int submit_job(QLM_QDMI_Device_Job pJob) {
   PyObject **remote_qpu = get_remote_qpu();
   CHECK_PYTHON_ERROR(*remote_qpu, *isFromPython())
 
-  PyObject *qasm_string = PyUnicode_FromString(pJob->program);
+  PyObject *qasm_string = PyUnicode_FromString(job->program);
   CHECK_PYTHON_ERROR(qasm_string, *isFromPython())
 
-  PyObject *num_shot = PyLong_FromUnsignedLong(pJob->num_shots);
+  PyObject *num_shot = PyLong_FromUnsignedLong(job->num_shots);
   CHECK_PYTHON_ERROR(num_shot, *isFromPython())
 
   PyObject *pArgs = PyTuple_Pack(3, *remote_qpu, qasm_string, num_shot);
   CHECK_PYTHON_ERROR(pArgs, *isFromPython())
 
-  pJob->status = QDMI_JOB_STATUS_RUNNING;
+  job->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
 
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
@@ -740,22 +763,22 @@ int submit_job(QLM_QDMI_Device_Job pJob) {
   unsigned long resultSize = (unsigned long)PyList_GET_SIZE(pResults);
   PyObject *pBitring = PyList_GET_ITEM(pResults, 0);
 
-  asprintf(&(pJob->probability_keys), "%s", PyUnicode_AsUTF8(pBitring));
-  pJob->probability_values = malloc(sizeof(double) * resultSize);
+  asprintf(&(job->probability_keys), "%s", PyUnicode_AsUTF8(pBitring));
+  job->probability_values = malloc(sizeof(double) * resultSize);
   PyObject *pProbability;
   for (size_t i = 1; i < resultSize; i++) {
     pProbability = PyList_GetItem(pResults, (long)i);
-    pJob->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
+    job->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
   }
-  pJob->results_size = resultSize - 1;
+  job->results_size = resultSize - 1;
 
-  pJob->status = QDMI_JOB_STATUS_DONE;
+  job->status = QDMI_JOB_STATUS_DONE;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
   if (!*isFromPython())
     PyGILState_Release(gstate);
 
-  return 0;
+  return QDMI_SUCCESS;
 }
 
 /**
@@ -764,9 +787,15 @@ int submit_job(QLM_QDMI_Device_Job pJob) {
  * named myQLM. The out-of-the box job submission function is a
  * blocking-function that waits
  * @param[in] job The job to submit. Must not be @c NULL.
- * @return @ref QDMI_SUCCESS if the job was successfully submitted.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p job is @c NULL.
- * @return @ref QDMI_ERROR_FATAL if the job submission failed.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job was successfully submitted.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p job is @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the job submission failed.
  *
  * @see submit_job
  * @see QLM_QDMI_device_session_create_device_job
@@ -800,10 +829,14 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job) {
  * @details The submitted jobs cannot be canceled due to nature of the device.
  * Therefore, we can only cancel the created jobs.
  * @param[in] job The job to cancel. Must not be @c NULL.
- * @return @ref QDMI_SUCCESS if the job was successfully canceled.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p job is @c NULL or the job
+ * @return <a
+ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ if the job was successfully canceled.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a> if @p job is @c NULL or the job
  * already has the status QDMI_JOB_STATUS_DONE.
- * @return @ref QDMI_ERROR_FATAL if the job could not be canceled.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a> if the job could not be canceled.
 
  * @see QLM_QDMI_device_session_create_device_job
  * @see QLM_QDMI_device_job_submit
@@ -841,11 +874,15 @@ int QLM_QDMI_device_job_cancel(QLM_QDMI_Device_Job job) {
  * status.
  * @param[in] job The job to check the status of. Must not be @c NULL.
  * @param[out] status The status of the job. Must not be @c NULL.
- * @return @ref QDMI_SUCCESS if the job status was successfully checked.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p job or @p status is @c NULL.
- * @return @ref QDMI_ERROR_PERMISSIONDENIED if the device does not allow using
- * the @ref device_job_interface "device job interface" for the current session.
- * @return @ref QDMI_ERROR_FATAL if the job status could not be checked.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job status was successfully checked.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p job or @p status is @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the job status could not be checked.
  */
 int QLM_QDMI_device_job_check(QLM_QDMI_Device_Job job,
                               QDMI_Job_Status *status) {
@@ -862,6 +899,24 @@ int QLM_QDMI_device_job_check(QLM_QDMI_Device_Job job,
   return QDMI_SUCCESS;
 }
 
+/**
+ * @brief Wait for a job to finish.
+ * @details Since @ref QLM_QDMI_device_job_submit is a blocking function, this
+ * function makes sure that status is set to QDMI_JOB_STATUS_DONE.
+ * @param[in] job The job to wait for. Must not be @c NULL.
+ * @param[in] timeout The timeout in seconds.
+ * If this is zero, the function waits indefinitely until the job has finished.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job is finished or canceled.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p job is @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the job could not be waited for and this function returns before the job
+ * has finished or has been canceled.
+ */
 int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job, size_t timeout) {
   if (job == NULL)
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -881,10 +936,42 @@ int QLM_QDMI_device_job_wait(QLM_QDMI_Device_Job job, size_t timeout) {
   return QDMI_SUCCESS;
 }
 
+/**
+ * @brief Retrieve the results of a job.
+ * @details The QLM device returns the results as a state-probability pair.
+ * Therefore, this function provides the probability values, keys, and density,
+ * as well as the histogram keys and values, which are calculated by multiplying
+ * the probability values by the number of shots.
+ * @param[in] job The job to retrieve the results from. Must not be @c NULL.
+ * @param[in] result The result to retrieve. Must be one of the values specifie
+ * for <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#aa154b942b0f67e437c393ad7b33cadd1">QDMI_Job_Result</a>
+ * @param[in] size The size of the buffer pointed to by @p data in bytes. Must
+ * be greater or equal to the size of the return type specified for the <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#aa154b942b0f67e437c393ad7b33cadd1">QDMI_Job_Result</a>
+ * @p result, except when @p data is @c NULL, in which case it is ignored.
+ * @param[out] data A pointer to the memory location where the results will be
+ * stored. If this is @c NULL, it is ignored.
+ * @param[out] size_ret The actual size of the data being queried in bytes. If
+ * this is @c NULL, it is ignored.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the device supports the specified result and, when @p data is not @c NULL,
+ * the results were successfully retrieved.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if
+ *  - @p job is @c NULL,
+ *  - @p job has not completed,
+ *  - @p result is invalid, or
+ *  - @p data is not @c NULL and @p size is smaller than the size of the data
+ *    being queried.
+ */
 int QLM_QDMI_device_job_get_results(QLM_QDMI_Device_Job job,
                                     QDMI_Job_Result result, size_t size,
                                     void *data, size_t *size_ret) {
-  if (job->status != QDMI_JOB_STATUS_DONE)
+
+  if (job == NULL || job->status != QDMI_JOB_STATUS_DONE)
     return QDMI_ERROR_INVALIDARGUMENT;
 
   if (result == QDMI_JOB_RESULT_STATEVECTOR_DENSE ||
@@ -952,25 +1039,87 @@ int QLM_QDMI_device_job_get_results(QLM_QDMI_Device_Job job,
 
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief Free a job.
+ * @details Free the resources associated with a job. Using a job handle after
+ * it was freed is undefined behavior.
+ * @param[in] job The job to free.
+ */
 void QLM_QDMI_device_job_free(QLM_QDMI_Device_Job job) {
   free(job->probability_dense);
   job->probability_dense = NULL;
+
   free(job->probability_keys);
   job->probability_keys = NULL;
+
   free(job->probability_values);
   job->probability_values = NULL;
 
   free(job);
   job = NULL;
 }
-
+/**
+ * @brief Query a job property.
+ * @param[in] job A handle to a job for which to query @p prop. Must not be @c
+ * NULL.
+ * @param[in] prop The property to query. Must be one of the values specified
+ * for a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a6e4d18c7fa5d383bbcc1498abe090d4f">QDMI_Device_Job_Property</a>
+ * @p result, except when @p data is @c NULL, in which case it is ignored..
+ * @param[in] size The size of the memory pointed to by @p value in bytes. Must
+ * be greater or equal to the size of the return type specified for @p prop,
+ * except when @p value is @c NULL, in which case it is ignored.
+ * @param[out] value A pointer to the memory location where the value of the
+ * property will be stored. If this is @c NULL, it is ignored.
+ * @param[out] size_ret The actual size of the data being queried in bytes. If
+ * this is @c NULL, it is ignored.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job supports the specified property and, when @p value is not @c NULL,
+ * the property was successfully retrieved.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
+ * if the job does not support the property.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if
+ *  - @p job is @c NULL,
+ *  - @p prop is invalid, or
+ *  - @p value is not @c NULL and @p size is less than the size of the data
+ *    being queried.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
+ * if the property cannot be queried in the current state of the job, for
+ * example, because the job failed or the property is not initialized because it
+ * has no default value and was not set.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if an unexpected error occurred.
+ */
 int QLM_QDMI_device_job_query_property(QLM_QDMI_Device_Job job,
-                                   QDMI_Device_Job_Property prop, size_t size,
-                                   void *value, size_t *size_ret){
-                                    return QDMI_ERROR_NOTSUPPORTED;
-                                   }
-
+                                       QDMI_Device_Job_Property prop,
+                                       size_t size, void *value,
+                                       size_t *size_ret) {
+  return QDMI_ERROR_NOTIMPLEMENTED;
+}
+/**
+ * @brief Initializes the Python interpreter.
+ *
+ * @details Since we are obligated to use myQLM Python package, we need to
+ * initialize the interpreter. However, if the library is used by a Python based
+ * client, the interpreter does not need to be initialized.
+ *
+ * This function initializes the Python interpreter and imports the custom
+ * auxiliary module which is named qlm_auxiliary.py by default. The module is
+ * used in @ref create_remote_qpu and @ref submit_job.
+ *
+ * @returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the python interpreter cannot be initialized .
+ * @returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the python interpreter is successfully initialized.
+ */
 int initialize_python(void) {
 
   char *script_location = getenv(SCRIPT_LOCATION);
@@ -1003,7 +1152,21 @@ int initialize_python(void) {
 
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief Connects to the remote qpu.
+ *
+ * @details This function is connects to the remote qpu by using the
+ * create_remote_qpu function from the qlm_auxiliary.
+ *
+ * @param[in] hostname The name of the host where the device is located. Must be
+ * in the form "host:port".
+ * @returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the connection faills.
+ * @returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the connection success.
+ */
 int create_remote_qpu(const char *hostname) {
 
   PyGILState_STATE gstate = PyGILState_Ensure();
@@ -1023,12 +1186,39 @@ int create_remote_qpu(const char *hostname) {
   return QDMI_SUCCESS;
 }
 
+/** @brief Checks if the required environment variables are set
+ *
+ * @details Two environment variables needs to be set to locate the custom
+ * auxiliary module: @ref SCRIPT_LOCATION indicates the location of the file and
+ * @ref SCRIPT_NAME indicates the name of the file.
+ * @returns returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if either one is NULL.
+ * @returns returns <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if both is set.
+ */
+
 int check_env_variable(void) {
   if (getenv(SCRIPT_LOCATION) == NULL || getenv(SCRIPT_NAME) == NULL)
     return QDMI_ERROR_FATAL;
   return QDMI_SUCCESS;
 }
 
+/**
+ *  @brief Initializes the device
+ *
+ *  @details This function check if the required environment variables are set
+ * and the Python interpreter can be initialized.
+ *
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the environment variables are null or Python interpreter cannot be
+ * initialized.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the device succuessly is initialized.
+ */
 int QLM_QDMI_device_initialize(void) {
   int err = check_env_variable();
   CHECK_QDMI_ERROR(err)
@@ -1040,6 +1230,16 @@ int QLM_QDMI_device_initialize(void) {
   return QDMI_SUCCESS;
 }
 
+/**
+ * @brief Finalizes the device
+ *
+ *  @details This function finalizes the device by freeing the custom module,
+ * and finalizesthe Python interpreter.
+ *
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the device succuessly is finalized.
+ */
 int QLM_QDMI_device_finalize(void) {
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
   if (*get_custom_python_module() != NULL) {
@@ -1060,7 +1260,19 @@ int QLM_QDMI_device_finalize(void) {
   }
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief Allocates a new device session.
+ * @param[out] session A handle to the session that is allocated. Must not be
+ * @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the session was allocated successfully.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p session is @c NULL.
+ * @see QDMI_device_session_set_parameter
+ * @see QDMI_device_session_init
+ */
 int QLM_QDMI_device_session_alloc(QLM_QDMI_Device_Session *session) {
   if (session == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -1071,7 +1283,24 @@ int QLM_QDMI_device_session_alloc(QLM_QDMI_Device_Session *session) {
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief Initializes a device session.
+ * @details This function initializes the device session and prepares it for
+ * use based on the set parameters.
+ * @param[out] session A handle to the session that is allocated.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the session was allocated successfully.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p session is @c NULL.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the device's status is QDMI_DEVICE_STATUS_ERROR or
+ * QDMI_DEVICE_STATUS_OFFLINE or QDMI_DEVICE_STATUS_MAINTENANCE
+ * @see QLM_QDMI_device_session_alloc
+ * @see QDMI_device_session_set_parameter
+ */
 int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session) {
   if (session == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -1096,14 +1325,49 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session) {
   session->status = INITIALIZED;
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief Free a QDMI device session.
+ * @param[in] session The session to free.
+ */
 void QLM_QDMI_device_session_free(QLM_QDMI_Device_Session session) {
   if (session != NULL) {
     free(session->url);
     free(session);
   }
 }
-
+/**
+ * @brief Set a parameter for a device session.
+ * @param[in] session A handle to the session to set the parameter for.
+ * @param[in] param The parameter to set. Must be one of the values specified
+ * for <a href="
+ *  https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a9f1e467b2b3870263b0e9d7e5d36cea4">QDMI_Device_Session_Parameter</a>.
+ * @param[in] size The size of the data pointed by @p value in bytes.
+ * @param[in] value A pointer to the memory location that contains the value of
+ * the parameter to be set.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the device supports the specified <a href="
+ *  https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a9f1e467b2b3870263b0e9d7e5d36cea4">QDMI_Device_Session_Parameter</a>
+ * and, when @p value is not @c NULL, the value of the parameter was set
+ * successfully.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>.
+ * if the device does not support the parameter or the value of the parameter.
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if
+ *  - @p session is @c NULL,
+ *  - @p param is invalid, or
+ *  - @p value is not @c NULL and @p size is zero or not the expected size for
+ *    the parameter (if specified by the <a href="
+ *  https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a9f1e467b2b3870263b0e9d7e5d36cea4">QDMI_Device_Session_Parameter</a>
+ * documentation).
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
+ * if the parameter cannot be set in the current state of the session.
+ * @see QLM_QDMI_device_session_alloc
+ * @see QDMI_device_session_init
+ */
 int QLM_QDMI_device_session_set_parameter(
     QLM_QDMI_Device_Session session, const QDMI_Device_Session_Parameter param,
     const size_t size, const void *value) {

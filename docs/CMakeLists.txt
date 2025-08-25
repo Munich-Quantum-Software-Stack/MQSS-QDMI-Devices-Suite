@@ -23,14 +23,16 @@ set(DOXYGEN_CONFIG_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 # Set the input directories for doxygen, i.e., all files that contain source
 # code with documentation.
 set(DOXYGEN_INPUT_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/devices.md ${PROJECT_SOURCE_DIR}/src/dcdb
-    ${PROJECT_SOURCE_DIR}/src/qlm)
+    ${CMAKE_CURRENT_SOURCE_DIR}/implementations.md
+    ${PROJECT_SOURCE_DIR}/src/dcdb ${PROJECT_SOURCE_DIR}/src/qlm)
 # After the variable above is correctly initialized, we can add the additional
 # files that are not source code but still part of the documentation. IMPORTANT:
 # The order the files with the static content are added here influences their
 # order in the generated documentation.
-set(DOXYGEN_INPUT_DIRS ${DOXYGEN_INPUT_DIRS}
-                       ${CMAKE_CURRENT_SOURCE_DIR}/index.md)
+set(DOXYGEN_INPUT_DIRS
+    ${DOXYGEN_INPUT_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/index.md
+    ${CMAKE_CURRENT_SOURCE_DIR}/faq.md
+    ${CMAKE_CURRENT_SOURCE_DIR}/development.md)
 # By default the files are separated by a semicolon. This is not what Doxygen
 # wants, so we replace it with a space.
 string(REPLACE ";" " " DOXYGEN_INPUT_DIRS "${DOXYGEN_INPUT_DIRS}")

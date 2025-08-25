@@ -1,4 +1,4 @@
-# QDMI {#mainpage}
+# QDMI Devices {#mainpage}
 
 <!-- IMPORTANT: Keep the line above as the first line and do not remove the label above. -->
 <!----------------------------------------------------------------------------
@@ -22,10 +22,24 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 <!-- The label is needed to set this page as the main page in Doxygen. -->
 <!-- This file is a static page and included in the CMakeLists.txt file. -->
 
-## Quantum Device Management Interface
+## Quantum Device Management Interface Devices
 
 <img class="qdmi" alt="QDMI in Quantum Software Stack" src="qdmi.svg">
 
 <!-- Include the content of README.md between the pair of markers DOXYGEN MAIN. -->
 
 \snippet{doc} README.md DOXYGEN MAIN
+
+### How to Use this Documentation?
+
+This documentation includes helpful information about QDMI implementations for various quantum
+devices to be used in the quantum software stacks such as MQSS and to help you implement your own.
+
+#### General Information
+
+The [FAQ](faq.md) page gives an overview over frequently asked questions.
+
+#### Implementations
+
+The [Implementations](implementations.md) page provides implementation details of devices in action.
+The implementations are good starting points when you want to start your own implementation of QDMI.

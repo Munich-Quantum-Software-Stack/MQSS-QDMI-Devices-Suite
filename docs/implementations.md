@@ -1,4 +1,4 @@
-# Devices
+# Implementations
 
 <!-- IMPORTANT: Keep the line above as the first line. -->
 
@@ -26,7 +26,7 @@ This page contains the implementations of the QDMI devices.
 
 \tableofcontents
 
-## Implemented Devices {#device}
+## Implemented Devices {#implementation}
 
 Currently, there are two QDMI device implementations: Qaptiva and DCDB. While Qaptiva is implemented
 using C with Python components, DCDB is implemented using C++.
@@ -37,7 +37,7 @@ the LRZ that monitors HPC environments.
 While Qaptiva is capable of executing quantum circuits, DCDB allows the QDMI Client to query the
 surroundings of quantum and HPC devices located at LRZ.
 
-### The Properties of Devices {#device-properties}
+## The Properties of Devices {#device-properties}
 
 Every implemented devices has different proterties, i.e. `QDMI_DEVICE_PROPERTY_NAME`, the number of
 `QDMI_Site` or `QDMI_TelemetrySensor`.
@@ -71,7 +71,7 @@ explanation of the macros, see the QDMI Documentation on
 <a href="https://munich-quantum-software-stack.github.io/QDMI/md_docs_2examples.html#device-macros">Auxiliary
 Macros</a>.
 
-### The Sites of the Devices {#device-sites}
+## The Sites of the Devices {#device-sites}
 
 A `QDMI_Site` represents a qubit in the QLM implementation. Due to the nature of the emulators, the
 qubit is not have `T1` or `T2` values. Therefore, the implementation only provides the index of the
@@ -88,7 +88,7 @@ qubit.
 </div>
 <!-- prettier-ignore-end -->
 
-### The Telemetry Sensor of the Devices {#device-telemetry}
+## The Telemetry Sensor of the Devices {#device-telemetry}
 
 A `QDMI_TelemetrySensor` represents a telemetry sensor that located at the LRZ in the DCDB
 implementation. All the predefined properties of a `QDMI_TelemetrySensor` can be queried.
@@ -103,7 +103,7 @@ implementation. All the predefined properties of a `QDMI_TelemetrySensor` can be
   \until QDMI_ERROR_NOTSUPPORTED
 </div>
 
-### Submitting a Job {#device-job}
+## Submitting a Job {#device-job}
 
 A `QDMI_Job` represents a quantum job that can be executed on the device in the QLM implementation.
 To be able to submit a job, `QDMI_DEVICE_JOB_PARAMETER_PROGRAM`and
@@ -118,7 +118,7 @@ To be able to submit a job, `QDMI_DEVICE_JOB_PARAMETER_PROGRAM`and
   \until QDMI_SUCCESS
 </div>
 
-### Submitting a Telemetry Sensor Query {#device-environment-query}
+## Submitting a Telemetry Sensor Query {#device-environment-query}
 
 A `QDMI_TelemetrySensor_Query` represents a data query of a telemetry sensor that can be executed on
 the device in the DCDB implementation. To be able to submit a query,

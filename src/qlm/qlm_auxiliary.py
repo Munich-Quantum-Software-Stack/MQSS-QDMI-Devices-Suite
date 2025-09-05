@@ -41,24 +41,27 @@ def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
         if t1 <= 0 or t2 <= 0 or math.isnan(t1) or math.isnan(t2):
             return jsonify({"error": "t1 and t2 must be positive floats"}), 400
         
-        
-        url = get_noisy_qpu_url()
+        host='http://host.docker.internal:20502/run'
+        url ='http://host.docker.internal:20502/run'
         payload = {"aqasm": qasm_string, "t1": t1, "t2": t2, "nbshots": nshots}
         
         
         print(url, payload)
         response = requests.post(url, json=payload)
-        
+        print(response)
+   
         if response.status_code != 200:
             print("Error from server:", response.text)
             return None
 
         data = response.json()
-        probs = data.get("state_probabilities", {})
+        result = data.get("result", {})
+        probs = result.get("state_probabilities", {})
         states = list(probs.keys())
         probabilities = list(probs.values())
         return_value = [",".join(states)] + probabilities
-        print(probs, states, return_value)
+        print(states, probabilities,return_value)
+        input('click')
         print(f'Response from the QLM noisy QPUserver: {response}')
         return return_value
     except Exception as e:
@@ -94,6 +97,21 @@ def submit_job(remote_qpu, qasm_string, nshots):
         return return_value
     except:
         return None
+def create_remote_qpu(host):
+    """! Creates a remote QPU connection.
+
+    @param host Hostname and port in the form "host:port".
+    @return A RemoteQPU instance or None if the connection fails.
+    """
+    try:
+        from qat.core.qpu import RemoteQPU
+        host='host.docker.internal:20501'
+        url, port = host.split(":")
+        qpu = RemoteQPU(port, url)
+    except:
+        return None
+    return qpu
+
 
 def get_noisy_qpu_url():
     return os.getenv('QLM_NOISY_HOST_URL')

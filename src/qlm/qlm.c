@@ -817,8 +817,7 @@ int QLM_QDMI_device_job_set_parameter(QLM_QDMI_Device_Job job,
  * @see QLM_QDMI_device_job_submit
  */
 
-int submit_job(QLM_QDMI_Device_Job pJob)
-{
+int submit_job(QLM_QDMI_Device_Job job) {
   PyGILState_STATE gstate;
 
   if (!*isFromPython())
@@ -833,16 +832,16 @@ int submit_job(QLM_QDMI_Device_Job pJob)
   PyObject **remote_qpu = get_remote_qpu();
   CHECK_PYTHON_ERROR(*remote_qpu, *isFromPython())
 
-  PyObject *qasm_string = PyUnicode_FromString(pJob->program);
+  PyObject *qasm_string = PyUnicode_FromString(job->program);
   CHECK_PYTHON_ERROR(qasm_string, *isFromPython())
 
-  PyObject *num_shot = PyLong_FromUnsignedLong(pJob->num_shots);
+  PyObject *num_shot = PyLong_FromUnsignedLong(job->num_shots);
   CHECK_PYTHON_ERROR(num_shot, *isFromPython())
 
   PyObject *pArgs = PyTuple_Pack(3, *remote_qpu, qasm_string, num_shot);
   CHECK_PYTHON_ERROR(pArgs, *isFromPython())
 
-  pJob->status = QDMI_JOB_STATUS_RUNNING;
+  job->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
 
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
@@ -851,24 +850,24 @@ int submit_job(QLM_QDMI_Device_Job pJob)
   unsigned long resultSize = (unsigned long)PyList_GET_SIZE(pResults);
   PyObject *pBitring = PyList_GET_ITEM(pResults, 0);
 
-  asprintf(&(pJob->probability_keys), "%s", PyUnicode_AsUTF8(pBitring));
-  pJob->probability_values = malloc(sizeof(double) * resultSize);
+  asprintf(&(job->probability_keys), "%s", PyUnicode_AsUTF8(pBitring));
+  job->probability_values = malloc(sizeof(double) * resultSize);
   PyObject *pProbability;
-  for (size_t i = 1; i < resultSize; i++)
-  {
+  for (size_t i = 1; i < resultSize; i++) {
     pProbability = PyList_GetItem(pResults, (long)i);
-    pJob->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
+    job->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
   }
-  pJob->results_size = resultSize - 1;
+  job->results_size = resultSize - 1;
 
-  pJob->status = QDMI_JOB_STATUS_DONE;
+  job->status = QDMI_JOB_STATUS_DONE;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
   if (!*isFromPython())
     PyGILState_Release(gstate);
 
-  return 0;
+  return QDMI_SUCCESS;
 }
+
 
 /**
  * @brief Submit a job to the device.

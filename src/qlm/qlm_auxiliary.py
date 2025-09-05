@@ -41,15 +41,10 @@ def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
         if t1 <= 0 or t2 <= 0 or math.isnan(t1) or math.isnan(t2):
             return jsonify({"error": "t1 and t2 must be positive floats"}), 400
         
-        host='http://host.docker.internal:20502/run'
-        url ='http://host.docker.internal:20502/run'
+        host, url = get_noisy_qpu_url()
         payload = {"aqasm": qasm_string, "t1": t1, "t2": t2, "nbshots": nshots}
         
-        
-        print(url, payload)
         response = requests.post(url, json=payload)
-        print(response)
-   
         if response.status_code != 200:
             print("Error from server:", response.text)
             return None
@@ -60,9 +55,6 @@ def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
         states = list(probs.keys())
         probabilities = list(probs.values())
         return_value = [",".join(states)] + probabilities
-        print(states, probabilities,return_value)
-        input('click')
-        print(f'Response from the QLM noisy QPUserver: {response}')
         return return_value
     except Exception as e:
         print("HTTP submit error:", e)
@@ -86,14 +78,11 @@ def submit_job(remote_qpu, qasm_string, nshots):
         raw_results = remote_qpu.submit(job)
         states = []
         probabilities = []
-        print(remote_qpu)
-        print(qasm_string)
-        print(nshots)
         for result in raw_results:
             states.append(result.state.bitstring)
             probabilities.append((result.probability))
         return_value = [",".join(states)] + list(probabilities)
-        print(result)
+        
         return return_value
     except:
         return None

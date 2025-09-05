@@ -755,7 +755,7 @@ int QLM_QDMI_device_job_set_parameter(QLM_QDMI_Device_Job job,
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM4 &&
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM5))
   {
-    printf("DEBUG: param (%d) is invalid (>= MAX and not a supported custom param)\n", param);
+    
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -895,23 +895,23 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job)
 
   if (job->status != QDMI_JOB_STATUS_CREATED || job->program == NULL ||
       job->num_shots == DEFAULT_NUM_SHOT) {
-    printf("DEBUG: submit validation failed: status=%d, program=%p, shots=%zu\n", 
-           job->status, job->program, job->num_shots);
+    
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  job->status = QDMI_JOB_STATUS_SUBMITTED;
+  
   int err = 0;
   
   // Check if this is a noisy session or if t1/t2 are set to non-default values
   if (job->session->is_noisy_session || 
       (job->t1 != T1_MAGIC_UNSET_VALUE && job->t2 != T2_MAGIC_UNSET_VALUE)) {
+    job->status = QDMI_JOB_STATUS_SUBMITTED;
     err = QLM_QDMI_device_job_submit_http(job);
-    printf("[DEBUG]: submit via HTTP (noisy session or t1/t2 set), err is: %d\n", err);
+    
   }
   else {
-    // Use regular submission path
-    printf("[DEBUG]: submit via regular path\n");
+    job->status = QDMI_JOB_STATUS_SUBMITTED;
     err = submit_job(job);
+    
   }
   if (err) {
       job->status = QDMI_JOB_STATUS_FAILED;
@@ -1238,10 +1238,9 @@ int create_remote_qpu(const char *hostname)
 
 int create_noisy_remote_connection(const char *hostname)
 {
-  // For noisy sessions, we don't need to create a Python QPU object
+  // For noisy sessions, we don't need to create a QLM QPU object
   // since we use HTTP requests directly. We just store the hostname
   // and validate the connection is available.
-  printf("[DEBUG]: Creating noisy remote connection to %s\n", hostname);
   
   // We could add a simple HTTP ping here to validate the server is up
   // For now, we just assume it's working since it's a local server
@@ -1335,13 +1334,9 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session)
 
   int err;
   if (session->is_noisy_session) {
-    // For noisy sessions, just establish HTTP connection validation
     err = create_noisy_remote_connection(session->url);
-    printf("[DEBUG]: Initializing noisy session for %s\n", session->url);
   } else {
-    // For regular sessions, create the Python QPU connection
     err = create_remote_qpu(session->url);
-    printf("[DEBUG]: Initializing regular session for %s\n", session->url);
   }
   
   CHECK_QDMI_ERROR(err)
@@ -1392,7 +1387,6 @@ int QLM_QDMI_device_session_set_parameter(
   {
     if (size == sizeof(int)) {
       session->is_noisy_session = *(const int *)value;
-      printf("[DEBUG]: Session marked as noisy: %d\n", session->is_noisy_session);
     }
   }
 

@@ -14,6 +14,8 @@
     "QLM_NOISY_HOST_URL": "http://host.docker.internal:20502/run",
     "DCDB_HOST_URL": "host.docker.internal:9042",
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
-    "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib"
+    "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
+
+    "LRZ_DEVICE_HOST": "https://portal.quantum.lrz.de:4000/v1"
   }
 }

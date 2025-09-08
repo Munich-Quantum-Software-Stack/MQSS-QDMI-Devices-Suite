@@ -902,7 +902,7 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job)
   int err = 0;
   
   // Check if this is a noisy session or if t1/t2 are set to non-default values
-  if (job->session->is_noisy_session || 
+  if (
       (job->t1 != T1_MAGIC_UNSET_VALUE && job->t2 != T2_MAGIC_UNSET_VALUE)) {
     job->status = QDMI_JOB_STATUS_SUBMITTED;
     err = QLM_QDMI_device_job_submit_http(job);
@@ -910,12 +910,13 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job)
   }
   else {
     job->status = QDMI_JOB_STATUS_SUBMITTED;
+    printf("Job status is: %d", job->status);
     err = submit_job(job);
+    
     
   }
   if (err) {
       job->status = QDMI_JOB_STATUS_FAILED;
-      return err;
     }
   return QDMI_SUCCESS;
 }
@@ -926,9 +927,6 @@ int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
     job->status = QDMI_JOB_STATUS_FAILED;
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-
-
-  
   PyGILState_STATE gstate;
   if (!*isFromPython())
     gstate = PyGILState_Ensure();
@@ -955,7 +953,7 @@ int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
 
   job->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
-
+  printf("Job is running, with %d", job->status);
 
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
   CHECK_PYTHON_ERROR(pResults, *isFromPython());
@@ -981,7 +979,7 @@ int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
 
   job->results_size = resultSize - 1;
   job->status = QDMI_JOB_STATUS_DONE;
-
+  printf("Job is done, with %d", job->status);
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
   if (!*isFromPython())
@@ -1333,15 +1331,17 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session)
   }
 
   int err;
-  if (session->is_noisy_session) {
-    err = create_noisy_remote_connection(session->url);
-  } else {
-    err = create_remote_qpu(session->url);
-  }
+
+  
+  err = create_noisy_remote_connection(session->url);
+
+  err = create_remote_qpu(session->url);
+
   
   CHECK_QDMI_ERROR(err)
 
   session->status = INITIALIZED;
+  printf("Session Status is %d", session->status);
   return QDMI_SUCCESS;
 }
 
@@ -1382,78 +1382,5 @@ int QLM_QDMI_device_session_set_parameter(
     strcpy(session->url, (const char *)value);
   }
 
-  // Use CUSTOM1 parameter to indicate this is a noisy session
-  if (param == QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1)
-  {
-    if (size == sizeof(int)) {
-      session->is_noisy_session = *(const int *)value;
-    }
-  }
-
   return QDMI_SUCCESS;
-}
-
-/**
- * @brief Submit a job using a specific session.
- * @details This function submits a job using the session provided,
- * allowing for different session types (regular vs noisy).
- * @param[in] session The session to use for job submission.
- * @param[in] job The job to submit.
- * @param[out] job_id Pointer to store the job ID after submission.
- * @return @ref QDMI_SUCCESS if the job was successfully submitted.
- * @return @ref QDMI_ERROR_INVALIDARGUMENT if parameters are invalid.
- */
-int QLM_QDMI_device_session_submit_device_job(QLM_QDMI_Device_Session session,
-                                              QLM_QDMI_Device_Job job, 
-                                              int *job_id)
-{
-  if (session == NULL || job == NULL || job_id == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (session->status != INITIALIZED)
-    return QDMI_ERROR_BADSTATE;
-
-  // Set the job's session to the provided session
-  job->session = session;
-  
-  // Submit the job
-  int err = QLM_QDMI_device_job_submit(job);
-  if (err == QDMI_SUCCESS) {
-    *job_id = job->id;
-  }
-  
-  return err;
-}
-
-/**
- * @brief Query job results using a specific session.
- * @details This function allows querying job results using a specific session.
- * @param[in] session The session to use for querying results.
- * @param[in] job_id The ID of the job to query.
- * @param[in] result The type of result to retrieve.
- * @param[in] size The size of the buffer for results.
- * @param[out] data Buffer to store the results.
- * @param[out] size_ret Actual size of the data returned.
- * @return @ref QDMI_SUCCESS if successful.
- */
-int QLM_QDMI_device_session_job_result(QLM_QDMI_Device_Session session,
-                                       int job_id,
-                                       QDMI_Job_Result result,
-                                       size_t size,
-                                       void *data,
-                                       size_t *size_ret)
-{
-  if (session == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (session->status != INITIALIZED)
-    return QDMI_ERROR_BADSTATE;
-
-  // For now, we assume the job is stored globally
-  // In a full implementation, you might want to track jobs per session
-  // This is a simplified implementation that delegates to the existing function
-  
-  // We would need to find the job by ID here, but for simplicity,
-  // this is left as a placeholder since the test framework handles job tracking
-  return QDMI_ERROR_NOTSUPPORTED;
 }

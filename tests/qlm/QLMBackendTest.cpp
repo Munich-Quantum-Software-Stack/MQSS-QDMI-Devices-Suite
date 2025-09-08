@@ -682,21 +682,21 @@ TEST_F(QDMIImplementationTest, SubmitJobWithHTTP) {
     QDMI_Job_Status *job_status = (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
     QDMI_Device_Status *device_status = (QDMI_Device_Status *)malloc(sizeof(QDMI_Device_Status));
 
-    // CREATE_JOB(job, nShot, qasmFormat, c_t_c);
+
     CREATE_NOISY_JOB(job, nShot, qasmFormat, c_t_c, t1, t2)
 
-    CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
+    CHECK_NOISY_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CREATED);
 
-    // ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+    ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+    CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_SUBMITTED);
 
-    // Wait for job completion
+    
     while (*job_status == QDMI_JOB_STATUS_SUBMITTED)
       QLM_QDMI_device_job_check(job, job_status);
 
-    
-    CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
-    
+    CHECK_NOISY_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
+
     ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 

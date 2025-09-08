@@ -910,7 +910,7 @@ int QLM_QDMI_device_job_submit(QLM_QDMI_Device_Job job)
   }
   else {
     job->status = QDMI_JOB_STATUS_SUBMITTED;
-    printf("Job status is: %d", job->status);
+    
     err = submit_job(job);
     
     
@@ -953,7 +953,7 @@ int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
 
   job->status = QDMI_JOB_STATUS_RUNNING;
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
-  printf("Job is running, with %d", job->status);
+  
 
   PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
   CHECK_PYTHON_ERROR(pResults, *isFromPython());
@@ -979,7 +979,7 @@ int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
 
   job->results_size = resultSize - 1;
   job->status = QDMI_JOB_STATUS_DONE;
-  printf("Job is done, with %d", job->status);
+  
   QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
   if (!*isFromPython())
@@ -1341,7 +1341,7 @@ int QLM_QDMI_device_session_init(QLM_QDMI_Device_Session session)
   CHECK_QDMI_ERROR(err)
 
   session->status = INITIALIZED;
-  printf("Session Status is %d", session->status);
+  
   return QDMI_SUCCESS;
 }
 

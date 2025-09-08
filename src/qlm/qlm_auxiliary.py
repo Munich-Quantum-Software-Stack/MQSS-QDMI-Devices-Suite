@@ -31,7 +31,7 @@ def create_remote_qpu(host):
         
         url, port = host.split(":")
         qpu = RemoteQPU(port, url)
-        print(qpu)
+        
     except Exception as e:
         print("Error creating remote QPU:", e)
         raise e
@@ -62,7 +62,7 @@ def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
         return return_value
     except Exception as e:
         print("HTTP submit error:", e)
-        return None
+        raise e
 
 
 def submit_job(remote_qpu, qasm_string, nshots):
@@ -75,7 +75,7 @@ def submit_job(remote_qpu, qasm_string, nshots):
     """
     try:
         from qat.interop.openqasm import OqasmParser
-        print("Here is JOB SUBMISSION")
+        
         parser = OqasmParser()
         circuit = parser.compile(qasm_string)
         job = circuit.to_job(nbshots=nshots)

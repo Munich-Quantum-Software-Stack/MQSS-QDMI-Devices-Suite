@@ -122,10 +122,8 @@ protected:
     char *hostname = getenv(LRZ_HOST_URL);
     char *token = getenv(MQP_SECRET_TOKEN);
     int err;
-
     EXIT_ON_FAIL(LRZ_QDMI_device_initialize(),
                  "Failed to initialize the device");
-
     size_t hardware_size;
     EXIT_ON_FAIL(
         LRZ_QDMI_device_session_query_device_property(
@@ -524,7 +522,6 @@ TEST_P(LRZBackendTest, ControlGetDataHistogramValue) {
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   size_t histogram_values_size;
-  int *histogram_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(LRZ_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(LRZ_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
@@ -532,12 +529,12 @@ TEST_P(LRZBackendTest, ControlGetDataHistogramValue) {
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
                                             nullptr, &histogram_values_size),
             QDMI_SUCCESS);
-  histogram_values = (int *)malloc(histogram_values_size);
+  std::vector<int> histogram_values(histogram_values_size / sizeof(int));
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
                                             histogram_values_size,
-                                            histogram_values, nullptr),
-            QDMI_SUCCESS);
+                                            static_cast<void
+*>(histogram_values.data()), nullptr), QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
 }
@@ -560,7 +557,6 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityKeys) {
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   size_t probability_keys_size;
-  char *probability_keys;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(LRZ_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(LRZ_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
@@ -569,11 +565,12 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityKeys) {
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, 0, nullptr,
                 &probability_keys_size),
             QDMI_SUCCESS);
-  probability_keys = (char *)malloc(probability_keys_size);
+  std::string probability_keys(probability_keys_size, '\0');
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS,
-                probability_keys_size, probability_keys, nullptr),
+                probability_keys_size,
+                static_cast<void *>(probability_keys.data()), nullptr),
             QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
@@ -596,7 +593,6 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityValues) {
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   size_t probability_values_size;
-  double *probability_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(LRZ_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(LRZ_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
@@ -605,11 +601,11 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityValues) {
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, 0, nullptr,
                 &probability_values_size),
             QDMI_SUCCESS);
-  probability_values = (double *)malloc(probability_values_size);
+  std::vector<double> probability_values(probability_values_size/sizeof(double));
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES,
-                probability_values_size, probability_values, nullptr),
+                probability_values_size, static_cast<void*>(probability_values.data()), nullptr),
             QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
@@ -632,7 +628,6 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityDense) {
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   size_t probability_dense_size;
-  double *probability_dense;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
   ASSERT_EQ(LRZ_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(LRZ_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
@@ -642,11 +637,11 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityDense) {
                                       0, nullptr, &probability_dense_size),
       QDMI_SUCCESS);
 
-  probability_dense = (double *)malloc(probability_dense_size);
+  std::vector<double> probability_dense(probability_dense_size/sizeof(double));
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                probability_dense_size, probability_dense, nullptr),
+                probability_dense_size, static_cast<void*>(probability_dense.data()), nullptr),
             QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
@@ -706,7 +701,6 @@ TEST_P(LRZBackendTest, QuerySitePropertyNotSupported) {
             QDMI_ERROR_NOTSUPPORTED);
 }
 
-
 TEST_P(LRZBackendTest, QueryOperationProperties) {
   HardwareSession *hardware_session = GetParam();
   if (hardware_session->session == nullptr ||
@@ -730,7 +724,7 @@ TEST_P(LRZBackendTest, QueryOperationProperties) {
                 static_cast<void *>(operations.data()), nullptr),
             expected)
       << "Devices must provide a list of sites";
-      
+
   for (const auto &op : operations) {
     size_t name_length = 0;
     ASSERT_EQ(LRZ_QDMI_device_session_query_operation_property(

@@ -17,6 +17,6 @@
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
     "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
 
-    "LRZ_DEVICE_HOST": "https://portal.quantum.lrz.de:4000/v1"
+    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
   }
 }

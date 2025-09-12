@@ -232,7 +232,7 @@ int LRZ_QDMI_device_initialize(void) {
     return QDMI_ERROR_FATAL;
 
   curl_easy_setopt(curl, CURLOPT_URL,
-                   "https://portal-test.quantum.lrz.de:4000/v1");
+                   "https://portal.quantum.lrz.de:4000/v1");
   curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   res = curl_easy_perform(curl);

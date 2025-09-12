@@ -885,7 +885,7 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
   job->prob_value_size = sizeof(double) * array_size;
   size_t size_in_byte = (size_t)array_size * sizeof(double);
 
-  job->prob_values = malloc(sizeof(int) * array_size);
+  job->prob_values = malloc(sizeof(double) * array_size);
   job->hist_values = malloc(sizeof(int) * array_size);
   job->prob_dense = malloc(job->prob_dense_size);
   job->n_state = 1 << strlen(f_item);

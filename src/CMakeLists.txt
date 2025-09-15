@@ -23,4 +23,6 @@ if(BUILD_BACKEND_DCDB)
   add_subdirectory(dcdb)
 endif()
 
-add_subdirectory(lrz)
+if(BUILD_BACKEND_LRZ)
+  add_subdirectory(lrz)
+endif()

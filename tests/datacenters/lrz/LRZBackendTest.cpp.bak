@@ -555,13 +555,13 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported) {
 TEST_F(QDMIImplementationTest, QueryOperationProperties) {
 
   RUN_FOR_ALL_SESSIONS(
-    
+
       size_t size; ASSERT_EQ(LRZ_QDMI_device_session_query_device_property(
                                  session, QDMI_DEVICE_PROPERTY_OPERATIONS, 0,
                                  nullptr, &size),
                              QDMI_SUCCESS)
                    << "Devices must provide a list of sites";
-                   
+
       std::vector<LRZ_QDMI_Operation> operations(size /
                                                  sizeof(LRZ_QDMI_Operation));
       ASSERT_EQ(LRZ_QDMI_device_session_query_device_property(

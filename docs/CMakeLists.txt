@@ -24,7 +24,8 @@ set(DOXYGEN_CONFIG_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 # code with documentation.
 set(DOXYGEN_INPUT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/implementations.md
-    ${PROJECT_SOURCE_DIR}/src/databases/dcdb ${PROJECT_SOURCE_DIR}/src/simulators/eviden)
+    ${PROJECT_SOURCE_DIR}/src/databases/dcdb
+    ${PROJECT_SOURCE_DIR}/src/simulators/eviden)
 # After the variable above is correctly initialized, we can add the additional
 # files that are not source code but still part of the documentation. IMPORTANT:
 # The order the files with the static content are added here influences their
@@ -49,8 +50,9 @@ set(DOXYGEN_CONFIG_FILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 # can be included with the `\include`or `\snippet` command, we need to add the
 # directories where these files are located.
 set(DOXYGEN_EXAMPLE_DIRS
-    ${PROJECT_SOURCE_DIR}/src/simulators/eviden ${PROJECT_SOURCE_DIR}/src/databases/dcdb
-    ${PROJECT_SOURCE_DIR}/.github ${PROJECT_SOURCE_DIR}/README.md)
+    ${PROJECT_SOURCE_DIR}/src/simulators/eviden
+    ${PROJECT_SOURCE_DIR}/src/databases/dcdb ${PROJECT_SOURCE_DIR}/.github
+    ${PROJECT_SOURCE_DIR}/README.md)
 # Again, replace the semicolon with a space such that Doxygen can handle it.
 string(REPLACE ";" " " DOXYGEN_EXAMPLE_DIRS "${DOXYGEN_EXAMPLE_DIRS}")
 

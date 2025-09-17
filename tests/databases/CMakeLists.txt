@@ -16,5 +16,5 @@
 # ------------------------------------------------------------------------------
 
 if(BUILD_BACKEND_DCDB)
-    add_subdirectory(dcdb)
+  add_subdirectory(dcdb)
 endif()

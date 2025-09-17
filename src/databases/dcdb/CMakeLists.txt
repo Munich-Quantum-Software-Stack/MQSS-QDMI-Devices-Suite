@@ -15,7 +15,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-
 add_library(dcdb_device SHARED dcdb.cpp session.cpp sensors.cpp)
 
 target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::project_warnings

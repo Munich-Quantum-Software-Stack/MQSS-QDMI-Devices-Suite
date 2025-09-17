@@ -16,5 +16,5 @@
 # ------------------------------------------------------------------------------
 
 if(BUILD_BACKEND_LRZ)
-    add_subdirectory(lrz)
+  add_subdirectory(lrz)
 endif()

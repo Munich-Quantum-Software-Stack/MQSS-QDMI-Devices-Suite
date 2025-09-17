@@ -20,14 +20,15 @@ find_package(Python3 3.10...3.12 REQUIRED COMPONENTS Interpreter Development)
 add_library(qaptiva_device SHARED qaptiva.c)
 
 target_link_libraries(qaptiva_device PUBLIC qdmi::qdmi qdmi::project_warnings
-                                        ${Python3_LIBRARIES})
+                                            ${Python3_LIBRARIES})
 generate_prefixed_qdmi_headers(${QAPTIVA_QDMI_PREFIX})
-target_include_directories(qaptiva_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
-                                             ${Python3_INCLUDE_DIRS})
+target_include_directories(
+  qaptiva_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
+                        ${Python3_INCLUDE_DIRS})
 add_library(qdmi::qaptiva_device ALIAS qaptiva_device)
 
 if(ENABLE_COVERAGE)
   target_compile_options(qaptiva_device INTERFACE --coverage -fprofile-arcs
-                                              -ftest-coverage -O0)
+                                                  -ftest-coverage -O0)
   target_link_libraries(qaptiva_device INTERFACE gcov --coverage)
 endif()

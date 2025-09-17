@@ -16,5 +16,5 @@
 # ------------------------------------------------------------------------------
 
 if(BUILD_BACKEND_EVIDEN)
-    add_subdirectory(eviden)
+  add_subdirectory(eviden)
 endif()

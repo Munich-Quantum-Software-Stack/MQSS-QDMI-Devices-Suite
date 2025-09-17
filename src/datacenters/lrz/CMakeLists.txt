@@ -20,7 +20,8 @@ find_package(cJSON REQUIRED)
 
 add_library(lrz_device SHARED lrz.c)
 
-target_link_libraries(lrz_device PUBLIC qdmi::qdmi qdmi::project_warnings curl cjson)
+target_link_libraries(lrz_device PUBLIC qdmi::qdmi qdmi::project_warnings curl
+                                        cjson)
 
 generate_prefixed_qdmi_headers(${LRZ_QDMI_PREFIX})
 
@@ -30,5 +31,5 @@ add_library(qdmi::lrz_device ALIAS lrz_device)
 target_compile_definitions(lrz_device PRIVATE MAQCS)
 
 target_compile_options(lrz_device PRIVATE --coverage -fprofile-arcs
-                                            -ftest-coverage -O0)
+                                          -ftest-coverage -O0)
 target_link_libraries(lrz_device PRIVATE gcov --coverage)

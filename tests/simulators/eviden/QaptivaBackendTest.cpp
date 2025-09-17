@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define CHECK_DEVICE_STATUS(device_status, expected_value)                     \
   {                                                                            \
-    ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(                   \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(               \
                   session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(size_t),        \
                   device_status, nullptr),                                     \
               QDMI_SUCCESS);                                                   \
@@ -32,24 +32,24 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define CHECK_JOB_STATUS(job_status, expected_value)                           \
   {                                                                            \
-    ASSERT_EQ(QAPTIVA_QDMI_device_job_check(job, job_status), QDMI_SUCCESS);       \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_check(job, job_status), QDMI_SUCCESS);   \
     ASSERT_TRUE(*job_status == expected_value);                                \
   }
 
 #define CREATE_JOB(job, n_shot, format, program)                               \
   {                                                                            \
-    ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),        \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),    \
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QAPTIVA_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM, sizeof(n_shot), &n_shot), \
         QDMI_SUCCESS);                                                         \
-    ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(                               \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(                           \
                   job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT,                \
                   sizeof(format), &format),                                    \
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QAPTIVA_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_PROGRAM, strlen(program), program), \
         QDMI_SUCCESS);                                                         \
   }
@@ -264,7 +264,8 @@ TEST_F(QDMIImplementationTest, ControlCheckImplemented) {
 
   ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QAPTIVA_QDMI_device_job_check(job, &status), QDMI_ERROR_NOTIMPLEMENTED);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_check(job, &status),
+            QDMI_ERROR_NOTIMPLEMENTED);
   QAPTIVA_QDMI_device_job_free(job);
 }
 
@@ -282,7 +283,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataImplemented) {
   ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_MAX, 0,
-                                            nullptr, nullptr),
+                                                nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
   QAPTIVA_QDMI_device_job_free(job);
 }
@@ -302,15 +303,15 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS, 0,
-                                            nullptr, &histogram_size),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
+                                                0, nullptr, &histogram_size),
             QDMI_SUCCESS);
 
   histogram_keys = (char *)malloc(histogram_size);
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
-                                            histogram_size, histogram_keys,
-                                            nullptr),
+                                                histogram_size, histogram_keys,
+                                                nullptr),
             QDMI_SUCCESS);
 
   QAPTIVA_QDMI_device_job_free(job);
@@ -331,14 +332,15 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
-                                            nullptr, &histogram_values_size),
-            QDMI_SUCCESS);
+  ASSERT_EQ(
+      QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
+                                          nullptr, &histogram_values_size),
+      QDMI_SUCCESS);
   histogram_values = (int *)malloc(histogram_values_size);
 
-  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
-                                            histogram_values_size,
-                                            histogram_values, nullptr),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
+                job, QDMI_JOB_RESULT_HIST_VALUES, histogram_values_size,
+                histogram_values, nullptr),
             QDMI_SUCCESS);
 
   QAPTIVA_QDMI_device_job_free(job);
@@ -417,10 +419,10 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(
-      QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                                      0, nullptr, &probability_dense_size),
-      QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
+                job, QDMI_JOB_RESULT_PROBABILITIES_DENSE, 0, nullptr,
+                &probability_dense_size),
+            QDMI_SUCCESS);
 
   probability_dense = (double *)malloc(probability_dense_size);
 

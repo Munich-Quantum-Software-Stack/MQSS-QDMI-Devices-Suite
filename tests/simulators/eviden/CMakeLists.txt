@@ -26,8 +26,9 @@ generate_device_defs_executable(${QAPTIVA_QDMI_PREFIX})
 
 add_executable(QaptivaBackendTest QaptivaBackendTest.cpp)
 
-target_link_libraries(QaptivaBackendTest PRIVATE gtest gtest_main qdmi::qdmi
-                                             qaptiva_device qdmi::project_warnings)
+target_link_libraries(
+  QaptivaBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
+                             qdmi::project_warnings)
 
 add_dependencies(QaptivaBackendTest qdmi_test_qaptiva_device_defs)
 
@@ -35,6 +36,6 @@ gtest_discover_tests(QaptivaBackendTest)
 
 if(ENABLE_COVERAGE)
   target_compile_options(QaptivaBackendTest INTERFACE --coverage -fprofile-arcs
-                                                  -ftest-coverage -O0)
+                                                      -ftest-coverage -O0)
   target_link_libraries(QaptivaBackendTest INTERFACE gcov --coverage)
 endif()

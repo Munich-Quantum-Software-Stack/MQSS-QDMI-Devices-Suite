@@ -325,7 +325,7 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
       if (!from_python) {                                                      \
         PyGILState_Release(gstate);                                            \
       }                                                                        \
-      QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);                     \
+      QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);                 \
       return QDMI_ERROR_FATAL;                                                 \
     }                                                                          \
   }
@@ -460,9 +460,10 @@ static PyObject **get_custom_python_module(void) {
  */
 int QAPTIVA_QDMI_device_session_query_operation_property(
     QAPTIVA_QDMI_Device_Session session, QAPTIVA_QDMI_Operation operation,
-    const size_t num_sites, const QAPTIVA_QDMI_Site *sites, const size_t num_params,
-    const double *params, const QDMI_Operation_Property prop, const size_t size,
-    void *value, size_t *size_ret) {
+    const size_t num_sites, const QAPTIVA_QDMI_Site *sites,
+    const size_t num_params, const double *params,
+    const QDMI_Operation_Property prop, const size_t size, void *value,
+    size_t *size_ret) {
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
@@ -520,10 +521,10 @@ int QAPTIVA_QDMI_device_session_query_device_property(
   ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, size_t, 38, prop,
                             size, value, size_ret)
   ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_STATUS, QDMI_Device_Status,
-                            QAPTIVA_QDMI_read_device_status(), prop, size, value,
-                            size_ret)
-  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, QAPTIVA_QDMI_Site, DEVICE_SITES, 38,
-                    prop, size, value, size_ret)
+                            QAPTIVA_QDMI_read_device_status(), prop, size,
+                            value, size_ret)
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, QAPTIVA_QDMI_Site, DEVICE_SITES,
+                    38, prop, size, value, size_ret)
   // Since it is a emulator, there is no coupling map.
   return QDMI_ERROR_NOTSUPPORTED;
 }
@@ -561,11 +562,10 @@ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a45
  *  being queried.
  *
  */
-int QAPTIVA_QDMI_device_session_query_site_property(QAPTIVA_QDMI_Device_Session session,
-                                                QAPTIVA_QDMI_Site site,
-                                                const QDMI_Site_Property prop,
-                                                const size_t size, void *value,
-                                                size_t *size_ret) {
+int QAPTIVA_QDMI_device_session_query_site_property(
+    QAPTIVA_QDMI_Device_Session session, QAPTIVA_QDMI_Site site,
+    const QDMI_Site_Property prop, const size_t size, void *value,
+    size_t *size_ret) {
 
   // Since it is a emulator, there is no qubit property.
   if (session == NULL || site == NULL || (value != NULL && size == 0) ||
@@ -610,14 +610,15 @@ int QAPTIVA_QDMI_device_session_query_site_property(QAPTIVA_QDMI_Device_Session 
  * @see QAPTIVA_QDMI_device_job_free
  */
 
-int QAPTIVA_QDMI_device_session_create_device_job(QAPTIVA_QDMI_Device_Session session,
-                                              QAPTIVA_QDMI_Device_Job *job) {
+int QAPTIVA_QDMI_device_session_create_device_job(
+    QAPTIVA_QDMI_Device_Session session, QAPTIVA_QDMI_Device_Job *job) {
 
   if (session == NULL || job == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  *job = (QAPTIVA_QDMI_Device_Job)malloc(sizeof(QAPTIVA_QDMI_Device_Job_impl_t));
+  *job =
+      (QAPTIVA_QDMI_Device_Job)malloc(sizeof(QAPTIVA_QDMI_Device_Job_impl_t));
   (*job)->session = session;
 
   (*job)->id = rand();
@@ -676,8 +677,9 @@ if the device supports the specified <a
  * @see QAPTIVA_QDMI_device_job_free
  */
 int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
-                                      const QDMI_Device_Job_Parameter param,
-                                      const size_t size, const void *value) {
+                                          const QDMI_Device_Job_Parameter param,
+                                          const size_t size,
+                                          const void *value) {
   if (job == NULL || (value != NULL && size == 0) || (value == NULL) ||
       (param >= QDMI_DEVICE_JOB_PARAMETER_MAX &&
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM1 &&
@@ -885,7 +887,7 @@ int QAPTIVA_QDMI_device_job_cancel(QAPTIVA_QDMI_Device_Job job) {
  * if the job status could not be checked.
  */
 int QAPTIVA_QDMI_device_job_check(QAPTIVA_QDMI_Device_Job job,
-                              QDMI_Job_Status *status) {
+                                  QDMI_Job_Status *status) {
 
   if (job == NULL || status == NULL)
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -901,8 +903,8 @@ int QAPTIVA_QDMI_device_job_check(QAPTIVA_QDMI_Device_Job job,
 
 /**
  * @brief Wait for a job to finish.
- * @details Since @ref QAPTIVA_QDMI_device_job_submit is a blocking function, this
- * function makes sure that status is set to QDMI_JOB_STATUS_DONE.
+ * @details Since @ref QAPTIVA_QDMI_device_job_submit is a blocking function,
+ * this function makes sure that status is set to QDMI_JOB_STATUS_DONE.
  * @param[in] job The job to wait for. Must not be @c NULL.
  * @param[in] timeout The timeout in seconds.
  * If this is zero, the function waits indefinitely until the job has finished.
@@ -968,8 +970,8 @@ int QAPTIVA_QDMI_device_job_wait(QAPTIVA_QDMI_Device_Job job, size_t timeout) {
  *    being queried.
  */
 int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
-                                    QDMI_Job_Result result, size_t size,
-                                    void *data, size_t *size_ret) {
+                                        QDMI_Job_Result result, size_t size,
+                                        void *data, size_t *size_ret) {
 
   if (job == NULL || job->status != QDMI_JOB_STATUS_DONE)
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -1097,9 +1099,9 @@ void QAPTIVA_QDMI_device_job_free(QAPTIVA_QDMI_Device_Job job) {
  * if an unexpected error occurred.
  */
 int QAPTIVA_QDMI_device_job_query_property(QAPTIVA_QDMI_Device_Job job,
-                                       QDMI_Device_Job_Property prop,
-                                       size_t size, void *value,
-                                       size_t *size_ret) {
+                                           QDMI_Device_Job_Property prop,
+                                           size_t size, void *value,
+                                           size_t *size_ret) {
   return QDMI_ERROR_NOTIMPLEMENTED;
 }
 /**
@@ -1277,8 +1279,8 @@ int QAPTIVA_QDMI_device_session_alloc(QAPTIVA_QDMI_Device_Session *session) {
   if (session == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  *session =
-      (QAPTIVA_QDMI_Device_Session)malloc(sizeof(QAPTIVA_QDMI_Device_Session_impl_t));
+  *session = (QAPTIVA_QDMI_Device_Session)malloc(
+      sizeof(QAPTIVA_QDMI_Device_Session_impl_t));
   (*session)->url = NULL;
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
@@ -1369,8 +1371,9 @@ void QAPTIVA_QDMI_device_session_free(QAPTIVA_QDMI_Device_Session session) {
  * @see QDMI_device_session_init
  */
 int QAPTIVA_QDMI_device_session_set_parameter(
-    QAPTIVA_QDMI_Device_Session session, const QDMI_Device_Session_Parameter param,
-    const size_t size, const void *value) {
+    QAPTIVA_QDMI_Device_Session session,
+    const QDMI_Device_Session_Parameter param, const size_t size,
+    const void *value) {
   if (session == NULL || (value != NULL && size == 0) ||
       (param >= QDMI_DEVICE_SESSION_PARAMETER_MAX &&
        param != QDMI_DEVICE_SESSION_PARAMETER_TOKEN &&

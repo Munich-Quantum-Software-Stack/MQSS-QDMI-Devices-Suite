@@ -1,0 +1,22 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+  "name": "QDMI Backend Development",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools SUB_DIRS=lib tools PLUGINS= OPERATORS=",
+
+  "remoteEnv": {
+    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/eviden",
+    "QLM_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
+    "QAPTIVA_HOST_URL": "host.docker.internal:20501",
+
+    "DCDB_HOST_URL": "host.docker.internal:9042",
+    "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
+    "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
+
+    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
+  }
+}

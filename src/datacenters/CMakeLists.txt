@@ -15,6 +15,10 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-add_subdirectory(databases)
-add_subdirectory(datacenters)
-add_subdirectory(simulators)
+if(BUILD_BACKEND_LRZ)
+  add_subdirectory(lrz)
+endif()
+
+if(BUILD_BACKEND_CESGA)
+  add_subdirectory(cesga)
+endif()

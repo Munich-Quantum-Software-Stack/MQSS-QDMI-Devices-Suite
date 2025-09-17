@@ -1,60 +1,124 @@
-# Declare all external dependencies and make sure that they are available.
+# ------------------------------------------------------------------------------
+# Copyright 2024 Munich Quantum Software Stack Project
+#
+# Licensed under the Apache License, Version 2.0 with LLVM Exceptions (the
+# "License"); you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/blob/develop/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# ------------------------------------------------------------------------------
 
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
-set(QDMI_URL "https://github.com/Munich-Quantum-Software-Stack/QDMI.git" CACHE STRING "QDMI URL")
+set(QDMI_VERSION
+    "1.1.0"
+    CACHE STRING "QDMI version")
+set(QDMI_URL
+    "https://github.com/kayaercument/QDMI.git"
+    CACHE STRING "QDMI URL")
+
+set(BUILD_QDMI_DOCS OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-	FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG develop)
-	list(APPEND FETCH_PACKAGES qdmi)
+  FetchContent_Declare(
+    qdmi
+    GIT_REPOSITORY https://github.com/kayaercument/QDMI.git
+    GIT_TAG 152-env-prop)
+  list(APPEND FETCH_PACKAGES qdmi)
 else()
-	find_package(qdmi QUIET)
-	if(NOT qdmi_FOUND)
-		FetchContent_Declare(qdmi GIT_REPOSITORY ${QDMI_URL} GIT_TAG develop)
-		list(APPEND FETCH_PACKAGES qdmi)
-	endif()
+  find_package(qdmi ${QDMI_VERSION} QUIET)
+  if(NOT qdmi_FOUND)
+    FetchContent_Declare(qdmi URL ${QDMI_URL})
+    list(APPEND FETCH_PACKAGES qdmi)
+  endif()
 endif()
 
-set(JANSSON_VERSION "2.14" CACHE STRING "Jansson version")
-set(JANSSON_URL "https://github.com/akheron/jansson/releases/download/v${JANSSON_VERSION}/jansson-${JANSSON_VERSION}.tar.gz" CACHE STRING "Jansson URL")
-set(JANSSON_BUILD_DOCS OFF CACHE INTERNAL "Do not build Jansson documentation")
-set(JANSSON_WITHOUT_TESTS ON CACHE INTERNAL "Do not build Jansson tests")
+if(BUILD_DOCUMENTATION)
+  find_package(Doxygen 1.13.1 REQUIRED)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-	FetchContent_Declare(jansson URL ${JANSSON_URL} FIND_PACKAGE_ARGS ${JANSSON_VERSION})
-	list(APPEND FETCH_PACKAGES jansson)
-else()
-	find_package(jansson ${JANSSON_VERSION} QUIET)
-	if(NOT jansson_FOUND)
-		FetchContent_Declare(jansson URL ${JANSSON_URL})
-		list(APPEND FETCH_PACKAGES jansson)
-	endif()
+  set(DOXYGEN_AWESOME_VERSION
+      1.12.0
+      CACHE STRING "Doxygen Awesome version")
+  set(DOXYGEN_AWESOME_REV
+      "af1d9030b3ffa7b483fa9997a7272fb12af6af4c"
+      CACHE STRING "Doxygen Awesome identifier (tag, branch or commit hash)")
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    FetchContent_Declare(
+      doxygen-awesome-css
+      GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
+      GIT_TAG ${DOXYGEN_AWESOME_REV}
+      FIND_PACKAGE_ARGS ${DOXYGEN_AWESOME_VERSION})
+    list(APPEND FETCH_PACKAGES doxygen-awesome-css)
+  else()
+    find_package(doxygen-awesome-css ${DOXYGEN_AWESOME_VERSION} QUIET)
+    if(NOT doxygen-awesome-css_FOUND)
+      FetchContent_Declare(
+        doxygen-awesome-css
+        GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
+        GIT_TAG ${DOXYGEN_AWESOME_REV})
+      list(APPEND FETCH_PACKAGES doxygen-awesome-css)
+    endif()
+  endif()
 endif()
 
-set(CJSON_VERSION "1.7.18" CACHE STRING "cJSON version")
-set(CJSON_URL "https://github.com/DaveGamble/cJSON/archive/refs/tags/v${CJSON_VERSION}.tar.gz" CACHE STRING "cJSON URL")
-set(ENABLE_CJSON_TEST OFF CACHE INTERNAL "Do not build cJSON tests")
-set(ENABLE_CJSON_UNINSTALL OFF CACHE INTERNAL "Do not add cJSON uninstall target")
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-	FetchContent_Declare(cjson URL ${CJSON_URL} FIND_PACKAGE_ARGS ${CJSON_VERSION})
-	list(APPEND FETCH_PACKAGES cjson)
-else()
-	find_package(cjson ${CJSON_VERSION} QUIET)
-	if(NOT cjson_FOUND)
-		FetchContent_Declare(cjson URL ${CJSON_URL})
-		list(APPEND FETCH_PACKAGES cjson)
-	endif()
+if(BUILD_BACKEND_TESTS)
+  set(gtest_force_shared_crt
+      ON
+      CACHE BOOL "" FORCE)
+  set(GTEST_VERSION
+      1.16.0
+      CACHE STRING "Google Test version")
+  set(GTEST_URL
+      https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    FetchContent_Declare(googletest URL ${GTEST_URL} FIND_PACKAGE_ARGS
+                                        ${GTEST_VERSION} NAMES GTest)
+    list(APPEND FETCH_PACKAGES googletest)
+  else()
+    find_package(googletest ${GTEST_VERSION} QUIET NAMES GTest)
+    if(NOT googletest_FOUND)
+      FetchContent_Declare(googletest URL ${GTEST_URL})
+      list(APPEND FETCH_PACKAGES googletest)
+    endif()
+  endif()
+endif()
+
+if(BUILD_BACKEND_DCDB)
+
+  FetchContent_Declare(
+    dcdb
+    GIT_REPOSITORY https://gitlab.lrz.de/dcdb/dcdb.git
+    GIT_TAG master)
+
+  FetchContent_MakeAvailable(dcdb)
+  FetchContent_GetProperties(dcdb)
+
+  add_custom_target(
+    dcdb ALL
+    COMMAND ${CMAKE_MAKE_PROGRAM} depsinstall lib tools SUB_DIRS=lib tools
+            PLUGINS= OPERATORS=
+    WORKING_DIRECTORY ${dcdb_SOURCE_DIR}
+    COMMENT "Building external Make project")
+
+  set(DCDB_LIBRARY "${dcdb_SOURCE_DIR}/lib/libdcdb.so")
+  set(DCDB_QUERY_OBJECT "${dcdb_SOURCE_DIR}/tools/dcdbquery/query.o")
+  set(DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/lib/include")
+
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/common/include")
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/../install/include")
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/tools/dcdbquery")
+
 endif()
 
 if(FETCH_PACKAGES)
-	FetchContent_MakeAvailable(${FETCH_PACKAGES})
-
-	# QDMI currently requires access to internal headers
-	target_include_directories(qdmi PUBLIC $<BUILD_INTERFACE:${qdmi_SOURCE_DIR}/src>)
-
-	# jansson does not set the include directory on the target
-	target_include_directories(jansson PUBLIC $<BUILD_INTERFACE:${jansson_BINARY_DIR}/include>)
-
-	# cJSON does not set the include directory on the target
-	target_include_directories(cjson PUBLIC $<BUILD_INTERFACE:${cjson_SOURCE_DIR}>)
+  FetchContent_MakeAvailable(${FETCH_PACKAGES})
 endif()

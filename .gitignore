@@ -2,3 +2,6 @@ build
 .cache
 inputs/token.txt
 .vscode
+__pycache__
+.DC_Store
+.DS_Store

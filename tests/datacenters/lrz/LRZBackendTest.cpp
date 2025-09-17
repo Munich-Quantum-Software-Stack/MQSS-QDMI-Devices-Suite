@@ -502,7 +502,6 @@ TEST_P(LRZBackendTest, ControlGetDataHistogramKeys) {
   LRZ_QDMI_device_job_free(job);
 }
 
-
 TEST_P(LRZBackendTest, ControlGetDataHistogramValue) {
 
   HardwareSession *hardware_session = GetParam();
@@ -531,10 +530,10 @@ TEST_P(LRZBackendTest, ControlGetDataHistogramValue) {
             QDMI_SUCCESS);
   std::vector<int> histogram_values(histogram_values_size / sizeof(int));
 
-  ASSERT_EQ(LRZ_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
-                                            histogram_values_size,
-                                            static_cast<void
-*>(histogram_values.data()), nullptr), QDMI_SUCCESS);
+  ASSERT_EQ(LRZ_QDMI_device_job_get_results(
+                job, QDMI_JOB_RESULT_HIST_VALUES, histogram_values_size,
+                static_cast<void *>(histogram_values.data()), nullptr),
+            QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
 }
@@ -601,11 +600,13 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityValues) {
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, 0, nullptr,
                 &probability_values_size),
             QDMI_SUCCESS);
-  std::vector<double> probability_values(probability_values_size/sizeof(double));
+  std::vector<double> probability_values(probability_values_size /
+                                         sizeof(double));
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES,
-                probability_values_size, static_cast<void*>(probability_values.data()), nullptr),
+                probability_values_size,
+                static_cast<void *>(probability_values.data()), nullptr),
             QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);
@@ -637,11 +638,13 @@ TEST_P(LRZBackendTest, ControlGetDataProbabilityDense) {
                                       0, nullptr, &probability_dense_size),
       QDMI_SUCCESS);
 
-  std::vector<double> probability_dense(probability_dense_size/sizeof(double));
+  std::vector<double> probability_dense(probability_dense_size /
+                                        sizeof(double));
 
   ASSERT_EQ(LRZ_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                probability_dense_size, static_cast<void*>(probability_dense.data()), nullptr),
+                probability_dense_size,
+                static_cast<void *>(probability_dense.data()), nullptr),
             QDMI_SUCCESS);
 
   LRZ_QDMI_device_job_free(job);

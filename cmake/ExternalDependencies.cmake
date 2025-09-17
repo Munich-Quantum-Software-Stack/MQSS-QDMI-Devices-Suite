@@ -92,7 +92,33 @@ if(BUILD_BACKEND_TESTS)
   endif()
 endif()
 
+if(BUILD_BACKEND_DCDB)
+
+  FetchContent_Declare(
+    dcdb
+    GIT_REPOSITORY https://gitlab.lrz.de/dcdb/dcdb.git
+    GIT_TAG master)
+
+  FetchContent_MakeAvailable(dcdb)
+  FetchContent_GetProperties(dcdb)
+
+  add_custom_target(
+    dcdb ALL
+    COMMAND ${CMAKE_MAKE_PROGRAM} depsinstall lib tools SUB_DIRS=lib tools
+            PLUGINS= OPERATORS=
+    WORKING_DIRECTORY ${dcdb_SOURCE_DIR}
+    COMMENT "Building external Make project")
+
+  set(DCDB_LIBRARY "${dcdb_SOURCE_DIR}/lib/libdcdb.so")
+  set(DCDB_QUERY_OBJECT "${dcdb_SOURCE_DIR}/tools/dcdbquery/query.o")
+  set(DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/lib/include")
+
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/common/include")
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/../install/include")
+  list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/tools/dcdbquery")
+
+endif()
+
 if(FETCH_PACKAGES)
   FetchContent_MakeAvailable(${FETCH_PACKAGES})
-
 endif()

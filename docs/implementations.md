@@ -52,7 +52,7 @@ The `QDMI_Client` can query the device to get the properties using
 <!-- prettier-ignore-start -->
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
-  \dontinclude qlm.c
+  \dontinclude qaptiva.c
   \skip int QLM_QDMI_device_session_query_device_property
   \until QDMI_DEVICE_PROPERTY_LIBRARYVERSION
   \until size_ret)
@@ -80,7 +80,7 @@ qubit.
 <!-- prettier-ignore-start -->
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
-  \dontinclude qlm.c
+  \dontinclude qaptiva.c
   \skip int QLM_QDMI_device_session_query_site_property
   \until QDMI_SITE_PROPERTY_INDEX
   \until size_ret)
@@ -112,7 +112,7 @@ To be able to submit a job, `QDMI_DEVICE_JOB_PARAMETER_PROGRAM`and
 <!-- prettier-ignore-start -->
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
-  \dontinclude qlm.c
+  \dontinclude qaptiva.c
   \skip int QLM_QDMI_device_job_submit
   \until QDMI_JOB_STATUS_FAILED
   \until QDMI_SUCCESS

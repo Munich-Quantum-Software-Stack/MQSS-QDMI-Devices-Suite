@@ -15,7 +15,7 @@ the License.
 
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
-
+#define _GNU_SOURCE
 #include "lrz_qdmi/device.h"
 #include "lrz_qdmi/types.h"
 #include "qdmi/constants.h"
@@ -86,7 +86,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     }                                                                          \
   }
 
-#define NUM_OF_HW 7
+#define NUM_OF_HW 8
 
 #define NUM_OF_OP 4
 const char *DEVICE_HARDWARES[NUM_OF_HW] = {
@@ -143,9 +143,9 @@ typedef struct LRZ_Hardware_impl_d {
 
   LRZ_QDMI_Operation operations[NUM_OF_OP];
 
-  int n_op;
+  size_t n_op;
 
-  int coupling_map_size;
+  size_t coupling_map_size;
 } LRZ_Hardware;
 
 /**
@@ -200,7 +200,7 @@ struct LRZ_QDMI_Device_Job_impl_d {
  * @details This structure can, e.g., be used to store the site id.
  */
 struct LRZ_QDMI_Site_impl_d {
-  int index;
+  size_t index;
 };
 
 /**
@@ -350,10 +350,10 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
       return QDMI_ERROR_FATAL;
     }
 
-    int _n_qubit = (int)cJSON_GetNumberValue(qubit_num);
+    size_t _n_qubit = (size_t)cJSON_GetNumberValue(qubit_num);
     session->hardware->n_qubit = _n_qubit;
     session->hardware->sites = malloc(sizeof(LRZ_QDMI_Site) * _n_qubit);
-    for (int i = 0; i < session->hardware->n_qubit; i++) {
+    for (size_t i = 0; i < session->hardware->n_qubit; i++) {
       session->hardware->sites[i] = malloc(sizeof(LRZ_QDMI_Site));
       session->hardware->sites[i]->index = i;
     }
@@ -365,9 +365,9 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     char *coupling_map = cJSON_GetStringValue(coupling_maps);
 
     const char *p = &(*++coupling_map);
-    int index = 0;
+    size_t index = 0;
     session->hardware->coupling_map = malloc(sizeof(LRZ_QDMI_Site) * strlen(p));
-    const char *coupling_map_pair_format = "[%d, %d]";
+    const char coupling_map_pair_format[] = "[%d, %d]";
     while (*p) {
       int a, b;
       if (sscanf(p, coupling_map_pair_format, &a, &b) == 2) {
@@ -383,7 +383,7 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     char *ops = operations_s;
     size_t start_index = 0, end_index = 0;
     size_t count = 0;
-    int num_op = 0;
+    size_t num_op = 0;
     while (*ops) {
       char *name;
       if (*ops == '\'') {
@@ -815,7 +815,7 @@ int LRZ_QDMI_device_job_wait(LRZ_QDMI_Device_Job job, const size_t timeout) {
       }
     }
     gettimeofday(&end, NULL);
-    if (timeout != 0 && (end.tv_sec - start.tv_sec) > timeout) {
+    if (timeout != 0 && (size_t)(end.tv_sec - start.tv_sec) > timeout) {
       return QDMI_ERROR_TIMEOUT;
     }
     usleep(500);
@@ -1003,7 +1003,7 @@ int LRZ_QDMI_device_session_query_device_property(
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, int,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, size_t,
                             session->hardware->n_qubit, prop, size, value,
                             size_ret)
 
@@ -1031,7 +1031,7 @@ int LRZ_QDMI_device_session_query_site_property(LRZ_QDMI_Device_Session session,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, int, site->index, prop,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, size_t, site->index, prop,
                             size, value, size_ret)
   return QDMI_ERROR_NOTSUPPORTED;
 }

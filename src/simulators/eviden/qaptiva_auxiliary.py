@@ -17,7 +17,7 @@
 
 
 
-## @file qlm_auxiliary.py
+## @file qaptiva_auxiliary.py
 #  @brief The Custom Module for handling the connection and submitting jobs.
 
 

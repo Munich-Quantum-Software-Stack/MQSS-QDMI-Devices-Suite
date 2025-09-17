@@ -53,7 +53,7 @@ The `QDMI_Client` can query the device to get the properties using
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
   \dontinclude qaptiva.c
-  \skip int QLM_QDMI_device_session_query_device_property
+  \skip int QAPTIVA_QDMI_device_session_query_device_property
   \until QDMI_DEVICE_PROPERTY_LIBRARYVERSION
   \until size_ret)
   \until QDMI_ERROR_NOTSUPPORTED
@@ -81,7 +81,7 @@ qubit.
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
   \dontinclude qaptiva.c
-  \skip int QLM_QDMI_device_session_query_site_property
+  \skip int QAPTIVA_QDMI_device_session_query_site_property
   \until QDMI_SITE_PROPERTY_INDEX
   \until size_ret)
   \until QDMI_ERROR_NOTSUPPORTED
@@ -113,7 +113,7 @@ To be able to submit a job, `QDMI_DEVICE_JOB_PARAMETER_PROGRAM`and
 <div class="tabbed">
 - <b class="tab-title">QLM</b>
   \dontinclude qaptiva.c
-  \skip int QLM_QDMI_device_job_submit
+  \skip int QAPTIVA_QDMI_device_job_submit
   \until QDMI_JOB_STATUS_FAILED
   \until QDMI_SUCCESS
 </div>

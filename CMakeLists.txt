@@ -32,7 +32,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
     CACHE BOOL "Export compile commands" FORCE)
 
 option(BUILD_BACKEND_TESTS "Build the backend tests" ON)
-option(BUILD_DOCUMENTATION "Build the documentations" OFF)
+option(BUILD_DOCUMENTATION "Build the documentations" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['sampling_5frate_0',['sampling_rate',['../structDCDB__QDMI__TelemetrySensor__impl__t.html#a7718e9b2e67fe8e5b837d200138cd182',1,'DCDB_QDMI_TelemetrySensor_impl_t']]],
+  ['script_5flocation_1',['SCRIPT_LOCATION',['../qaptiva_8c.html#aab0a399d3c56da7f5f53dc5bf6d088b4',1,'qaptiva.c']]],
+  ['script_5fname_2',['SCRIPT_NAME',['../qaptiva_8c.html#a36fda025d077ce6d9795ff5acff19eeb',1,'qaptiva.c']]],
+  ['sensor_20of_20the_20devices_3',['The Telemetry Sensor of the Devices',['../md_docs_2implementations.html#device-telemetry',1,'']]],
+  ['sensor_20query_4',['Submitting a Telemetry Sensor Query',['../md_docs_2implementations.html#device-environment-query',1,'']]],
+  ['sensors_2eh_5',['sensors.h',['../sensors_8h.html',1,'']]],
+  ['session_6',['session',['../structDCDB__QDMI__Device__TelemetrySensor__Query__impl__d.html#a301ba0bcb8c65ed2967d03f1764686f9',1,'DCDB_QDMI_Device_TelemetrySensor_Query_impl_d::session'],['../structQAPTIVA__QDMI__Device__Job__impl__t.html#a6f8a25f5902f683f39169bb5b06b308a',1,'QAPTIVA_QDMI_Device_Job_impl_t::session']]],
+  ['session_2eh_7',['session.h',['../session_8h.html',1,'']]],
+  ['sethostname_8',['setHostname',['../structDCDB__QDMI__Device__Session__impl__d.html#a39fecc073afed40781394f238fd4d4cd',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['sethostnameandport_9',['setHostnameAndPort',['../structDCDB__QDMI__Device__Session__impl__d.html#afa8a598e1d7ea2a6e61755146b023246',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['setpassword_10',['setPassword',['../structDCDB__QDMI__Device__Session__impl__d.html#aa2af80bfde937718d0872eefd59197dc',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['setport_11',['setPort',['../structDCDB__QDMI__Device__Session__impl__d.html#a74651be6fc2dcebd52c1424e1c8cd06f',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['setstatus_12',['setStatus',['../structDCDB__QDMI__Device__Session__impl__d.html#a611e22c7e779815d127c844e03cad3e1',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['setusername_13',['setUsername',['../structDCDB__QDMI__Device__Session__impl__d.html#aed3a52f49d86ecbba1f18c8f10bf7a47',1,'DCDB_QDMI_Device_Session_impl_d']]],
+  ['sites_20of_20the_20devices_14',['The Sites of the Devices',['../md_docs_2implementations.html#device-sites',1,'']]],
+  ['spesific_20dependencies_15',['Device-Spesific Dependencies',['../md_docs_2development.html#dependencies',1,'']]],
+  ['start_5ftime_16',['start_time',['../structDCDB__QDMI__Device__TelemetrySensor__Query__impl__d.html#a4de32882f324d9ca29eb3b8323bc181c',1,'DCDB_QDMI_Device_TelemetrySensor_Query_impl_d']]],
+  ['status_17',['status',['../structDCDB__QDMI__Device__TelemetrySensor__Query__impl__d.html#afb94ebfca6738a57bf2a443468bcbb61',1,'DCDB_QDMI_Device_TelemetrySensor_Query_impl_d::status'],['../structDCDB__QDMI__Device__Session__impl__d.html#a0eee26735a4fc9a13c35887a962f692f',1,'DCDB_QDMI_Device_Session_impl_d::status'],['../structQAPTIVA__QDMI__Device__Session__impl__t.html#a5f688c024e0f15c65daaf5bc25539c57',1,'QAPTIVA_QDMI_Device_Session_impl_t::status'],['../structQAPTIVA__QDMI__Device__Job__impl__t.html#a30910b956aa1384012f5908277a0eb16',1,'QAPTIVA_QDMI_Device_Job_impl_t::status']]],
+  ['submit_5fjob_18',['submit_job',['../qaptiva_8c.html#a9154cb56763f0ccd9c8e60ecd0c4ee1b',1,'submit_job():&#160;qaptiva.c'],['../qaptiva__auxiliary_8py.html#ae6cd0751ed88f63a7324f32afd68ca36',1,'qaptiva_auxiliary.submit_job()']]],
+  ['submit_5fjob_5ffunction_5fname_19',['SUBMIT_JOB_FUNCTION_NAME',['../qaptiva_8c.html#a9249de5e033067002552944225094637',1,'qaptiva.c']]],
+  ['submit_5fquery_20',['submit_query',['../dcdb_8cpp.html#ae7c40e4cbfefd53a8b4ad2af20880058',1,'dcdb.cpp']]],
+  ['submitting_20a_20job_21',['Submitting a Job',['../md_docs_2implementations.html#device-job',1,'']]],
+  ['submitting_20a_20telemetry_20sensor_20query_22',['Submitting a Telemetry Sensor Query',['../md_docs_2implementations.html#device-environment-query',1,'']]]
+];

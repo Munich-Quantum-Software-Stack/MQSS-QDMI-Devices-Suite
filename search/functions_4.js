@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['qaptiva_5fqdmi_5fdevice_5ffinalize_0',['QAPTIVA_QDMI_device_finalize',['../qaptiva_8c.html#a4d282b4d40b843cad2edf61c54cebe61',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5finitialize_1',['QAPTIVA_QDMI_device_initialize',['../qaptiva_8c.html#a8f315875ee871139882fcd8cc43b14e1',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fcancel_2',['QAPTIVA_QDMI_device_job_cancel',['../qaptiva_8c.html#ab7a52abf337c54225085191b087e0fad',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fcheck_3',['QAPTIVA_QDMI_device_job_check',['../qaptiva_8c.html#aa9a271a9088851f355ec04b31c44219e',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5ffree_4',['QAPTIVA_QDMI_device_job_free',['../qaptiva_8c.html#a20498251dc353017bf7f95c495aab0a4',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fget_5fresults_5',['QAPTIVA_QDMI_device_job_get_results',['../qaptiva_8c.html#a72d0ba3f739f3aa8cb45a0c15707ee83',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fquery_5fproperty_6',['QAPTIVA_QDMI_device_job_query_property',['../qaptiva_8c.html#a6358f2e4abd1160c00ca1fd324c1b6de',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fset_5fparameter_7',['QAPTIVA_QDMI_device_job_set_parameter',['../qaptiva_8c.html#aa280811ffe8976000d831029f88406e7',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fsubmit_8',['QAPTIVA_QDMI_device_job_submit',['../qaptiva_8c.html#a3e5d120b4ad717b728678df0e2cce784',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fjob_5fwait_9',['QAPTIVA_QDMI_device_job_wait',['../qaptiva_8c.html#a4f6cb2a46d1ee98e879be2c567d2994a',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5falloc_10',['QAPTIVA_QDMI_device_session_alloc',['../qaptiva_8c.html#a1c467a6cb9e849339651b5d7f7281265',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5fcreate_5fdevice_5fjob_11',['QAPTIVA_QDMI_device_session_create_device_job',['../qaptiva_8c.html#a4219f62fc5373c067acfca48cd5164b0',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5ffree_12',['QAPTIVA_QDMI_device_session_free',['../qaptiva_8c.html#a4d2f044d1382b8f54cdb91805269da10',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5finit_13',['QAPTIVA_QDMI_device_session_init',['../qaptiva_8c.html#a9e5d902ed89b8c0b6ad4426482abac91',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5fquery_5fdevice_5fproperty_14',['QAPTIVA_QDMI_device_session_query_device_property',['../qaptiva_8c.html#ab856b13ee7f755790798e87c08c19c2f',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5fquery_5foperation_5fproperty_15',['QAPTIVA_QDMI_device_session_query_operation_property',['../qaptiva_8c.html#ac86ef192af39525cd54c51de73cd59cd',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5fquery_5fsite_5fproperty_16',['QAPTIVA_QDMI_device_session_query_site_property',['../qaptiva_8c.html#a433b4ef2fb28634351f5e347685b663a',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fdevice_5fsession_5fset_5fparameter_17',['QAPTIVA_QDMI_device_session_set_parameter',['../qaptiva_8c.html#a5acb1b1d860719ba6622aa42687c2161',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fget_5fdevice_5fstatus_18',['QAPTIVA_QDMI_get_device_status',['../qaptiva_8c.html#a986a44336aedb3f26a048bb80fe328bc',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fread_5fdevice_5fstatus_19',['QAPTIVA_QDMI_read_device_status',['../qaptiva_8c.html#aaf754636fc7fa307c90b3a028a69d154',1,'qaptiva.c']]],
+  ['qaptiva_5fqdmi_5fset_5fdevice_5fstatus_20',['QAPTIVA_QDMI_set_device_status',['../qaptiva_8c.html#a72e98e04ff1750796e43cd6044df0d06',1,'qaptiva.c']]],
+  ['query_21',['query',['../structDCDB__QDMI__TelemetrySensor__impl__t.html#a3c21b2f08f45118ac440545be61c3add',1,'DCDB_QDMI_TelemetrySensor_impl_t']]]
+];

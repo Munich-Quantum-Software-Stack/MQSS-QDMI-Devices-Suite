@@ -149,7 +149,7 @@ To build and run the devices following environment variables needs to be set.
 - <b class="tab-title">QLM</b>
   - _QLM_AUXILIARY_SCRIPT_LOCATION_ : The location of the QLM auxiliary script.
   - _QLM_AUXILIARY_SCRIPT_NAME_ : The name of the QLM auxiliary script.
-  - _QLM_HOST_URL_ : The host url where QLM hardware is hosted.
+  - _QAPTIVA_HOST_URL_ : The host url where QLM hardware is hosted.
 
 - <b class="tab-title">DCDB</b>
   - _DCDB_SOURCE_LOCATION_ : The location of the DCDB source.

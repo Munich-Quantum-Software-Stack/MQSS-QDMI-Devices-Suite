@@ -178,7 +178,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  * the `QDMI Device Telemetry Sensor Query` interface. This design allows
  * devices to implement the query type in a device-specific manner. This struct
  * represents the opaque pointer type used on the device side, encapsulating all
- * information required for an telemetry sensor query.
+ * information required for a telemetry sensor query.
  */
 struct DCDB_QDMI_Device_TelemetrySensor_Query_impl_d {
   /**
@@ -652,7 +652,7 @@ int DCDB_QDMI_device_session_query_operation_property(
 }
 
 /**
- * @brief Query an telemetry sensor property.
+ * @brief Query a telemetry sensor property.
  * @param[in] session The session used for the query.
  * @param[in] telemetrysensor The telemetry to query.
  * @param[in] prop The property to query.
@@ -716,8 +716,8 @@ int DCDB_QDMI_device_session_query_telemetrysensor_property(
 }
 
 /**
- * @brief Create an telemetry sensor query.
- * @details This is the main entry point for a driver to create an telemetry
+ * @brief Create a telemetry sensor query.
+ * @details This is the main entry point for a driver to create a telemetry
  sensor
  * query for a device. The returned handle can be used throughout the "device
  * telemetry sensor query interface" to refer to the telemetry sensor query.
@@ -739,7 +739,7 @@ int DCDB_QDMI_device_session_query_telemetrysensor_property(
  * @return <a
  href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a>
  if the session is not in a state allowing
- * the creation of an telemetry sensor query, for example, because the session
+ * the creation of a telemetry sensor query, for example, because the session
  is not
  * initialized.
  *
@@ -776,8 +776,8 @@ int DCDB_QDMI_device_session_create_device_telemetrysensor_query(
 }
 
 /**
- * @brief Set a parameter for an telemetry sensor query.
- * @param[in] query A handle to an telemetry sensor query for which to set @p
+ * @brief Set a parameter for a telemetry sensor query.
+ * @param[in] query A handle to a telemetry sensor query for which to set @p
 param.
  * Must not be @c NULL.
  * @param[in] param The parameter whose value will be set. Must be one of the
@@ -865,10 +865,10 @@ int DCDB_QDMI_device_telemetrysensor_query_set_parameter(
   }
 }
 /**
- * @brief The auxiliary function to submit an telemetry sensor query.
+ * @brief The auxiliary function to submit a telemetry sensor query.
  *
  * @details This function is used in the @ref
- * DCDB_QDMI_device_telemetrysensor_query_submit to submit an telemetry
+ * DCDB_QDMI_device_telemetrysensor_query_submit to submit a telemetry
  * sensor query asynchronously
  *
  * @param[in] query The telemetry sensor query to submit. Must not be @c NULL.
@@ -886,7 +886,7 @@ void submit_query(DCDB_QDMI_Device_TelemetrySensor_Query query) {
 }
 
 /**
- * @brief Submit an telemetry sensor query to the device.
+ * @brief Submit a telemetry sensor query to the device.
  * @details This functions asynchronously submit the telemetry sensor query
  using
  * the @ref submit_query function. The @ref
@@ -930,7 +930,7 @@ int DCDB_QDMI_device_telemetrysensor_query_submit(
   return QDMI_SUCCESS;
 }
 /**
- * @brief Retrieve the results of an telemetry sensor query.
+ * @brief Retrieve the results of a telemetry sensor query.
  * @param[in] query The telemetry sensor query to retrieve the results from.
  Must not
  * be @c NULL.
@@ -1069,7 +1069,7 @@ int DCDB_QDMI_device_telemetrysensor_query_check_status(
 }
 
 /**
- * @brief Wait for an telemetry sensor query to finish.
+ * @brief Wait for a telemetry sensor query to finish.
  * @details This function blocks until the @ref submit_query function has
  * finished or has been canceled.
  * @param[in] query The telemetry sensor query to wait for. Must not be @c
@@ -1140,7 +1140,7 @@ int DCDB_QDMI_device_telemetrysensor_query_cancel(
 }
 
 /**
- * @brief Free an telemetry sensor query.
+ * @brief Free a telemetry sensor query.
  * @details Free the resources associated with a telemetry sensor query. Using
  * a telemetry sensor query handle after it has been freed is undefined
  * behavior.

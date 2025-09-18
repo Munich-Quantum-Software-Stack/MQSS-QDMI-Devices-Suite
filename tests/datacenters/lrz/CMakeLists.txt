@@ -15,6 +15,24 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-add_subdirectory(databases)
-add_subdirectory(datacenters)
-add_subdirectory(simulators)
+enable_testing()
+include(GoogleTest)
+enable_language(CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+generate_device_defs_executable(${LRZ_QDMI_PREFIX})
+
+add_executable(LRZBackendTest LRZBackendTest.cpp)
+
+target_link_libraries(LRZBackendTest PRIVATE gtest gtest_main qdmi::qdmi
+                                             lrz_device qdmi::project_warnings)
+
+add_dependencies(LRZBackendTest qdmi_test_lrz_device_defs)
+
+gtest_discover_tests(LRZBackendTest DISCOVERY_TIMEOUT 60)
+
+target_compile_options(LRZBackendTest INTERFACE --coverage -fprofile-arcs
+                                                -ftest-coverage -O0)
+target_link_libraries(LRZBackendTest INTERFACE gcov --coverage)

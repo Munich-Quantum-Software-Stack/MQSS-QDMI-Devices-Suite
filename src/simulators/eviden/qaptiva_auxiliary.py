@@ -15,10 +15,13 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-"""! @brief QPU bağlantı ve iş gönderme yardımcı fonksiyonları."""
+## @file qaptiva_auxiliary.py
+#  @brief The Custom Module for handling the connection and submitting jobs.
+
+
 import math
-import requests
-import os
+
+
 def create_remote_qpu(host):
     """! Creates a remote QPU connection.
 
@@ -40,6 +43,9 @@ def create_remote_qpu(host):
 
 def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
     """Submits job via HTTP to Flask backend instead of RemoteQPU."""
+    from flask import jsonify
+    import math
+    import requests
     try:        
         if t1 <= 0 or t2 <= 0 or math.isnan(t1) or math.isnan(t2):
             return jsonify({"error": "t1 and t2 must be positive floats"}), 400

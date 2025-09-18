@@ -15,21 +15,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-set(DCDB_SOURCE_DIR $ENV{DCDB_SOURCE_LOCATION})
-
-set(DCDB_LIBRARY "${DCDB_SOURCE_DIR}/lib/libdcdb.so")
-set(DCDB_QUERY_OBJECT "${DCDB_SOURCE_DIR}/tools/dcdbquery/query.o")
-set(DCDB_INCLUDE_DIRS "${DCDB_SOURCE_DIR}/lib/include")
-
-list(APPEND DCDB_INCLUDE_DIRS "${DCDB_SOURCE_DIR}/common/include")
-list(APPEND DCDB_INCLUDE_DIRS "${DCDB_SOURCE_DIR}/../install/include")
-list(APPEND DCDB_INCLUDE_DIRS "${DCDB_SOURCE_DIR}/tools/dcdbquery")
-
-enable_language(CXX)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 add_library(dcdb_device SHARED dcdb.cpp session.cpp sensors.cpp)
 
 target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::project_warnings

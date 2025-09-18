@@ -8,14 +8,14 @@
   },
   "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools SUB_DIRS=lib tools PLUGINS= OPERATORS=",
   "remoteEnv": {
-    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/qlm",
-    "QLM_AUXILIARY_SCRIPT_NAME": "qlm_auxiliary",
-    "QLM_HOST_URL": "host.docker.internal:20501",
+    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/eviden",
+    "QLM_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
+    "QAPTIVA_HOST_URL": "host.docker.internal:20501",
     "QLM_NOISY_HOST_URL": "http://host.docker.internal:20502/run",
     "DCDB_HOST_URL": "host.docker.internal:9042",
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
     "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
 
-    "LRZ_DEVICE_HOST": "https://portal.quantum.lrz.de:4000/v1"
+    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
   }
 }

@@ -22,18 +22,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-generate_device_defs_executable(${LRZ_QDMI_PREFIX})
+generate_device_defs_executable(${QAPTIVA_QDMI_PREFIX})
 
-add_executable(LRZBackendTest LRZBackendTest.cpp)
+add_executable(QaptivaBackendTest QaptivaBackendTest.cpp)
 
-target_link_libraries(LRZBackendTest PRIVATE gtest gtest_main qdmi::qdmi
-                                             lrz_device qdmi::project_warnings)
+target_link_libraries(
+  QaptivaBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
+                             qdmi::project_warnings)
 
-add_dependencies(LRZBackendTest qdmi_test_lrz_device_defs)
+add_dependencies(QaptivaBackendTest qdmi_test_qaptiva_device_defs)
 
-gtest_discover_tests(LRZBackendTest 
-  DISCOVERY_TIMEOUT 60  )
+gtest_discover_tests(QaptivaBackendTest)
 
-target_compile_options(LRZBackendTest INTERFACE --coverage -fprofile-arcs
-                                                -ftest-coverage -O0)
-target_link_libraries(LRZBackendTest INTERFACE gcov --coverage)
+if(ENABLE_COVERAGE)
+  target_compile_options(QaptivaBackendTest INTERFACE --coverage -fprofile-arcs
+                                                      -ftest-coverage -O0)
+  target_link_libraries(QaptivaBackendTest INTERFACE gcov --coverage)
+endif()

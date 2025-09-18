@@ -15,7 +15,7 @@ the License.
 
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
-
+#define _GNU_SOURCE
 #include "lrz_qdmi/device.h"
 #include "lrz_qdmi/types.h"
 #include "qdmi/constants.h"
@@ -86,7 +86,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     }                                                                          \
   }
 
-#define NUM_OF_HW 7
+#define NUM_OF_HW 8
 
 #define NUM_OF_OP 4
 const char *DEVICE_HARDWARES[NUM_OF_HW] = {
@@ -143,9 +143,9 @@ typedef struct LRZ_Hardware_impl_d {
 
   LRZ_QDMI_Operation operations[NUM_OF_OP];
 
-  int n_op;
+  size_t n_op;
 
-  int coupling_map_size;
+  size_t coupling_map_size;
 } LRZ_Hardware;
 
 /**
@@ -188,8 +188,11 @@ struct LRZ_QDMI_Device_Job_impl_d {
   int *hist_values;
   double *prob_values;
   double *prob_dense;
-
   int n_state;
+
+  size_t hist_size;
+  size_t prob_value_size;
+  size_t prob_dense_size;
 };
 
 /**
@@ -197,7 +200,7 @@ struct LRZ_QDMI_Device_Job_impl_d {
  * @details This structure can, e.g., be used to store the site id.
  */
 struct LRZ_QDMI_Site_impl_d {
-  int index;
+  size_t index;
 };
 
 /**
@@ -228,8 +231,7 @@ int LRZ_QDMI_device_initialize(void) {
   if (!curl)
     return QDMI_ERROR_FATAL;
 
-  curl_easy_setopt(curl, CURLOPT_URL,
-                   "https://portal-test.quantum.lrz.de:4000/v1");
+  curl_easy_setopt(curl, CURLOPT_URL, "https://portal.quantum.lrz.de:4000/v1");
   curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   res = curl_easy_perform(curl);
@@ -347,10 +349,10 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
       return QDMI_ERROR_FATAL;
     }
 
-    int _n_qubit = (int)cJSON_GetNumberValue(qubit_num);
+    size_t _n_qubit = (size_t)cJSON_GetNumberValue(qubit_num);
     session->hardware->n_qubit = _n_qubit;
     session->hardware->sites = malloc(sizeof(LRZ_QDMI_Site) * _n_qubit);
-    for (int i = 0; i < session->hardware->n_qubit; i++) {
+    for (size_t i = 0; i < session->hardware->n_qubit; i++) {
       session->hardware->sites[i] = malloc(sizeof(LRZ_QDMI_Site));
       session->hardware->sites[i]->index = i;
     }
@@ -362,9 +364,9 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     char *coupling_map = cJSON_GetStringValue(coupling_maps);
 
     const char *p = &(*++coupling_map);
-    int index = 0;
+    size_t index = 0;
     session->hardware->coupling_map = malloc(sizeof(LRZ_QDMI_Site) * strlen(p));
-    const char *coupling_map_pair_format = "[%d, %d]";
+    const char coupling_map_pair_format[] = "[%d, %d]";
     while (*p) {
       int a, b;
       if (sscanf(p, coupling_map_pair_format, &a, &b) == 2) {
@@ -380,7 +382,7 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     char *ops = operations_s;
     size_t start_index = 0, end_index = 0;
     size_t count = 0;
-    int num_op = 0;
+    size_t num_op = 0;
     while (*ops) {
       char *name;
       if (*ops == '\'') {
@@ -812,7 +814,7 @@ int LRZ_QDMI_device_job_wait(LRZ_QDMI_Device_Job job, const size_t timeout) {
       }
     }
     gettimeofday(&end, NULL);
-    if (timeout != 0 && (end.tv_sec - start.tv_sec) > timeout) {
+    if (timeout != 0 && (size_t)(end.tv_sec - start.tv_sec) > timeout) {
       return QDMI_ERROR_TIMEOUT;
     }
     usleep(500);
@@ -875,30 +877,33 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
     return QDMI_ERROR_FATAL;
   }
 
-  int array_size = (cJSON_GetArraySize(parsed_results));
+  size_t array_size = (size_t)cJSON_GetArraySize(parsed_results);
+  char *f_item = cJSON_GetArrayItem(parsed_results, 0)->string;
+  job->prob_dense_size = (1 << strlen(f_item)) * sizeof(double);
+  job->hist_size = array_size;
+  job->prob_value_size = sizeof(double) * array_size;
   size_t size_in_byte = (size_t)array_size * sizeof(double);
-  job->prob_values = malloc(size_in_byte);
-  job->hist_values = malloc(size_in_byte);
-  job->prob_dense = malloc(size_in_byte);
-  job->n_state = array_size;
+
+  job->prob_values = malloc(sizeof(double) * array_size);
+  job->hist_values = malloc(sizeof(int) * array_size);
+  job->prob_dense = malloc(job->prob_dense_size);
+  job->n_state = 1 << strlen(f_item);
   size_t shots = *(job->shots);
-  for (int index = 0; index < array_size; index++) {
-    cJSON *value_json = cJSON_GetArrayItem(parsed_results, index);
+  for (size_t index = 0; index < array_size; index++) {
+    cJSON *value_json = cJSON_GetArrayItem(parsed_results, (int)index);
     int value = (int)cJSON_GetNumberValue(value_json);
     double prob = (double)value / (double)shots;
     char *key = value_json->string;
     long key_int = strtol(key, NULL, 2);
 
     job->prob_values[index] = prob;
-    job->prob_dense[key_int] = prob;
     job->hist_values[index] = value;
 
+    job->prob_dense[key_int] = prob;
     asprintf(&hist_keys, "%s,%s", hist_keys, key);
   }
   job->hist_keys = malloc(strlen(hist_keys) - 1);
   strcpy(job->hist_keys, ++hist_keys);
-  // job->hist_keys = &*++hist_keys;
-
   return QDMI_SUCCESS;
 }
 
@@ -929,46 +934,19 @@ int LRZ_QDMI_device_job_get_results(LRZ_QDMI_Device_Job job,
   }
 
   size_t required_size;
-  if (result == QDMI_JOB_RESULT_HIST_KEYS ||
-      result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS) {
-    required_size = strlen(job->hist_keys);
-    if (data) {
-      if (size < required_size)
-        return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->hist_keys, size);
-      return QDMI_SUCCESS;
-    }
-    if (size_ret)
-      *size_ret = required_size;
-    return QDMI_SUCCESS;
-  }
+  ADD_STRING_PROPERTY(QDMI_JOB_RESULT_HIST_KEYS, job->hist_keys, result, size,
+                      data, size_ret)
+  ADD_LIST_PROPERTY(QDMI_JOB_RESULT_HIST_VALUES, int, job->hist_values,
+                    job->hist_size, result, size, data, size_ret)
 
-  if (result == QDMI_JOB_RESULT_HIST_VALUES) {
-    required_size = sizeof(job->hist_values);
-    if (data) {
-      if (size < required_size)
-        return QDMI_ERROR_INVALIDARGUMENT;
-      memcpy(data, job->hist_values, size);
-    }
-    if (size_ret)
-      *size_ret = required_size;
-    return QDMI_SUCCESS;
-  }
-
-  if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES) {
-    required_size = sizeof(job->prob_values);
-    if (data) {
-      if (size < required_size)
-        return QDMI_ERROR_INVALIDARGUMENT;
-      memcpy(data, job->prob_values, size);
-    }
-    if (size_ret)
-      *size_ret = required_size;
-    return QDMI_SUCCESS;
-  }
+  ADD_STRING_PROPERTY(QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, job->hist_keys,
+                      result, size, data, size_ret)
+  ADD_LIST_PROPERTY(QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, int,
+                    job->prob_values, job->prob_value_size / sizeof(double),
+                    result, size, data, size_ret)
 
   if (result == QDMI_JOB_RESULT_PROBABILITIES_DENSE) {
-    required_size = sizeof(job->prob_dense);
+    required_size = job->prob_dense_size;
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
@@ -1023,7 +1001,7 @@ int LRZ_QDMI_device_session_query_device_property(
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, int,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, size_t,
                             session->hardware->n_qubit, prop, size, value,
                             size_ret)
 
@@ -1051,7 +1029,7 @@ int LRZ_QDMI_device_session_query_site_property(LRZ_QDMI_Device_Session session,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, int, site->index, prop,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, size_t, site->index, prop,
                             size, value, size_ret)
   return QDMI_ERROR_NOTSUPPORTED;
 }

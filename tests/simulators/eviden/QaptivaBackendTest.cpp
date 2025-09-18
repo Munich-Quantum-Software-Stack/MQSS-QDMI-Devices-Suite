@@ -16,7 +16,7 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
 
-#include "qlm_qdmi/device.h"
+#include "qaptiva_qdmi/device.h"
 #include <gtest/gtest.h>
 
 #define QLM_HOST_URL "QLM_HOST_URL"
@@ -54,18 +54,18 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define CREATE_JOB(job, n_shot, format, program)                               \
   {                                                                            \
-    ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),        \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),    \
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QLM_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM, sizeof(n_shot), &n_shot), \
         QDMI_SUCCESS);                                                         \
-    ASSERT_EQ(QLM_QDMI_device_job_set_parameter(                               \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(                           \
                   job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT,                \
                   sizeof(format), &format),                                    \
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QLM_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_PROGRAM, strlen(program), program), \
         QDMI_SUCCESS);                                                         \
   }
@@ -132,7 +132,7 @@ protected:
     if (!hostname)
     {
       std::cout << "Please provide a hostname by using environment variable "
-                   "QLM_HOST_URL."
+                   "QAPTIVA_HOST_URL."
                 << std::endl;
       exit(1);
     }
@@ -146,40 +146,30 @@ protected:
       exit(1);
     }
 
-    EXIT_ON_FAIL(QLM_QDMI_device_initialize(),
+    EXIT_ON_FAIL(QAPTIVA_QDMI_device_initialize(),
                  "Failed to initialize the device")
 
-    EXIT_ON_FAIL(QLM_QDMI_device_session_alloc(&session),
+    EXIT_ON_FAIL(QAPTIVA_QDMI_device_session_alloc(&session),
                  "Failed to allocate a session")
 
-    EXIT_ON_FAIL(QLM_QDMI_device_session_alloc(&noisy_session),
-                 "Failed to allocate a noisy session")
-
-    EXIT_ON_FAIL(QLM_QDMI_device_session_set_parameter(
+    EXIT_ON_FAIL(QAPTIVA_QDMI_device_session_set_parameter(
                      session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
                      strlen(hostname) * sizeof(char), hostname),
                  "Failed to set baseurl for the session")
 
-    EXIT_ON_FAIL(QLM_QDMI_device_session_set_parameter(
+    EXIT_ON_FAIL(QAPTIVA_QDMI_device_session_set_parameter(
                      noisy_session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
                      strlen(noisy_hostname) * sizeof(char), noisy_hostname),
                  "Failed to set baseurl for the noisy session")
 
     EXIT_ON_FAIL(
-        QLM_QDMI_device_session_init(session),
+        QAPTIVA_QDMI_device_session_init(session),
         "Failed to initialize a session. Potential errors: Wrong or missing "
         "authentication information, or missing Python packages or device "
         "status is offline, or in "
         "maintenance. To provide credentials, take a look in " __FILE__
             << (__LINE__ - 4));
 
-    EXIT_ON_FAIL(
-        QLM_QDMI_device_session_init(noisy_session),
-        "Failed to initialize a noisy session. Potential errors: Wrong or missing "
-        "authentication information, or missing Python packages or device "
-        "status is offline, or in "
-        "maintenance. To provide credentials, take a look in " __FILE__
-            << (__LINE__ - 4));
   }
 
   static void TearDownTestSuite()
@@ -191,13 +181,12 @@ protected:
 };
 
 QLM_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-QLM_QDMI_Device_Session QDMIImplementationTest::noisy_session = nullptr;
+QLM_QDMI_Device_Session QDMIImplementationTest::noisy_session = nullptr
 char *QDMIImplementationTest::hostname = nullptr;
 char *QDMIImplementationTest::noisy_hostname = nullptr;
 
-TEST_F(QDMIImplementationTest, SessionSetParameterImplemented)
-{
-  ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
+TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_set_parameter(
                 session, QDMI_DEVICE_SESSION_PARAMETER_MAX, 0, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
@@ -205,7 +194,7 @@ TEST_F(QDMIImplementationTest, SessionSetParameterImplemented)
 TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated)
 {
   char dummy_hostname[] = "qlm.lrz.de";
-  ASSERT_EQ(QLM_QDMI_device_session_set_parameter(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_set_parameter(
                 session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
                 sizeof(dummy_hostname), &dummy_hostname),
             QDMI_ERROR_BADSTATE);
@@ -225,71 +214,67 @@ namespace
   }
 } // namespace
 
-TEST_F(QDMIImplementationTest, ControlCreateJobImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
-  ASSERT_NE(QLM_QDMI_device_session_create_device_job(session, &job),
+TEST_F(QDMIImplementationTest, ControlCreateJobImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
+  ASSERT_NE(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_ERROR_NOTIMPLEMENTED);
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
-TEST_F(QDMIImplementationTest, ControlSetParameterImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+TEST_F(QDMIImplementationTest, ControlSetParameterImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_set_parameter(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(
                 job, QDMI_DEVICE_JOB_PARAMETER_MAX, 0, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlSetShotParameterImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlSetShotParameterImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   int nShot = 1024;
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_set_parameter(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(
                 job, QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM, sizeof(nShot), &nShot),
             QDMI_SUCCESS);
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlSetProgramFormatParameterImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlSetProgramFormatParameterImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   int nShot = 1024;
   const QDMI_Program_Format qirFormat = QDMI_PROGRAM_FORMAT_QIRBASESTRING;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
 
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_set_parameter(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(
                 job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT, sizeof(qirFormat),
                 &qirFormat),
             QDMI_ERROR_NOTSUPPORTED);
-  ASSERT_EQ(QLM_QDMI_device_job_set_parameter(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(
                 job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT,
                 sizeof(qasmFormat), &qasmFormat),
             QDMI_SUCCESS);
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
 TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented)
 {
 
-  QLM_QDMI_Device_Job job = nullptr;
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  QAPTIVA_QDMI_Device_Job job = nullptr;
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QLM_QDMI_device_job_submit(job), QDMI_ERROR_NOTIMPLEMENTED);
-  ASSERT_NE(QLM_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
-  QLM_QDMI_device_job_free(job);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_submit(job), QDMI_ERROR_NOTIMPLEMENTED);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
 TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob)
 {
 
-  QLM_QDMI_Device_Job job = nullptr;
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -299,20 +284,19 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob)
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
 
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
 
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_SUBMITTED);
 
-  ASSERT_EQ(QLM_QDMI_device_job_cancel(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_cancel(job), QDMI_SUCCESS);
 
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CANCELED);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -329,69 +313,65 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob)
   CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CREATED);
 
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
 
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_SUBMITTED);
 
   // Wait until running
   while (*job_status == QDMI_JOB_STATUS_SUBMITTED)
-    QLM_QDMI_device_job_check(job, job_status);
+    QAPTIVA_QDMI_device_job_check(job, job_status);
 
   CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
 
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlCancelImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlCancelImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
 
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QLM_QDMI_device_job_cancel(job), QDMI_ERROR_NOTIMPLEMENTED);
-  QLM_QDMI_device_job_free(job);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_cancel(job), QDMI_ERROR_NOTIMPLEMENTED);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlCheckImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlCheckImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   QDMI_Job_Status status = QDMI_JOB_STATUS_RUNNING;
 
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QLM_QDMI_device_job_check(job, &status), QDMI_ERROR_NOTIMPLEMENTED);
-  QLM_QDMI_device_job_free(job);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_check(job, &status),
+            QDMI_ERROR_NOTIMPLEMENTED);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlWaitImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlWaitImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
 
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_NE(QLM_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
-  QLM_QDMI_device_job_free(job);
+  ASSERT_NE(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_ERROR_NOTIMPLEMENTED);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataImplemented)
-{
-  QLM_QDMI_Device_Job job = nullptr;
-  ASSERT_EQ(QLM_QDMI_device_session_create_device_job(session, &job),
+TEST_F(QDMIImplementationTest, ControlGetDataImplemented) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_MAX, 0,
-                                            nullptr, nullptr),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_MAX, 0,
+                                                nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -402,26 +382,25 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys)
   size_t histogram_size;
   char *histogram_keys;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS, 0,
-                                            nullptr, &histogram_size),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
+                                                0, nullptr, &histogram_size),
             QDMI_SUCCESS);
 
   histogram_keys = (char *)malloc(histogram_size);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
-                                            histogram_size, histogram_keys,
-                                            nullptr),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
+                                                histogram_size, histogram_keys,
+                                                nullptr),
             QDMI_SUCCESS);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -432,25 +411,25 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue)
   size_t histogram_values_size;
   int *histogram_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
-                                            nullptr, &histogram_values_size),
-            QDMI_SUCCESS);
+  ASSERT_EQ(
+      QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
+                                          nullptr, &histogram_values_size),
+      QDMI_SUCCESS);
   histogram_values = (int *)malloc(histogram_values_size);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
-                                            histogram_values_size,
-                                            histogram_values, nullptr),
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
+                job, QDMI_JOB_RESULT_HIST_VALUES, histogram_values_size,
+                histogram_values, nullptr),
             QDMI_SUCCESS);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -461,26 +440,25 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys)
   size_t probability_keys_size;
   char *probability_keys;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, 0, nullptr,
                 &probability_keys_size),
             QDMI_SUCCESS);
   probability_keys = (char *)malloc(probability_keys_size);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS,
                 probability_keys_size, probability_keys, nullptr),
             QDMI_SUCCESS);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -491,26 +469,25 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues)
   size_t probability_values_size;
   double *probability_values;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, 0, nullptr,
                 &probability_values_size),
             QDMI_SUCCESS);
   probability_values = (double *)malloc(probability_values_size);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES,
                 probability_values_size, probability_values, nullptr),
             QDMI_SUCCESS);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense)
-{
-  QLM_QDMI_Device_Job job = nullptr;
+TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
+  QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
   std::string test_circuit = Get_test_circuit();
@@ -521,28 +498,28 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense)
   size_t probability_dense_size;
   double *probability_dense;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
-  ASSERT_EQ(
-      QLM_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                                      0, nullptr, &probability_dense_size),
-      QDMI_SUCCESS);
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
+                job, QDMI_JOB_RESULT_PROBABILITIES_DENSE, 0, nullptr,
+                &probability_dense_size),
+            QDMI_SUCCESS);
 
   probability_dense = (double *)malloc(probability_dense_size);
 
-  ASSERT_EQ(QLM_QDMI_device_job_get_results(
+  ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
                 probability_dense_size, probability_dense, nullptr),
             QDMI_SUCCESS);
 
-  QLM_QDMI_device_job_free(job);
+  QAPTIVA_QDMI_device_job_free(job);
 }
 
 TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented)
 {
 
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_NAME, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
@@ -550,7 +527,7 @@ TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented)
 TEST_F(QDMIImplementationTest, QuerySitePropertyImplemented)
 {
 
-  ASSERT_EQ(QLM_QDMI_device_session_query_site_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_site_property(
                 nullptr, nullptr, QDMI_SITE_PROPERTY_MAX, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
@@ -558,18 +535,18 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported)
 {
 
   size_t size = 0;
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_SITES, 0, nullptr, &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of sites";
-  std::vector<QLM_QDMI_Site> sites(size / sizeof(QLM_QDMI_Site));
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  std::vector<QAPTIVA_QDMI_Site> sites(size / sizeof(QAPTIVA_QDMI_Site));
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_SITES, size,
                 static_cast<void *>(sites.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of sites";
 
-  ASSERT_EQ(QLM_QDMI_device_session_query_site_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_site_property(
                 session, sites.at(0), QDMI_SITE_PROPERTY_T1, sizeof(uint64_t),
                 nullptr, nullptr),
             QDMI_ERROR_NOTSUPPORTED);
@@ -578,7 +555,7 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported)
 TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported)
 {
   // Since it is a emulator
-  ASSERT_EQ(QLM_QDMI_device_session_query_operation_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_operation_property(
                 session, nullptr, 0, nullptr, 0, nullptr,
                 QDMI_OPERATION_PROPERTY_FIDELITY, 0, nullptr, nullptr),
             QDMI_ERROR_NOTSUPPORTED);
@@ -588,13 +565,13 @@ TEST_F(QDMIImplementationTest, QueryDeviceNameImplemented)
 {
   size_t size = 0;
 
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_NAME, 0, nullptr, &size),
             QDMI_SUCCESS)
       << "Devices must provide a name";
   std::string value(size - 1, '\0');
   ASSERT_EQ(
-      QLM_QDMI_device_session_query_device_property(
+      QAPTIVA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_NAME, size, value.data(), nullptr),
       QDMI_SUCCESS)
       << "Devices must provide a name";
@@ -605,13 +582,13 @@ TEST_F(QDMIImplementationTest, QueryDeviceVersionImplemented)
 {
   size_t size = 0;
 
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_VERSION, 0, nullptr, &size),
             QDMI_SUCCESS)
       << "Devices must provide a version";
   std::string value(size - 1, '\0');
   ASSERT_EQ(
-      QLM_QDMI_device_session_query_device_property(
+      QAPTIVA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_VERSION, size, value.data(), nullptr),
       QDMI_SUCCESS)
       << "Devices must provide a version";
@@ -623,12 +600,12 @@ TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented)
   size_t size = 0;
 
   ASSERT_EQ(
-      QLM_QDMI_device_session_query_device_property(
+      QAPTIVA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_LIBRARYVERSION, 0, nullptr, &size),
       QDMI_SUCCESS)
       << "Devices must provide a library version";
   std::string value(size - 1, '\0');
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_LIBRARYVERSION, size,
                 value.data(), nullptr),
             QDMI_SUCCESS)
@@ -639,23 +616,22 @@ TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented)
 TEST_F(QDMIImplementationTest, QuerySiteIDImplemented)
 {
   size_t size = 0;
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_SITES, 0, nullptr, &size),
             QDMI_SUCCESS)
       << "Devices must provide a list of sites";
-  std::vector<QLM_QDMI_Site> sites(size / sizeof(QLM_QDMI_Site));
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  std::vector<QAPTIVA_QDMI_Site> sites(size / sizeof(QAPTIVA_QDMI_Site));
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_SITES, size,
                 static_cast<void *>(sites.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of sites";
   size_t id = 0;
-  for (auto *site : sites)
-  {
-    ASSERT_EQ(
-        QLM_QDMI_device_session_query_site_property(
-            session, site, QDMI_SITE_PROPERTY_INDEX, sizeof(size_t), &id, nullptr),
-        QDMI_SUCCESS)
+  for (auto *site : sites) {
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_query_site_property(
+                  session, site, QDMI_SITE_PROPERTY_INDEX, sizeof(size_t), &id,
+                  nullptr),
+              QDMI_SUCCESS)
         << "Devices must provide a site id";
   }
 }
@@ -663,7 +639,7 @@ TEST_F(QDMIImplementationTest, QuerySiteIDImplemented)
 TEST_F(QDMIImplementationTest, QubitNum)
 {
   size_t num_qubits = 0;
-  ASSERT_EQ(QLM_QDMI_device_session_query_device_property(
+  ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t),
                 &num_qubits, nullptr),
             QDMI_SUCCESS);

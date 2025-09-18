@@ -34,18 +34,18 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <qaptiva_qdmi/types.h>
 
 /** @brief The definition for the auxiliary script's location.
- * @details `QLM_AUXILIARY_SCRIPT_LOCATION` is an environment variable that
+ * @details `QAPTIVA_AUXILIARY_SCRIPT_LOCATION` is an environment variable that
  * corresponse to location of the `qlm_auxiliary.py`. In this project, it should
  * be {PROJECT_SOURCE_DIR}/src/eviden/
  */
-#define SCRIPT_LOCATION "QLM_AUXILIARY_SCRIPT_LOCATION"
+#define SCRIPT_LOCATION "QAPTIVA_AUXILIARY_SCRIPT_LOCATION"
 
 /** @brief The file name of the auxiliary script.
- * @details `QLM_AUXILIARY_SCRIPT_NAME` is an environment variable that
+ * @details `QAPTIVA_AUXILIARY_SCRIPT_NAME` is an environment variable that
  * corresponse to the file name of the auxiliary script. In this project, it
  * should be `qlm_auxiliary`
  */
-#define SCRIPT_NAME "QLM_AUXILIARY_SCRIPT_NAME"
+#define SCRIPT_NAME "QAPTIVA_AUXILIARY_SCRIPT_NAME"
 
 /// The name of the function that used to create remote qpu.
 #define REMOTE_QPU_CREATE_FUNCTION_NAME "create_remote_qpu"
@@ -59,9 +59,9 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 /// The default number of the shot for a quantum job
 #define DEFAULT_NUM_SHOT 0
 
-/// Unset T1 value for QLM_QDMI_Device_Job_impl_d 
+/// Unset T1 value for QAPTIVA_QDMI_Device_Job_impl_d
 #define T1_MAGIC_UNSET_VALUE -999999.0
-/// Unset T2 value for QLM_QDMI_Device_Job_impl_d 
+/// Unset T2 value for QAPTIVA_QDMI_Device_Job_impl_d
 #define T2_MAGIC_UNSET_VALUE -999999.0
 /**
  * @brief Enum of the session status that can be set internally.
@@ -147,8 +147,8 @@ typedef struct QAPTIVA_QDMI_Device_Job_impl_d {
   /// The size of the results.
   size_t results_size;
 
-  double t1; 
-  double t2; 
+  double t1;
+  double t2;
 
 } QAPTIVA_QDMI_Device_Job_impl_t;
 
@@ -216,26 +216,22 @@ const QAPTIVA_QDMI_Site DEVICE_SITES[] = {
  *
  */
 
-#define ADD_STRING_PROPERTY(prop_name, prop_value, prop, size, value, \
-                            size_ret)                                 \
-  {                                                                   \
-    if ((prop) == (prop_name))                                        \
-    {                                                                 \
-      if ((value) != NULL)                                            \
-      {                                                               \
-        if ((size) < strlen(prop_value) + 1)                          \
-        {                                                             \
-          return QDMI_ERROR_INVALIDARGUMENT;                          \
-        }                                                             \
-        strncpy((char *)(value), prop_value, (size) - 1);             \
-        ((char *)(value))[(size) - 1] = '\0';                         \
-      }                                                               \
-      if ((size_ret) != NULL)                                         \
-      {                                                               \
-        *(size_ret) = strlen(prop_value) + 1;                         \
-      }                                                               \
-      return QDMI_SUCCESS;                                            \
-    }                                                                 \
+#define ADD_STRING_PROPERTY(prop_name, prop_value, prop, size, value,          \
+                            size_ret)                                          \
+  {                                                                            \
+    if ((prop) == (prop_name)) {                                               \
+      if ((value) != NULL) {                                                   \
+        if ((size) < strlen(prop_value) + 1) {                                 \
+          return QDMI_ERROR_INVALIDARGUMENT;                                   \
+        }                                                                      \
+        strncpy((char *)(value), prop_value, (size) - 1);                      \
+        ((char *)(value))[(size) - 1] = '\0';                                  \
+      }                                                                        \
+      if ((size_ret) != NULL) {                                                \
+        *(size_ret) = strlen(prop_value) + 1;                                  \
+      }                                                                        \
+      return QDMI_SUCCESS;                                                     \
+    }                                                                          \
   }
 /**
  * @brief Adds a primitive typed value property to the device.
@@ -263,25 +259,21 @@ const QAPTIVA_QDMI_Site DEVICE_SITES[] = {
  * example C device</a> in the QDMI repository.
  *
  */
-#define ADD_SINGLE_VALUE_PROPERTY(prop_name, prop_type, prop_value, prop, \
-                                  size, value, size_ret)                  \
-  {                                                                       \
-    if ((prop) == (prop_name))                                            \
-    {                                                                     \
-      if ((value) != NULL)                                                \
-      {                                                                   \
-        if ((size) < sizeof(prop_type))                                   \
-        {                                                                 \
-          return QDMI_ERROR_INVALIDARGUMENT;                              \
-        }                                                                 \
-        *(prop_type *)(value) = prop_value;                               \
-      }                                                                   \
-      if ((size_ret) != NULL)                                             \
-      {                                                                   \
-        *(size_ret) = sizeof(prop_type);                                  \
-      }                                                                   \
-      return QDMI_SUCCESS;                                                \
-    }                                                                     \
+#define ADD_SINGLE_VALUE_PROPERTY(prop_name, prop_type, prop_value, prop,      \
+                                  size, value, size_ret)                       \
+  {                                                                            \
+    if ((prop) == (prop_name)) {                                               \
+      if ((value) != NULL) {                                                   \
+        if ((size) < sizeof(prop_type)) {                                      \
+          return QDMI_ERROR_INVALIDARGUMENT;                                   \
+        }                                                                      \
+        *(prop_type *)(value) = prop_value;                                    \
+      }                                                                        \
+      if ((size_ret) != NULL) {                                                \
+        *(size_ret) = sizeof(prop_type);                                       \
+      }                                                                        \
+      return QDMI_SUCCESS;                                                     \
+    }                                                                          \
   }
 /**
  * @brief Adds a list typed value property to the device.
@@ -311,26 +303,22 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
  * example C device</a> in the QDMI repository.
  *
  */
-#define ADD_LIST_PROPERTY(prop_name, prop_type, prop_values, prop_length, \
-                          prop, size, value, size_ret)                    \
-  {                                                                       \
-    if ((prop) == (prop_name))                                            \
-    {                                                                     \
-      if ((value) != NULL)                                                \
-      {                                                                   \
-        if ((size) < (prop_length) * sizeof(prop_type))                   \
-        {                                                                 \
-          return QDMI_ERROR_INVALIDARGUMENT;                              \
-        }                                                                 \
-        memcpy((void *)(value), (const void *)(prop_values),              \
-               (prop_length) * sizeof(prop_type));                        \
-      }                                                                   \
-      if ((size_ret) != NULL)                                             \
-      {                                                                   \
-        *(size_ret) = (prop_length) * sizeof(prop_type);                  \
-      }                                                                   \
-      return QDMI_SUCCESS;                                                \
-    }                                                                     \
+#define ADD_LIST_PROPERTY(prop_name, prop_type, prop_values, prop_length,      \
+                          prop, size, value, size_ret)                         \
+  {                                                                            \
+    if ((prop) == (prop_name)) {                                               \
+      if ((value) != NULL) {                                                   \
+        if ((size) < (prop_length) * sizeof(prop_type)) {                      \
+          return QDMI_ERROR_INVALIDARGUMENT;                                   \
+        }                                                                      \
+        memcpy((void *)(value), (const void *)(prop_values),                   \
+               (prop_length) * sizeof(prop_type));                             \
+      }                                                                        \
+      if ((size_ret) != NULL) {                                                \
+        *(size_ret) = (prop_length) * sizeof(prop_type);                       \
+      }                                                                        \
+      return QDMI_SUCCESS;                                                     \
+    }                                                                          \
   }
 /** @brief Checks if there is a Python related error.
  *
@@ -363,35 +351,32 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
  * @param value The value to be checked
  * @return `value` if is is not `QDMI_SUCCESS`
  */
-#define CHECK_QDMI_ERROR(value) \
-  {                             \
-    if (value != QDMI_SUCCESS)  \
-    {                           \
-      return value;             \
-    }                           \
+#define CHECK_QDMI_ERROR(value)                                                \
+  {                                                                            \
+    if (value != QDMI_SUCCESS) {                                               \
+      return value;                                                            \
+    }                                                                          \
   }
 /**
  *
  * TODO
  *
  */
-#define GET_VALUE_DATA(type, multiplier)                                   \
-  {                                                                        \
-    required_size = job->results_size * sizeof(type);                      \
-    if (data)                                                              \
-    {                                                                      \
-      if (size < required_size)                                            \
-        return QDMI_ERROR_INVALIDARGUMENT;                                 \
-      type *data_ptr = data;                                               \
-      int max_index = (int)(size / sizeof(type));                          \
-      for (int index = 0; index < max_index; index++)                      \
-      {                                                                    \
-        *data_ptr++ = (type)(job->probability_values[index] * multiplier); \
-      }                                                                    \
-    }                                                                      \
-    if (size_ret)                                                          \
-      *size_ret = required_size;                                           \
-    return QDMI_SUCCESS;                                                   \
+#define GET_VALUE_DATA(type, multiplier)                                       \
+  {                                                                            \
+    required_size = job->results_size * sizeof(type);                          \
+    if (data) {                                                                \
+      if (size < required_size)                                                \
+        return QDMI_ERROR_INVALIDARGUMENT;                                     \
+      type *data_ptr = data;                                                   \
+      int max_index = (int)(size / sizeof(type));                              \
+      for (int index = 0; index < max_index; index++) {                        \
+        *data_ptr++ = (type)(job->probability_values[index] * multiplier);     \
+      }                                                                        \
+    }                                                                          \
+    if (size_ret)                                                              \
+      *size_ret = required_size;                                               \
+    return QDMI_SUCCESS;                                                       \
   }
 
 /**
@@ -430,8 +415,7 @@ void QAPTIVA_QDMI_set_device_status(QDMI_Device_Status status) {
  * @note This function should not be used outside of this file. Therefore, it is
  * not part of any header file.
  */
-static int *isFromPython(void)
-{
+static int *isFromPython(void) {
   static int isFromPython = 0;
   return &isFromPython;
 }
@@ -447,8 +431,7 @@ static int *isFromPython(void)
  * @see create_remote_qpu
  */
 
-static PyObject **get_remote_qpu(void)
-{
+static PyObject **get_remote_qpu(void) {
   static PyObject *remote_qpu = NULL;
   return &remote_qpu;
 }
@@ -456,15 +439,14 @@ static PyObject **get_remote_qpu(void)
 /**
  * @brief Static function to get the noisy `remote qpu`.
  *
- * @details The noisy `remote qpu` is created while initialting the noisy session and
- * re-used while submitting noisy jobs via HTTP.
+ * @details The noisy `remote qpu` is created while initialting the noisy
+ * session and re-used while submitting noisy jobs via HTTP.
  * @return The noisy `remote qpu` pointer if it is created. Otherwise, NULL;
  * @see submit_job_http
  * @see create_noisy_remote_qpu
  */
 
-static PyObject **get_noisy_remote_qpu(void)
-{
+static PyObject **get_noisy_remote_qpu(void) {
   static PyObject *noisy_remote_qpu = NULL;
   return &noisy_remote_qpu;
 }
@@ -480,8 +462,7 @@ static PyObject **get_noisy_remote_qpu(void)
  * @see initialize_python
  */
 
-static PyObject **get_custom_python_module(void)
-{
+static PyObject **get_custom_python_module(void) {
   static PyObject *custom_python_module = NULL;
   return &custom_python_module;
 }
@@ -547,7 +528,7 @@ int QAPTIVA_QDMI_device_session_query_device_property(
   if (prop >= QDMI_DEVICE_PROPERTY_MAX || (value == NULL && size_ret == NULL)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "QLM", prop, size, value,
+  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "QAPTIVA", prop, size, value,
                       size_ret)
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_VERSION, "0.0.1", prop, size, value,
                       size_ret)
@@ -604,8 +585,7 @@ int QAPTIVA_QDMI_device_session_query_site_property(
 
   // Since it is a emulator, there is no qubit property.
   if (session == NULL || site == NULL || (value != NULL && size == 0) ||
-      prop >= QDMI_SITE_PROPERTY_MAX)
-  {
+      prop >= QDMI_SITE_PROPERTY_MAX) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -645,8 +625,7 @@ int QAPTIVA_QDMI_device_session_query_site_property(
 int QAPTIVA_QDMI_device_session_create_device_job(
     QAPTIVA_QDMI_Device_Session session, QAPTIVA_QDMI_Device_Job *job) {
 
-  if (session == NULL || job == NULL)
-  {
+  if (session == NULL || job == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -663,8 +642,10 @@ int QAPTIVA_QDMI_device_session_create_device_job(
   (*job)->probability_keys = NULL;
   (*job)->probability_values = NULL;
 
-  (*job)->t1 = T1_MAGIC_UNSET_VALUE; // TODO: or a reasonable default, should be replaced
-  (*job)->t2 = T2_MAGIC_UNSET_VALUE; //  by QDMI DCDB values in case of a noisy job
+  (*job)->t1 =
+      T1_MAGIC_UNSET_VALUE; // TODO: or a reasonable default, should be replaced
+  (*job)->t2 =
+      T2_MAGIC_UNSET_VALUE; //  by QDMI DCDB values in case of a noisy job
 
   return QDMI_SUCCESS;
 }
@@ -720,19 +701,16 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM2 &&
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM3 &&
        param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM4 &&
-       param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM5))
-  {
-    
+       param != QDMI_DEVICE_JOB_PARAMETER_CUSTOM5)) {
+
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  if (job->status != QDMI_JOB_STATUS_CREATED)
-  {
+  if (job->status != QDMI_JOB_STATUS_CREATED) {
     return QDMI_ERROR_BADSTATE;
   }
 
-  if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT)
-  {
+  if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT) {
     QDMI_Program_Format format = *(const QDMI_Program_Format *)value;
     if (format != QDMI_PROGRAM_FORMAT_QASM2)
       return QDMI_ERROR_NOTSUPPORTED;
@@ -740,30 +718,26 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
     return QDMI_SUCCESS;
   }
 
-  if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAM)
-  {
+  if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAM) {
     job->program = malloc(size);
     strcpy(job->program, (const char *)value);
     return QDMI_SUCCESS;
   }
 
-  if (param == QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM)
-  {
+  if (param == QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM) {
     job->num_shots = *(const size_t *)value;
     return QDMI_SUCCESS;
   }
 
-  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM1)
-  {
-    
+  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM1) {
+
     if (size != sizeof(double))
       return QDMI_ERROR_INVALIDARGUMENT;
     job->t1 = *(const double *)value;
     return QDMI_SUCCESS;
   }
 
-  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM2)
-  {
+  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM2) {
     if (size != sizeof(double))
       return QDMI_ERROR_INVALIDARGUMENT;
     job->t2 = *(const double *)value;
@@ -841,6 +815,70 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
   return QDMI_SUCCESS;
 }
 
+int QAPTIVA_QDMI_device_job_submit_http(QAPTIVA_QDMI_Device_Job job) {
+  if (job->t1 <= 0 || job->t2 <= 0) {
+    job->status = QDMI_JOB_STATUS_FAILED;
+    return QDMI_ERROR_INVALIDARGUMENT;
+  }
+  PyGILState_STATE gstate;
+  if (!*isFromPython())
+    gstate = PyGILState_Ensure();
+
+  PyObject *custom_python_module = *get_custom_python_module();
+  PyObject *pFunc =
+      PyObject_GetAttrString(custom_python_module, "submit_job_http");
+  CHECK_PYTHON_ERROR(pFunc, *isFromPython());
+
+  PyObject *pHost = PyUnicode_FromString(job->session->url);
+  CHECK_PYTHON_ERROR(pHost, *isFromPython());
+
+  PyObject *qasm_string = PyUnicode_FromString(job->program);
+  CHECK_PYTHON_ERROR(qasm_string, *isFromPython());
+
+  PyObject *num_shots = PyLong_FromUnsignedLong(job->num_shots);
+  CHECK_PYTHON_ERROR(num_shots, *isFromPython());
+
+  // Add t1 and t2 parameters
+  PyObject *py_t1 = PyFloat_FromDouble(job->t1);
+  PyObject *py_t2 = PyFloat_FromDouble(job->t2);
+
+  PyObject *pArgs =
+      PyTuple_Pack(5, pHost, qasm_string, num_shots, py_t1, py_t2);
+  CHECK_PYTHON_ERROR(pArgs, *isFromPython());
+
+  job->status = QDMI_JOB_STATUS_RUNNING;
+  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
+
+  PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
+  CHECK_PYTHON_ERROR(pResults, *isFromPython());
+
+  // Parse results
+  Py_ssize_t resultSize = PyList_GET_SIZE(pResults);
+  if (resultSize < 1) {
+    job->status = QDMI_JOB_STATUS_FAILED;
+    QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+    return QDMI_ERROR_FATAL;
+  }
+
+  PyObject *pBitstring = PyList_GET_ITEM(pResults, 0);
+  asprintf(&(job->probability_keys), "%s", PyUnicode_AsUTF8(pBitstring));
+
+  job->probability_values = malloc(sizeof(double) * (resultSize - 1));
+  for (Py_ssize_t i = 1; i < resultSize; ++i) {
+    PyObject *pValue = PyList_GET_ITEM(pResults, i);
+    job->probability_values[i - 1] = PyFloat_AsDouble(pValue);
+  }
+
+  job->results_size = resultSize - 1;
+  job->status = QDMI_JOB_STATUS_DONE;
+
+  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+
+  if (!*isFromPython())
+    PyGILState_Release(gstate);
+
+  return QDMI_SUCCESS;
+}
 
 /**
  * @brief Submit a job to the device.
@@ -868,96 +906,25 @@ int QAPTIVA_QDMI_device_job_submit(QAPTIVA_QDMI_Device_Job job) {
 
   if (job->status != QDMI_JOB_STATUS_CREATED || job->program == NULL ||
       job->num_shots == DEFAULT_NUM_SHOT) {
-    
+
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  
+
   int err = 0;
-  
+
   // Check if this is a noisy session or if t1/t2 are set to non-default values
-  if (
-      (job->t1 != T1_MAGIC_UNSET_VALUE && job->t2 != T2_MAGIC_UNSET_VALUE)) {
+  if ((job->t1 != T1_MAGIC_UNSET_VALUE && job->t2 != T2_MAGIC_UNSET_VALUE)) {
     job->status = QDMI_JOB_STATUS_SUBMITTED;
-    err = QLM_QDMI_device_job_submit_http(job);
-    
-  }
-  else {
+    err = QAPTIVA_QDMI_device_job_submit_http(job);
+
+  } else {
     job->status = QDMI_JOB_STATUS_SUBMITTED;
-    
+
     err = submit_job(job);
-    
-    
   }
   if (err) {
-      job->status = QDMI_JOB_STATUS_FAILED;
-    }
-  return QDMI_SUCCESS;
-}
-
-int QLM_QDMI_device_job_submit_http(QLM_QDMI_Device_Job job)
-{
- if (job->t1 <= 0 ||  job->t2 <= 0) {
     job->status = QDMI_JOB_STATUS_FAILED;
-    return QDMI_ERROR_INVALIDARGUMENT;
   }
-  PyGILState_STATE gstate;
-  if (!*isFromPython())
-    gstate = PyGILState_Ensure();
-
-  PyObject *custom_python_module = *get_custom_python_module();
-  PyObject *pFunc = PyObject_GetAttrString(custom_python_module, "submit_job_http");
-  CHECK_PYTHON_ERROR(pFunc, *isFromPython());
-
-  PyObject *pHost = PyUnicode_FromString(job->session->url);
-  CHECK_PYTHON_ERROR(pHost, *isFromPython());
-
-  PyObject *qasm_string = PyUnicode_FromString(job->program);
-  CHECK_PYTHON_ERROR(qasm_string, *isFromPython());
-
-  PyObject *num_shots = PyLong_FromUnsignedLong(job->num_shots);
-  CHECK_PYTHON_ERROR(num_shots, *isFromPython());
-
-  // Add t1 and t2 parameters
-  PyObject *py_t1 = PyFloat_FromDouble(job->t1);
-  PyObject *py_t2 = PyFloat_FromDouble(job->t2);
-
-  PyObject *pArgs = PyTuple_Pack(5, pHost, qasm_string, num_shots, py_t1, py_t2);
-  CHECK_PYTHON_ERROR(pArgs, *isFromPython());
-
-  job->status = QDMI_JOB_STATUS_RUNNING;
-  QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
-  
-
-  PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pResults, *isFromPython());
-
-  // Parse results
-  Py_ssize_t resultSize = PyList_GET_SIZE(pResults);
-  if (resultSize < 1)
-  {
-    job->status = QDMI_JOB_STATUS_FAILED;
-    QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-    return QDMI_ERROR_FATAL;
-  }
-
-  PyObject *pBitstring = PyList_GET_ITEM(pResults, 0);
-  asprintf(&(job->probability_keys), "%s", PyUnicode_AsUTF8(pBitstring));
-
-  job->probability_values = malloc(sizeof(double) * (resultSize - 1));
-  for (Py_ssize_t i = 1; i < resultSize; ++i)
-  {
-    PyObject *pValue = PyList_GET_ITEM(pResults, i);
-    job->probability_values[i - 1] = PyFloat_AsDouble(pValue);
-  }
-
-  job->results_size = resultSize - 1;
-  job->status = QDMI_JOB_STATUS_DONE;
-  
-  QLM_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-
-  if (!*isFromPython())
-    PyGILState_Release(gstate);
-
   return QDMI_SUCCESS;
 }
 
@@ -987,8 +954,7 @@ int QAPTIVA_QDMI_device_job_cancel(QAPTIVA_QDMI_Device_Job job) {
       job->status != QDMI_JOB_STATUS_SUBMITTED &&
       job->status != QDMI_JOB_STATUS_CREATED)
     return QDMI_ERROR_INVALIDARGUMENT;
-  if (job->status != QDMI_JOB_STATUS_CREATED)
-  {
+  if (job->status != QDMI_JOB_STATUS_CREATED) {
     void *ret_val;
     //    int isErr = pthread_join(job->offload_thread, &(ret_val));
     int isErr = 0;
@@ -1055,8 +1021,7 @@ int QAPTIVA_QDMI_device_job_wait(QAPTIVA_QDMI_Device_Job job, size_t timeout) {
     return QDMI_ERROR_INVALIDARGUMENT;
 
   if (job->status != QDMI_JOB_STATUS_DONE &&
-      job->status != QDMI_JOB_STATUS_CREATED)
-  {
+      job->status != QDMI_JOB_STATUS_CREATED) {
     void *ret_val = NULL;
 
     if (ret_val != NULL)
@@ -1112,11 +1077,9 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
 
   size_t required_size;
   if (result == QDMI_JOB_RESULT_HIST_KEYS ||
-      result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS)
-  {
+      result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS) {
     required_size = strlen(job->probability_keys);
-    if (data)
-    {
+    if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
       strncpy(data, job->probability_keys, size);
@@ -1133,10 +1096,8 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
   if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES)
     GET_VALUE_DATA(double, 1)
 
-  if (result == QDMI_JOB_RESULT_PROBABILITIES_DENSE)
-  {
-    if (job->probability_dense == NULL)
-    {
+  if (result == QDMI_JOB_RESULT_PROBABILITIES_DENSE) {
+    if (job->probability_dense == NULL) {
       char *bitstream, *key, *endptr;
 
       size_t n_qubit = 0;
@@ -1152,8 +1113,7 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
       memset(job->probability_dense, 0, sizeof(double) * job->n_state);
 
       key = strtok(bitstream, ",");
-      while (key != NULL)
-      {
+      while (key != NULL) {
         long index = strtol(key, &endptr, 2);
         key = strtok(NULL, ",");
         job->probability_dense[index] = job->probability_values[stream_index++];
@@ -1162,14 +1122,12 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
     required_size = job->n_state * sizeof(double);
     if (size_ret)
       *size_ret = required_size;
-    if (data)
-    {
+    if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
       double *data_ptr = data;
       memset(data_ptr, 0, sizeof(double) * job->n_state);
-      for (int index = 0; index < required_size / sizeof(double); index++)
-      {
+      for (int index = 0; index < required_size / sizeof(double); index++) {
         *data_ptr++ = job->probability_dense[index];
       }
     }
@@ -1239,16 +1197,14 @@ int QAPTIVA_QDMI_device_job_query_property(QAPTIVA_QDMI_Device_Job job,
   return QDMI_ERROR_NOTIMPLEMENTED;
 }
 
-int initialize_python(void)
-{
+int initialize_python(void) {
 
   char *script_location = getenv(SCRIPT_LOCATION);
   char *script_name = getenv(SCRIPT_NAME);
 
   *isFromPython() = Py_IsInitialized();
   PyGILState_STATE gstate;
-  if (!*isFromPython())
-  {
+  if (!*isFromPython()) {
     Py_Initialize();
     PyThreadState *_save = PyEval_SaveThread();
     gstate = PyGILState_Ensure();
@@ -1274,8 +1230,7 @@ int initialize_python(void)
   return QDMI_SUCCESS;
 }
 
-int create_remote_qpu(const char *hostname)
-{
+int create_remote_qpu(const char *hostname) {
 
   PyGILState_STATE gstate = PyGILState_Ensure();
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
@@ -1294,20 +1249,18 @@ int create_remote_qpu(const char *hostname)
   return QDMI_SUCCESS;
 }
 
-int create_noisy_remote_connection(const char *hostname)
-{
+int create_noisy_remote_connection(const char *hostname) {
   // For noisy sessions, we don't need to create a QLM QPU object
   // since we use HTTP requests directly. We just store the hostname
   // and validate the connection is available.
-  
+
   // We could add a simple HTTP ping here to validate the server is up
   // For now, we just assume it's working since it's a local server
-  
+
   return QDMI_SUCCESS;
 }
 
-int check_env_variable(void)
-{
+int check_env_variable(void) {
   if (getenv(SCRIPT_LOCATION) == NULL || getenv(SCRIPT_NAME) == NULL)
     return QDMI_ERROR_FATAL;
   return QDMI_SUCCESS;
@@ -1367,8 +1320,7 @@ int QAPTIVA_QDMI_device_finalize(void) {
     *get_noisy_remote_qpu() = NULL;
   }
 
-  if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython())
-  {
+  if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython()) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Py_Finalize();
   }
@@ -1430,23 +1382,20 @@ int QAPTIVA_QDMI_device_session_init(QAPTIVA_QDMI_Device_Session session) {
     break;
   }
 
-  if (session->url == NULL)
-  {
+  if (session->url == NULL) {
     return QDMI_ERROR_BADSTATE;
   }
 
   int err;
 
-  
   err = create_noisy_remote_connection(session->url);
 
   err = create_remote_qpu(session->url);
 
-  
   CHECK_QDMI_ERROR(err)
 
   session->status = INITIALIZED;
-  
+
   return QDMI_SUCCESS;
 }
 /**
@@ -1504,18 +1453,15 @@ int QAPTIVA_QDMI_device_session_set_parameter(
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM2 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM3 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM4 &&
-       param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM5))
-  {
+       param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM5)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  if (session->status != ALLOCATED)
-  {
+  if (session->status != ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
 
-  if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL)
-  {
+  if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
     session->url = (char *)malloc(size);
     strcpy(session->url, (const char *)value);
   }

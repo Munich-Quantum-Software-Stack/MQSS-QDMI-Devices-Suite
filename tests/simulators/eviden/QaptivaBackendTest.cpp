@@ -22,34 +22,35 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #define QLM_HOST_URL "QLM_HOST_URL"
 #define QLM_NOISY_HOST_URL "QLM_NOISY_HOST_URL"
 
-#define CHECK_DEVICE_STATUS(device_status, expected_value)              \
-  {                                                                     \
-    ASSERT_EQ(QLM_QDMI_device_session_query_device_property(            \
-                  session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(size_t), \
-                  device_status, nullptr),                              \
-              QDMI_SUCCESS);                                            \
-    ASSERT_TRUE((*device_status == expected_value));                    \
+#define CHECK_DEVICE_STATUS(device_status, expected_value)                     \
+  {                                                                            \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(               \
+                  session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(size_t),        \
+                  device_status, nullptr),                                     \
+              QDMI_SUCCESS);                                                   \
+    ASSERT_TRUE((*device_status == expected_value));                           \
   }
 
-#define CHECK_NOISY_DEVICE_STATUS(device_status, expected_value)        \
-  {                                                                     \
-    ASSERT_EQ(QLM_QDMI_device_session_query_device_property(            \
-                  noisy_session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(size_t), \
-                  device_status, nullptr),                              \
-              QDMI_SUCCESS);                                            \
-    ASSERT_TRUE((*device_status == expected_value));                    \
+#define CHECK_NOISY_DEVICE_STATUS(device_status, expected_value)               \
+  {                                                                            \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(               \
+                  noisy_session, QDMI_DEVICE_PROPERTY_STATUS, sizeof(size_t),  \
+                  device_status, nullptr),                                     \
+              QDMI_SUCCESS);                                                   \
+    ASSERT_TRUE((*device_status == expected_value));                           \
   }
 
-#define CHECK_JOB_STATUS(job_status, expected_value)                     \
-  {                                                                      \
-    ASSERT_EQ(QLM_QDMI_device_job_check(job, job_status), QDMI_SUCCESS); \
-    ASSERT_TRUE(*job_status == expected_value);                          \
+#define CHECK_JOB_STATUS(job_status, expected_value)                           \
+  {                                                                            \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_check(job, job_status), QDMI_SUCCESS);   \
+    ASSERT_TRUE(*job_status == expected_value);                                \
   }
 
-#define CHECK_NOISY_JOB_STATUS(job_status, expected_value)               \
-  {                                                                      \
-    ASSERT_EQ(QLM_QDMI_device_job_check(noisy_job, job_status), QDMI_SUCCESS); \
-    ASSERT_TRUE(*job_status == expected_value);                          \
+#define CHECK_NOISY_JOB_STATUS(job_status, expected_value)                     \
+  {                                                                            \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_check(noisy_job, job_status),            \
+              QDMI_SUCCESS);                                                   \
+    ASSERT_TRUE(*job_status == expected_value);                                \
   }
 
 #define CREATE_JOB(job, n_shot, format, program)                               \
@@ -72,74 +73,74 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define CREATE_NOISY_JOB(job, n_shot, format, program, t1, t2)                 \
   {                                                                            \
-    ASSERT_EQ(QLM_QDMI_device_session_create_device_job(noisy_session, &job),  \
-              QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QLM_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_session_create_device_job(noisy_session, &job),    \
+        QDMI_SUCCESS);                                                         \
+    ASSERT_EQ(                                                                 \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM, sizeof(n_shot), &n_shot), \
         QDMI_SUCCESS);                                                         \
-    ASSERT_EQ(QLM_QDMI_device_job_set_parameter(                               \
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_set_parameter(                           \
                   job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT,                \
                   sizeof(format), &format),                                    \
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
-        QLM_QDMI_device_job_set_parameter(                                     \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
             job, QDMI_DEVICE_JOB_PARAMETER_PROGRAM, strlen(program), program), \
         QDMI_SUCCESS);                                                         \
-    ASSERT_EQ(QLM_QDMI_device_job_set_parameter(job,                           \
-      QDMI_DEVICE_JOB_PARAMETER_CUSTOM1, sizeof(double), &t1), QDMI_SUCCESS);   \
-    ASSERT_EQ(QLM_QDMI_device_job_set_parameter(job,                           \
-      QDMI_DEVICE_JOB_PARAMETER_CUSTOM2, sizeof(double), &t2), QDMI_SUCCESS);   \
+    ASSERT_EQ(                                                                 \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
+            job, QDMI_DEVICE_JOB_PARAMETER_CUSTOM1, sizeof(double), &t1),      \
+        QDMI_SUCCESS);                                                         \
+    ASSERT_EQ(                                                                 \
+        QAPTIVA_QDMI_device_job_set_parameter(                                 \
+            job, QDMI_DEVICE_JOB_PARAMETER_CUSTOM2, sizeof(double), &t2),      \
+        QDMI_SUCCESS);                                                         \
   }
 
-#define SUBMIT_JOB(job, job_id)                                          \
-  {                                                                      \
-    ASSERT_EQ(QLM_QDMI_device_session_submit_device_job(session, job, job_id), \
-              QDMI_SUCCESS);                                             \
+#define SUBMIT_JOB(job, job_id)                                                \
+  {                                                                            \
+    ASSERT_EQ(                                                                 \
+        QAPTIVA_QDMI_device_session_submit_device_job(session, job, job_id),   \
+        QDMI_SUCCESS);                                                         \
   }
 
-#define SUBMIT_NOISY_JOB(job, job_id)                                    \
-  {                                                                      \
-    ASSERT_EQ(QLM_QDMI_device_session_submit_device_job(noisy_session, job, job_id), \
-              QDMI_SUCCESS);                                             \
+#define SUBMIT_NOISY_JOB(job, job_id)                                          \
+  {                                                                            \
+    ASSERT_EQ(QAPTIVA_QDMI_device_session_submit_device_job(noisy_session,     \
+                                                            job, job_id),      \
+              QDMI_SUCCESS);                                                   \
   }
 
-
-#define EXIT_ON_FAIL(func, msg)      \
-  {                                  \
-    err = func;                      \
-    if (err != QDMI_SUCCESS)         \
-    {                                \
-      std::cout << msg << std::endl; \
-      exit(err);                     \
-    }                                \
+#define EXIT_ON_FAIL(func, msg)                                                \
+  {                                                                            \
+    err = func;                                                                \
+    if (err != QDMI_SUCCESS) {                                                 \
+      std::cout << msg << std::endl;                                           \
+      exit(err);                                                               \
+    }                                                                          \
   }
 
-class QDMIImplementationTest : public ::testing::Test
-{
+class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
-  static QLM_QDMI_Device_Session session;
-  static QLM_QDMI_Device_Session noisy_session;
+  static QAPTIVA_QDMI_Device_Session session;
+  static QAPTIVA_QDMI_Device_Session noisy_session;
   static char *hostname;
   static char *noisy_hostname;
 
-  static void SetUpTestSuite()
-  {
+  static void SetUpTestSuite() {
     int err;
     hostname = std::getenv(QLM_HOST_URL);
     noisy_hostname = std::getenv(QLM_NOISY_HOST_URL);
-    if (!hostname)
-    {
+    if (!hostname) {
       std::cout << "Please provide a hostname by using environment variable "
                    "QAPTIVA_HOST_URL."
                 << std::endl;
       exit(1);
     }
 
-
-      if (!noisy_hostname)
-    {
+    if (!noisy_hostname) {
       std::cout << "Please provide a hostname by using environment variable "
                    "QLM_NOISY_HOST_URL."
                 << std::endl;
@@ -169,19 +170,17 @@ protected:
         "status is offline, or in "
         "maintenance. To provide credentials, take a look in " __FILE__
             << (__LINE__ - 4));
-
   }
 
-  static void TearDownTestSuite()
-  {
-    QLM_QDMI_device_session_free(session);
-    QLM_QDMI_device_session_free(noisy_session);
-    QLM_QDMI_device_finalize();
+  static void TearDownTestSuite() {
+    QAPTIVA_QDMI_device_session_free(session);
+    QAPTIVA_QDMI_device_session_free(noisy_session);
+    QAPTIVA_QDMI_device_finalize();
   }
 };
 
-QLM_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-QLM_QDMI_Device_Session QDMIImplementationTest::noisy_session = nullptr
+QAPTIVA_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
+QAPTIVA_QDMI_Device_Session QDMIImplementationTest::noisy_session = nullptr;
 char *QDMIImplementationTest::hostname = nullptr;
 char *QDMIImplementationTest::noisy_hostname = nullptr;
 
@@ -191,8 +190,7 @@ TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
             QDMI_ERROR_INVALIDARGUMENT);
 }
 
-TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated)
-{
+TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated) {
   char dummy_hostname[] = "qlm.lrz.de";
   ASSERT_EQ(QAPTIVA_QDMI_device_session_set_parameter(
                 session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
@@ -200,18 +198,16 @@ TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated)
             QDMI_ERROR_BADSTATE);
 }
 
-namespace
-{
-  std::string Get_test_circuit()
-  {
-    return "OPENQASM 2.0;\n"
-           "include \"qelib1.inc\";\n"
-           "qreg q[2];\n"
-           "creg c[2];\n"
-           "h q[0];\n"
-           "cx q[0], q[1];\n"
-           "measure q -> c;\n";
-  }
+namespace {
+std::string Get_test_circuit() {
+  return "OPENQASM 2.0;\n"
+         "include \"qelib1.inc\";\n"
+         "qreg q[2];\n"
+         "creg c[2];\n"
+         "h q[0];\n"
+         "cx q[0], q[1];\n"
+         "measure q -> c;\n";
+}
 } // namespace
 
 TEST_F(QDMIImplementationTest, ControlCreateJobImplemented) {
@@ -260,8 +256,7 @@ TEST_F(QDMIImplementationTest, ControlSetProgramFormatParameterImplemented) {
   QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented)
-{
+TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented) {
 
   QAPTIVA_QDMI_Device_Job job = nullptr;
   ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
@@ -271,8 +266,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented)
   QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob)
-{
+TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob) {
 
   QAPTIVA_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
@@ -516,23 +510,20 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
   QAPTIVA_QDMI_device_job_free(job);
 }
 
-TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented)
-{
+TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {
 
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_NAME, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
 
-TEST_F(QDMIImplementationTest, QuerySitePropertyImplemented)
-{
+TEST_F(QDMIImplementationTest, QuerySitePropertyImplemented) {
 
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_site_property(
                 nullptr, nullptr, QDMI_SITE_PROPERTY_MAX, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
-TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported)
-{
+TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported) {
 
   size_t size = 0;
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
@@ -552,8 +543,7 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported)
             QDMI_ERROR_NOTSUPPORTED);
 }
 
-TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported)
-{
+TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported) {
   // Since it is a emulator
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_operation_property(
                 session, nullptr, 0, nullptr, 0, nullptr,
@@ -561,8 +551,7 @@ TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported)
             QDMI_ERROR_NOTSUPPORTED);
 }
 
-TEST_F(QDMIImplementationTest, QueryDeviceNameImplemented)
-{
+TEST_F(QDMIImplementationTest, QueryDeviceNameImplemented) {
   size_t size = 0;
 
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
@@ -578,8 +567,7 @@ TEST_F(QDMIImplementationTest, QueryDeviceNameImplemented)
   ASSERT_FALSE(value.empty()) << "Devices must provide a name";
 }
 
-TEST_F(QDMIImplementationTest, QueryDeviceVersionImplemented)
-{
+TEST_F(QDMIImplementationTest, QueryDeviceVersionImplemented) {
   size_t size = 0;
 
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
@@ -595,8 +583,7 @@ TEST_F(QDMIImplementationTest, QueryDeviceVersionImplemented)
   ASSERT_FALSE(value.empty()) << "Devices must provide a version";
 }
 
-TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented)
-{
+TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented) {
   size_t size = 0;
 
   ASSERT_EQ(
@@ -613,8 +600,7 @@ TEST_F(QDMIImplementationTest, QueryDeviceLibraryVersionImplemented)
   ASSERT_FALSE(value.empty()) << "Devices must provide a library version";
 }
 
-TEST_F(QDMIImplementationTest, QuerySiteIDImplemented)
-{
+TEST_F(QDMIImplementationTest, QuerySiteIDImplemented) {
   size_t size = 0;
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_SITES, 0, nullptr, &size),
@@ -636,8 +622,7 @@ TEST_F(QDMIImplementationTest, QuerySiteIDImplemented)
   }
 }
 
-TEST_F(QDMIImplementationTest, QubitNum)
-{
+TEST_F(QDMIImplementationTest, QubitNum) {
   size_t num_qubits = 0;
   ASSERT_EQ(QAPTIVA_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t),
@@ -648,74 +633,74 @@ TEST_F(QDMIImplementationTest, QubitNum)
 TEST_F(QDMIImplementationTest, SubmitJobWithHTTP) {
   // Test HTTP submission path (with custom t1/t2)
   {
-    QLM_QDMI_Device_Job job = nullptr;
+    QAPTIVA_QDMI_Device_Job job = nullptr;
     size_t nShot = 1024;
     const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
     std::string test_circuit = Get_test_circuit();
     const char *c_t_c = test_circuit.c_str();
-    double t1 = 4000, t2 = 5000;  // Non-default values, to be filled by DCDB values later on
+    double t1 = 4000,
+           t2 =
+               5000; // Non-default values, to be filled by DCDB values later on
 
-    QDMI_Job_Status *job_status = (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
-    QDMI_Device_Status *device_status = (QDMI_Device_Status *)malloc(sizeof(QDMI_Device_Status));
-
+    QDMI_Job_Status *job_status =
+        (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
+    QDMI_Device_Status *device_status =
+        (QDMI_Device_Status *)malloc(sizeof(QDMI_Device_Status));
 
     CREATE_NOISY_JOB(job, nShot, qasmFormat, c_t_c, t1, t2)
 
     CHECK_NOISY_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CREATED);
 
-    ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_SUBMITTED);
 
-    
     while (*job_status == QDMI_JOB_STATUS_SUBMITTED)
-      QLM_QDMI_device_job_check(job, job_status);
+      QAPTIVA_QDMI_device_job_check(job, job_status);
 
     CHECK_NOISY_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
 
-    ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 
-    QLM_QDMI_device_job_free(job);
+    QAPTIVA_QDMI_device_job_free(job);
     free(job_status);
     free(device_status);
   }
-
 }
-
 
 TEST_F(QDMIImplementationTest, SubmitJobWithoutHTTP) {
 
   // Test regular submission path (without)
   {
-    QLM_QDMI_Device_Job job = nullptr;
+    QAPTIVA_QDMI_Device_Job job = nullptr;
     size_t nShot = 1024;
     const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
     std::string test_circuit = Get_test_circuit();
     const char *c_t_c = test_circuit.c_str();
 
-    QDMI_Job_Status *job_status = (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
-    QDMI_Device_Status *device_status = (QDMI_Device_Status *)malloc(sizeof(QDMI_Device_Status));
+    QDMI_Job_Status *job_status =
+        (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
+    QDMI_Device_Status *device_status =
+        (QDMI_Device_Status *)malloc(sizeof(QDMI_Device_Status));
 
     CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-    
-    
+
     CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_IDLE);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_CREATED);
 
-    ASSERT_EQ(QLM_QDMI_device_job_submit(job), QDMI_SUCCESS);
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_SUBMITTED);
 
-    
     while (*job_status == QDMI_JOB_STATUS_SUBMITTED)
-      QLM_QDMI_device_job_check(job, job_status);
+      QAPTIVA_QDMI_device_job_check(job, job_status);
 
     CHECK_DEVICE_STATUS(device_status, QDMI_DEVICE_STATUS_BUSY);
-    
-    ASSERT_EQ(QLM_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
+
+    ASSERT_EQ(QAPTIVA_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
     CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 
-    QLM_QDMI_device_job_free(job);
+    QAPTIVA_QDMI_device_job_free(job);
     free(job_status);
     free(device_status);
   }

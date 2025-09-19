@@ -216,7 +216,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndCancelJob) {
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
   double t1 = 4000;
   double t2 = 4000;
-  CREATE_JOB(job, nShot, qasmFormat, c_t_c , t1, t2);
+  CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
 

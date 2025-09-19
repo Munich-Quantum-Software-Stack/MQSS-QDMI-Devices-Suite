@@ -30,7 +30,7 @@ def create_remote_qpu(host):
         from qat.core.qpu import RemoteQPU
         url, port = host.split(":")
         qpu = RemoteQPU(port, url)
-    except Exception as e:
+    except:
         return None
     return qpu
 
@@ -72,7 +72,6 @@ def submit_job(remote_qpu, qasm_string, nshots):
     """
     try:
         from qat.interop.openqasm import OqasmParser
-
         parser = OqasmParser()
         circuit = parser.compile(qasm_string)
         job = circuit.to_job(nbshots=nshots)
@@ -83,22 +82,7 @@ def submit_job(remote_qpu, qasm_string, nshots):
             states.append(result.state.bitstring)
             probabilities.append((result.probability))
         return_value = [",".join(states)] + list(probabilities)
-        print(return_value)
         return return_value
     except:
         return None
-def create_remote_qpu(host):
-    """! Creates a remote QPU connection.
-
-    @param host Hostname and port in the form "host:port".
-    @return A RemoteQPU instance or None if the connection fails.
-    """
-    try:
-        from qat.core.qpu import RemoteQPU
-        host='host.docker.internal:20501'
-        url, port = host.split(":")
-        qpu = RemoteQPU(port, url)
-    except:
-        return None
-    return qpu
 

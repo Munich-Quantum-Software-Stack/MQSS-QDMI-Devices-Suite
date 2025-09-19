@@ -19,9 +19,6 @@
 #  @brief The Custom Module for handling the connection and submitting jobs.
 
 
-import math
-import os
-
 
 def create_remote_qpu(host):
     """! Creates a remote QPU connection.
@@ -30,19 +27,15 @@ def create_remote_qpu(host):
     @return A RemoteQPU instance or None if the connection fails.
     """
     try:
-
         from qat.core.qpu import RemoteQPU
-
         url, port = host.split(":")
         qpu = RemoteQPU(port, url)
-
     except Exception as e:
-        print("Error creating remote QPU:", e)
-        raise e
+        return None
     return qpu
 
 
-def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
+def submit_noisy_job(host, qasm_string, nshots, t1=40000, t2=22000):
     """Submits job via HTTP to Flask backend instead of RemoteQPU."""
     from flask import jsonify
     import math
@@ -50,12 +43,9 @@ def submit_job_http(host, qasm_string, nshots, t1=40000, t2=22000):
     try:
         if t1 <= 0 or t2 <= 0 or math.isnan(t1) or math.isnan(t2):
             return jsonify({"error": "t1 and t2 must be positive floats"}), 400
-
-        host = get_noisy_qpu_url()
-        url = host
         payload = {"aqasm": qasm_string, "t1": t1, "t2": t2, "nbshots": nshots}
 
-        response = requests.post(url, json=payload)
+        response = requests.post(host, json=payload)
         if response.status_code != 200:
             print("Error from server:", response.text)
             return None
@@ -93,7 +83,7 @@ def submit_job(remote_qpu, qasm_string, nshots):
             states.append(result.state.bitstring)
             probabilities.append((result.probability))
         return_value = [",".join(states)] + list(probabilities)
-
+        print(return_value)
         return return_value
     except:
         return None
@@ -112,6 +102,3 @@ def create_remote_qpu(host):
         return None
     return qpu
 
-
-def get_noisy_qpu_url():
-    return os.getenv('QLM_NOISY_HOST_URL')

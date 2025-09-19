@@ -29,6 +29,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  * Python functions.
  */
 
+#include "qdmi/constants.h"
 #include <Python.h>
 #include <qaptiva_qdmi/device.h>
 #include <qaptiva_qdmi/types.h>
@@ -54,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #define SUBMIT_JOB_FUNCTION_NAME "submit_job"
 
 /// The name of the function that used to submit quantum job.
-#define SUBMIT_NOISY_JOB_FUNCTION_NAME "submit_job_http"
+#define SUBMIT_NOISY_JOB_FUNCTION_NAME "submit_noisy_job"
 
 /**
  * @brief Enum of the session status that can be set internally.
@@ -320,7 +321,6 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
  * returns the `ret_val`.
  *
  * @param value The value to be checked
- * @param ret_val The value to be returned if `value` is `NULL` or `Py_None`
  * @param from_python True means that the `QDMI_Driver` that initiate the device
  * is written in Python. Therefore, we don't need to release the GIL.
  * @return if the `value`is `NULL` or `Py_None`, it returns the `ret_val`
@@ -340,10 +340,8 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
 
 /** @brief Checks whether the `value` is `QDMI_SUCCESS`.
  *
- * If the `value`is not `QDMI_SUCCESS`, the value itself returns.
- *
  * @param value The value to be checked
- * @return `value` if is is not `QDMI_SUCCESS`
+ * @return `value` if it is not `QDMI_SUCCESS`
  */
 #define CHECK_QDMI_ERROR(value)                                                \
   {                                                                            \
@@ -649,6 +647,8 @@ int QAPTIVA_QDMI_device_session_create_device_job(
   (*job)->probability_dense = NULL;
   (*job)->probability_keys = NULL;
   (*job)->probability_values = NULL;
+  (*job)->results_size = NULL;
+  (*job)-> n_state = NULL;
 
   (*job)->t1 = NULL;
   (*job)->t2 = NULL;
@@ -819,7 +819,7 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
     pProbability = PyList_GetItem(pResults, (long)i);
     job->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
   }
-
+  job->results_size = malloc(sizeof(size_t));
   memcpy(job->results_size, &resultSize, sizeof(size_t));
 
   job->status = QDMI_JOB_STATUS_DONE;
@@ -839,9 +839,9 @@ int submit_noisy_job(QAPTIVA_QDMI_Device_Job job) {
 
   PyObject *custom_python_module = *get_custom_python_module();
   PyObject *pFunc =
-      PyObject_GetAttrString(custom_python_module, "submit_job_http");
+      PyObject_GetAttrString(custom_python_module, SUBMIT_NOISY_JOB_FUNCTION_NAME);
   CHECK_PYTHON_ERROR(pFunc, *isFromPython());
-
+  
   PyObject *pHost = PyUnicode_FromString(job->session->url);
   CHECK_PYTHON_ERROR(pHost, *isFromPython());
 
@@ -897,7 +897,7 @@ int submit_noisy_job(QAPTIVA_QDMI_Device_Job job) {
  * @brief Submit a job to the device.
  * @details To submit a job this device, we need to use Qaptiva's Python Package
  * named myQLM. The out-of-the box job submission function is a
- * blocking-function that waits
+ * blocking-function that waits until job is completed.
  * @param[in] job The job to submit. Must not be @c NULL.
  * @return @ref QDMI_SUCCESS if the job was successfully submitted.
  * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p job is @c NULL.
@@ -942,7 +942,7 @@ int QAPTIVA_QDMI_device_job_submit(QAPTIVA_QDMI_Device_Job job) {
 /**
  * @brief Cancel an already created job.
  * @details The submitted jobs cannot be canceled due to nature of the device.
- * Therefore, we can only cancel the created jobs.
+ * Therefore, this function is not supported.
  * @param[in] job The job to cancel. Must not be @c NULL.
  * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
@@ -962,25 +962,7 @@ int QAPTIVA_QDMI_device_job_submit(QAPTIVA_QDMI_Device_Job job) {
  * @see QAPTIVA_QDMI_device_job_free
  */
 int QAPTIVA_QDMI_device_job_cancel(QAPTIVA_QDMI_Device_Job job) {
-  if (job == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status != QDMI_JOB_STATUS_RUNNING &&
-      job->status != QDMI_JOB_STATUS_SUBMITTED &&
-      job->status != QDMI_JOB_STATUS_CREATED)
-    return QDMI_ERROR_INVALIDARGUMENT;
-  if (job->status != QDMI_JOB_STATUS_CREATED) {
-    void *ret_val;
-    //    int isErr = pthread_join(job->offload_thread, &(ret_val));
-    int isErr = 0;
-    if (ret_val != NULL || isErr)
-      return QDMI_ERROR_FATAL;
-  }
-
-  job->status = QDMI_JOB_STATUS_CANCELED;
-  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-
-  return QDMI_SUCCESS;
+  return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /**
@@ -1033,29 +1015,14 @@ int QAPTIVA_QDMI_device_job_check(QAPTIVA_QDMI_Device_Job job,
  * has finished or has been canceled.
  */
 int QAPTIVA_QDMI_device_job_wait(QAPTIVA_QDMI_Device_Job job, size_t timeout) {
-  if (job == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status == QDMI_JOB_STATUS_CANCELED)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status != QDMI_JOB_STATUS_DONE &&
-      job->status != QDMI_JOB_STATUS_CREATED) {
-    void *ret_val = NULL;
-
-    if (ret_val != NULL)
-      job->status = QDMI_JOB_STATUS_CANCELED;
-    else
-      job->status = QDMI_JOB_STATUS_DONE;
-  }
-  return QDMI_SUCCESS;
+  return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /**
  * @brief Retrieve the results of a job.
  * @details The QLM device returns the results as a state-probability pair.
  * Therefore, this function provides the probability values, keys, and density,
- * as well as the histogram keys and values, which are calculated by multiplying
+ * as well as the histogram keys and values, which are calculated by multiplying  
  * the probability values by the number of shots.
  * @param[in] job The job to retrieve the results from. Must not be @c NULL.
  * @param[in] result The result to retrieve. Must be one of the values specifie
@@ -1101,7 +1068,8 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->probability_keys, size);
+      strncpy(data, job->probability_keys, size-1);
+      ((char*)data)[size-1] = '\0';
       return QDMI_SUCCESS;
     }
     if (size_ret)
@@ -1125,6 +1093,7 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
       asprintf(&bitstream, "%s", job->probability_keys);
       while (bitstream[++n_qubit] != ',')
         ;
+      job->n_state = malloc(sizeof(size_t));
       *(job->n_state) = 1 << n_qubit;
       required_size = *(job->n_state) * sizeof(double);
 
@@ -1218,9 +1187,7 @@ int QAPTIVA_QDMI_device_job_query_property(QAPTIVA_QDMI_Device_Job job,
 /**
  * @brief Initializes the Python interpreter.
  *
-  * @details Since we are obligated to use myQLM Python package, we need to
-
-
+ * @details Since we are obligated to use myQLM Python package, we need to
  * initialize the interpreter. However, if the library is used by a Python based
  * client, the interpreter does not need to be initialized.
  *
@@ -1239,7 +1206,7 @@ int initialize_python(void) {
 
   char *script_location = getenv(SCRIPT_LOCATION);
   char *script_name = getenv(SCRIPT_NAME);
-
+  
   *isFromPython() = Py_IsInitialized();
   PyGILState_STATE gstate;
   if (!*isFromPython()) {
@@ -1520,6 +1487,7 @@ int QAPTIVA_QDMI_device_session_set_parameter(
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM3 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM4 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM5)) {
+        
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -1529,12 +1497,13 @@ int QAPTIVA_QDMI_device_session_set_parameter(
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
     session->url = (char *)malloc(size);
-    strcpy(session->url, (const char *)value);
+    strncpy(session->url, (const char *)value, size-1);
+    session->url[size-1] = '\0';
   }
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1) {
     session->is_noisy_session = malloc(sizeof(int));
-    memcpy(session->is_noisy_session, (const char *)value, size);
+    memcpy(session->is_noisy_session, (int*) value, size);
   }
 
   return QDMI_SUCCESS;

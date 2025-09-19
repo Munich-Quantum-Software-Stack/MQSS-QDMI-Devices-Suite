@@ -25,14 +25,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 generate_device_defs_executable(${QAPTIVA_QDMI_PREFIX})
 
 add_executable(QaptivaBackendTest QaptivaBackendTest.cpp)
+add_executable(QaptivaNoisyBackendTest QaptivaNoisyBackendTest.cpp)
 
 target_link_libraries(
   QaptivaBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
                              qdmi::project_warnings)
+target_link_libraries(
+  QaptivaNoisyBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
+                             qdmi::project_warnings)
 
 add_dependencies(QaptivaBackendTest qdmi_test_qaptiva_device_defs)
+add_dependencies(QaptivaNoisyBackendTest qdmi_test_qaptiva_device_defs)
 
 gtest_discover_tests(QaptivaBackendTest)
+gtest_discover_tests(QaptivaNoisyBackendTest)
 
 if(ENABLE_COVERAGE)
   target_compile_options(QaptivaBackendTest INTERFACE --coverage -fprofile-arcs

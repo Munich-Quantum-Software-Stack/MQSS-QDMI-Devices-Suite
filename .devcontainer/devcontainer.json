@@ -7,7 +7,7 @@
     "dockerfile": "Dockerfile"
   },
   "remoteEnv": {
-    "QAPTIVA_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/eviden",
+    "QAPTIVA_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/simulators/eviden",
     "QAPTIVA_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
 
     "QAPTIVA_HOST_URL": "host.docker.internal:20501",

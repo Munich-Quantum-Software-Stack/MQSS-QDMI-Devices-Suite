@@ -19,8 +19,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "qaptiva_qdmi/device.h"
 #include <gtest/gtest.h>
 
-#define QLM_HOST_URL "QLM_HOST_URL"
-#define QLM_NOISY_HOST_URL "QLM_NOISY_HOST_URL"
+#define QLM_HOST_URL "QAPTIVA_HOST_URL"
+#define QLM_NOISY_HOST_URL "QAPTIVA_NOISYHOST_URL"
 
 #define CHECK_DEVICE_STATUS(device_status, expected_value)                     \
   {                                                                            \

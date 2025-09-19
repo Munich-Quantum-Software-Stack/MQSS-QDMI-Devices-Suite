@@ -20,6 +20,7 @@
 
 
 import math
+import os
 
 
 def create_remote_qpu(host):

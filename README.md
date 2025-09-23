@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
   </picture>
 </p>
 
-# Quantum Device Management Interface Devices
+# MQSS QDMI Devices Suite
 
 <p align="center">
   <a href="https://munich-quantum-software-stack.github.io/QDMI-Devices/">
@@ -32,7 +32,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 </p>
 <!-- [DOXYGEN MAIN] -->
 
-The Quantum Device Management Interface Devices (QDMI Devices) is a collection of QDMI
+The MQSS **QDMI Devices Suite** is a collection of QDMI
 implementations for various quantum devices. The QDMI Devices are integrated into the Munich Quantum
 Software Stack (MQSS) infrastructure to execute quantum programs and query device information to
 optimize, transform, and lower the quantum programs. These devices vary from quantum emulators to

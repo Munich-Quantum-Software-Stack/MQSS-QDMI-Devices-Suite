@@ -832,7 +832,22 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
 
   return QDMI_SUCCESS;
 }
-
+/**
+ * @brief An auxiliary function for submitting job to a noisy QPU backend
+ *
+ * @param[in] job A handle to a job to be submitted
+ * @details This function calls the `submit_noisy_job` from the
+ * `qlm_auxiliary` to submit the given job. It requires the correct server to be up
+ * and running in QLM2.
+ *
+ * @see QAPTIVA_QDMI_device_job_submit
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job submitted successfully
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if an error occur
+ */
 int submit_noisy_job(QAPTIVA_QDMI_Device_Job job) {
 
   PyGILState_STATE gstate;
@@ -883,7 +898,7 @@ int submit_noisy_job(QAPTIVA_QDMI_Device_Job job) {
     PyObject *pValue = PyList_GET_ITEM(pResults, i);
     job->probability_values[i - 1] = PyFloat_AsDouble(pValue);
   }
-
+  job->results_size = malloc(sizeof(size_t));
   memcpy(job->results_size, &resultSize, sizeof(size_t));
   job->status = QDMI_JOB_STATUS_DONE;
 

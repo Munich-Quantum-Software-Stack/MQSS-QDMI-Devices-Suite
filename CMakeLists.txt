@@ -36,7 +36,15 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(AVAILABLE_MODULES lrz eviden dcdb databases datacenters simulators)
+set(AVAILABLE_MODULES
+    lrz
+    eviden
+    parityqc
+    dcdb
+    databases
+    datacenters
+    isv
+    simulators)
 # Main config variable for users
 set(BUILD_MODULES
     "all"
@@ -76,6 +84,8 @@ foreach(module ${AVAILABLE_MODULES})
       option(BUILD_BACKEND_LRZ "Build LRZ Backend" ON)
     elseif(module STREQUAL "eviden")
       option(BUILD_BACKEND_EVIDEN "Build EVIDEN Backend" ON)
+    elseif(module STREQUAL "parityqc")
+      option(BUILD_BACKEND_PARITYQC "Build ParityQC Backend" ON)
     elseif(module STREQUAL "dcdb")
       option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
     elseif(module STREQUAL "simulators")
@@ -84,6 +94,8 @@ foreach(module ${AVAILABLE_MODULES})
       option(BUILD_DATACENTERS "Build Datacenter Backends" ON)
     elseif(module STREQUAL "databases")
       option(BUILD_DATABASES "Build Database Backends" ON)
+    elseif(module STREQUAL "isv")
+      option(BUILD_ISV "Build ISV Backends" ON)
     endif()
   else()
     message(STATUS "Skipping module: ${module}")
@@ -98,6 +110,12 @@ endif()
 
 if(BUILD_DATABASES)
   set(BUILD_BACKEND_DCDB
+      ON
+      CACHE BOOL "" FORCE)
+endif()
+
+if(BUILD_ISV)
+  set(BUILD_BACKEND_PARITYQC
       ON
       CACHE BOOL "" FORCE)
 endif()
@@ -118,6 +136,11 @@ endif()
 
 if(BUILD_BACKEND_LRZ)
   set(LRZ_QDMI_PREFIX "LRZ")
+endif()
+
+if(BUILD_BACKEND_PARITYQC)
+  set(PARITYQC_QDMI_PREFIX "ParityOS")
+  string(TOLOWER "${PARITYQC_QDMI_PREFIX}" PARITYQC_QDMI_PREFIX_LOWER)
 endif()
 
 if(ENABLE_COVERAGE)

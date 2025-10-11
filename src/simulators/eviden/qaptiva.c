@@ -780,7 +780,6 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
  * if an error occur
  */
-
 int submit_job(QAPTIVA_QDMI_Device_Job job) {
   PyGILState_STATE gstate;
 

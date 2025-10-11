@@ -25,8 +25,8 @@ target_link_libraries(lrz_device PUBLIC qdmi::qdmi qdmi::project_warnings curl
 
 generate_prefixed_qdmi_headers(${LRZ_QDMI_PREFIX})
 
-target_include_directories(lrz_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
-                                             ${cJSON_INCLUDE_DIRS})
+target_include_directories(lrz_device
+                           PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 add_library(qdmi::lrz_device ALIAS lrz_device)
 target_compile_definitions(lrz_device PRIVATE MAQCS)
 

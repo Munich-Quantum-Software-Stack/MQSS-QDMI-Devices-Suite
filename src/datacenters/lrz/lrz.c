@@ -876,7 +876,6 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
   if (response_code != HTTP_OK || response.response == NULL)
     return QDMI_ERROR_FATAL;
   job->raw_results = response.response;
-  printf("%s\n", job->raw_results);
   char *hist_keys = "";
   cJSON *parsed = cJSON_Parse(response.response);
   cJSON *results = cJSON_GetObjectItem(parsed, "result");

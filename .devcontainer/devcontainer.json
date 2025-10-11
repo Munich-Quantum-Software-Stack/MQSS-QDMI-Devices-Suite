@@ -6,12 +6,12 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "postCreateCommand": "cd .. && mkdir -p DCDB && cd DCDB && git clone https://gitlab.lrz.de/dcdb/dcdb.git && cd dcdb && make depsinstall lib tools SUB_DIRS=lib tools PLUGINS= OPERATORS=",
-
   "remoteEnv": {
-    "QLM_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/eviden",
-    "QLM_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
+    "QAPTIVA_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/simulators/eviden",
+    "QAPTIVA_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
+
     "QAPTIVA_HOST_URL": "host.docker.internal:20501",
+    "QAPTIVA_NOISYHOST_URL": "http://host.docker.internal:20502/run",
 
     "DCDB_HOST_URL": "host.docker.internal:9042",
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",

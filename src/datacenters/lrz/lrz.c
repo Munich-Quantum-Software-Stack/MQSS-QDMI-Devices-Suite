@@ -15,6 +15,7 @@ the License.
 
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
+#include <stdio.h>
 #define _GNU_SOURCE
 #include "lrz_qdmi/device.h"
 #include "lrz_qdmi/types.h"
@@ -59,8 +60,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size) - 1);                      \
-        ((char *)(value))[(size) - 1] = '\0';                                  \
+        strncpy((char *)(value), prop_value, (size)-1);                        \
+        ((char *)(value))[(size)-1] = '\0';                                    \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -86,11 +87,12 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     }                                                                          \
   }
 
-#define NUM_OF_HW 8
+#define NUM_OF_HW 5
 
-#define NUM_OF_OP 4
-const char *DEVICE_HARDWARES[NUM_OF_HW] = {
-    "AQT20", "MAQCS", "MUNIQC-Atoms20", "Q20", "Q5", "QExa20", "WMI3", "QLM"};
+#define NUM_OF_OP 13
+const char *DEVICE_HARDWARES[NUM_OF_HW] = {"AQT20", "MAQCS", "MUNIQC-Atoms20",
+                                           /* "Q20", "Q5", "QExa20",*/ "WMI3",
+                                           "QLM"};
 
 static QDMI_Device_Status *LRZ_QDMI_get_device_status(void) {
   static QDMI_Device_Status device_status = QDMI_DEVICE_STATUS_OFFLINE;
@@ -214,37 +216,103 @@ typedef struct LRZ_QDMI_Operation_impl_d {
 
 } LRZ_QDMI_Operation_impl_t;
 
-LRZ_QDMI_Operation_impl_t meassure = {"measure", 1, 0};
+LRZ_QDMI_Operation_impl_t measure = {"measure", 1, 0};
 LRZ_QDMI_Operation_impl_t id = {"id", 1, 0};
+
 LRZ_QDMI_Operation_impl_t r = {"r", 1, 3};
+LRZ_QDMI_Operation_impl_t rx = {"rx", 1, 1};
+LRZ_QDMI_Operation_impl_t ry = {"ry", 1, 1};
+LRZ_QDMI_Operation_impl_t rz = {"rz", 1, 1};
+LRZ_QDMI_Operation_impl_t rxx = {"rxx", 2, 1};
+
 LRZ_QDMI_Operation_impl_t cz = {"cz", 2, 0};
+LRZ_QDMI_Operation_impl_t cx = {"cx", 2, 0};
 
-LRZ_QDMI_Operation OPERATIONS[NUM_OF_OP] = {&meassure, &id, &r, &cz};
+LRZ_QDMI_Operation_impl_t h = {"h", 1, 0};
+LRZ_QDMI_Operation_impl_t x = {"x", 1, 0};
+LRZ_QDMI_Operation_impl_t y = {"y", 1, 0};
+LRZ_QDMI_Operation_impl_t z = {"z", 1, 0};
 
-int LRZ_QDMI_device_initialize(void) {
-  CURL *curl;
-  CURLcode res;
-  long response_code;
+LRZ_QDMI_Operation OPERATIONS[NUM_OF_OP] = {
+    &measure, &id, &r, &rx, &ry, &rz, &rxx, &cz, &cx, &h, &x, &y, &z};
 
-  struct ResponseStruct response = {0};
-  curl = curl_easy_init();
+char *get_default_mqp_url() {
+  char *url = LRZ_DEVICE_HOST;
+  if (url != NULL) {
+    return url;
+  }
+  return "https://portal.quantum.lrz.de:4000/v1";
+}
+
+typedef enum {
+  HTTP_METHOD_GET,
+  HTTP_METHOD_POST,
+  HTTP_METHOD_DELETE,
+  HTTP_METHOD_HEAD
+} HttpMethod;
+
+int http_request(HttpMethod method, const char *url, const char *token,
+                 const char *body, struct ResponseStruct *response,
+                 long *http_code) {
+  CURL *curl = curl_easy_init();
   if (!curl)
     return QDMI_ERROR_FATAL;
 
-  curl_easy_setopt(curl, CURLOPT_URL, "https://portal.quantum.lrz.de:4000/v1");
-  curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
-  res = curl_easy_perform(curl);
+  struct curl_slist *headers = NULL;
+  if (token) {
+    char *auth_header;
+    asprintf(&auth_header, "Authorization: Bearer %s", token);
+    headers = curl_slist_append(headers, auth_header);
+    free(auth_header);
+  }
+  headers = curl_slist_append(headers, "Content-Type: application/json");
 
-  if (res != CURLE_OK)
+  if (response) {
+    response->response = NULL;
+    response->size = 0;
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)response);
+  }
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+  switch (method) {
+  case HTTP_METHOD_POST:
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body ? body : "");
+    break;
+  case HTTP_METHOD_DELETE:
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    break;
+  case HTTP_METHOD_HEAD:
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    break;
+  case HTTP_METHOD_GET:
+  default:
+    break;
+  }
+
+  CURLcode res = curl_easy_perform(curl);
+  if (res != CURLE_OK) {
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
     return QDMI_ERROR_FATAL;
+  }
 
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+  if (http_code)
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, http_code);
 
-  if (response_code != 200 && response_code != 403)
-    return QDMI_ERROR_FATAL;
-
+  curl_slist_free_all(headers);
   curl_easy_cleanup(curl);
+  return QDMI_SUCCESS;
+}
+
+int LRZ_QDMI_device_initialize(void) {
+
+  int err = http_request(HTTP_METHOD_HEAD, get_default_mqp_url(), NULL, NULL,
+                         NULL, NULL);
+  if (err != QDMI_SUCCESS)
+    return err;
 
   LRZ_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
@@ -286,7 +354,7 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
   }
 
   char *base_url =
-      session->base_url == NULL ? LRZ_DEVICE_HOST : session->base_url;
+      session->base_url == NULL ? get_default_mqp_url() : session->base_url;
 
   char *url;
   if (session->hardware != NULL)
@@ -294,32 +362,11 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
   else
     asprintf(&url, "%s/resources", base_url);
 
-  CURL *curl = curl_easy_init();
-  if (!curl)
-    return QDMI_ERROR_FATAL;
-
   struct ResponseStruct response = {0};
-  struct curl_slist *headers = NULL;
-  char *auth_header;
-  CURLcode res;
   long response_code;
+  int err = http_request(HTTP_METHOD_GET, url, session->token, NULL, &response,
+                         &response_code);
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-
-  asprintf(&auth_header, "Authorization: Bearer %s", session->token);
-  headers = curl_slist_append(headers, auth_header);
-  headers = curl_slist_append(headers, "Content-Type: application/json");
-
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-  res = curl_easy_perform(curl);
-  if (res != CURLE_OK)
-    return QDMI_ERROR_BADSTATE;
-
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-  curl_slist_free_all(headers);
   if (response_code == HTTP_FORBIDDEN)
     return QDMI_ERROR_PERMISSIONDENIED;
 
@@ -328,6 +375,7 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
 
   cJSON *response_json = cJSON_Parse(response.response);
   char *string = cJSON_Print(response_json);
+
   if (session->hardware == NULL) {
     for (int i = 0; i < NUM_OF_HW; i++) {
       cJSON *hw = cJSON_GetObjectItem(response_json, DEVICE_HARDWARES[i]);
@@ -352,6 +400,8 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     size_t _n_qubit = (size_t)cJSON_GetNumberValue(qubit_num);
     session->hardware->n_qubit = _n_qubit;
     session->hardware->sites = malloc(sizeof(LRZ_QDMI_Site) * _n_qubit);
+    if (!session->hardware->sites)
+      return QDMI_ERROR_OUTOFMEM;
     for (size_t i = 0; i < session->hardware->n_qubit; i++) {
       session->hardware->sites[i] = malloc(sizeof(LRZ_QDMI_Site));
       session->hardware->sites[i]->index = i;
@@ -421,7 +471,6 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
     session->status = INITIALIZED;
     return QDMI_SUCCESS;
   }
-
   return QDMI_ERROR_FATAL;
 }
 
@@ -431,16 +480,23 @@ void LRZ_QDMI_device_session_free(LRZ_QDMI_Device_Session session) {
   }
   if (session->hardware != NULL) {
     LRZ_Hardware *hardware = session->hardware;
-    if (hardware->coupling_map == NULL)
+    if (hardware->coupling_map != NULL) {
       free(session->hardware->coupling_map);
+      session->hardware->coupling_map = NULL;
+    }
 
     if (hardware->name != NULL) {
       free(hardware->name);
+      hardware->name = NULL;
     }
     if (hardware->sites != NULL) {
+      for (size_t i = 0; i < hardware->n_qubit; ++i)
+        free(hardware->sites[i]);
       free(hardware->sites);
+      hardware->sites = NULL;
     }
     free(hardware);
+    session->hardware = NULL;
   }
 
   if (session->base_url != NULL) {
@@ -474,15 +530,18 @@ int LRZ_QDMI_device_session_set_parameter(LRZ_QDMI_Device_Session session,
 
   case QDMI_DEVICE_SESSION_PARAMETER_BASEURL:
     session->base_url = (char *)malloc(size);
-    strcpy(session->base_url, (const char *)value);
+    strncpy(session->base_url, (const char *)value, size - 1);
+    session->base_url[size - 1] = '\0';
     return QDMI_SUCCESS;
   case QDMI_DEVICE_SESSION_PARAMETER_TOKEN:
     session->token = (char *)malloc(size);
-    strcpy(session->token, (const char *)value);
+    strncpy(session->token, (const char *)value, size - 1);
+    session->token[size - 1] = '\0';
     return QDMI_SUCCESS;
   case QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1:
     session->hardware->name = (char *)malloc(size);
-    strcpy(session->hardware->name, (const char *)value);
+    strncpy(session->hardware->name, (const char *)value, size - 1);
+    session->hardware->name[size - 1] = '\0';
     return QDMI_SUCCESS;
   default:
     break;
@@ -579,7 +638,8 @@ int LRZ_QDMI_device_job_set_parameter(LRZ_QDMI_Device_Job job,
 
   if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAM) {
     job->circuit = malloc(size);
-    strcpy(job->circuit, (const char *)value);
+    strncpy(job->circuit, (const char *)value, size - 1);
+    job->circuit[size - 1] = '\0';
     return QDMI_SUCCESS;
   }
 
@@ -616,45 +676,27 @@ int LRZ_QDMI_device_job_submit(LRZ_QDMI_Device_Job job) {
   cJSON_AddStringToObject(job_json, "circuit", job->circuit);
   cJSON_AddStringToObject(job_json, "circuit_format", circuit_format);
   cJSON_AddStringToObject(job_json, "resource_name", job->hw);
-  cJSON_AddNumberToObject(job_json, "shots", (double)*(job->shots));
+  cJSON_AddNumberToObject(job_json, "shots", (unsigned int)*(job->shots));
   cJSON_AddBoolToObject(job_json, "no_modify", 0);
   cJSON_AddBoolToObject(job_json, "queued", 0);
 
-  CURLcode res;
-  CURL *curl = curl_easy_init();
-  if (!curl)
-    return QDMI_ERROR_FATAL;
-
-  char *url, *auth_header;
-  struct curl_slist *headers = NULL;
+  char *base_url =
+      job->session->base_url == NULL ? LRZ_DEVICE_HOST : job->session->base_url;
+  char *url;
+  asprintf(&url, "%s/job", base_url);
   struct ResponseStruct response = {0};
-  asprintf(&auth_header, "Authorization: Bearer %s", job->session->token);
-  asprintf(&url, "%s/job", job->session->base_url);
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, cJSON_Print(job_json));
-
-  headers = curl_slist_append(headers, auth_header);
-  headers = curl_slist_append(headers, "Content-Type: application/json");
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-
-  res = curl_easy_perform(curl);
-
-  if (res != CURLE_OK)
-    return QDMI_ERROR_FATAL;
-  curl_slist_free_all(headers);
-  curl_easy_cleanup(curl);
-
+  int err = http_request(HTTP_METHOD_POST, url, job->session->token,
+                         cJSON_Print(job_json), &response, NULL);
   cJSON *json_response = cJSON_Parse(response.response);
-
-  if (!json_response)
+  if (!json_response) {
+    printf("Failed to parse JSON response: %d\n", (unsigned int)*(job->shots));
     return QDMI_ERROR_FATAL;
+  }
 
   job->uuid = cJSON_GetStringValue(cJSON_GetObjectItem(json_response, "uuid"));
   job->status = QDMI_JOB_STATUS_SUBMITTED;
+
   LRZ_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
   return QDMI_SUCCESS;
 }
@@ -732,34 +774,14 @@ int LRZ_QDMI_device_job_check(LRZ_QDMI_Device_Job job,
 
   char *url;
   asprintf(&url, "%s/job/%s", base_url, job->uuid);
-
-  CURL *curl = curl_easy_init();
-  if (!curl)
-    return QDMI_ERROR_FATAL;
-
   struct ResponseStruct response = {0};
-  struct curl_slist *headers = NULL;
-  char *auth_header;
-  CURLcode res;
+
   long response_code;
-
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-
-  asprintf(&auth_header, "Authorization: Bearer %s", job->session->token);
-  headers = curl_slist_append(headers, auth_header);
-  headers = curl_slist_append(headers, "Content-Type: application/json");
-
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-  res = curl_easy_perform(curl);
-
-  if (res != CURLE_OK)
-    return QDMI_ERROR_BADSTATE;
-
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-  curl_slist_free_all(headers);
+  int err = http_request(HTTP_METHOD_GET, url, job->session->token, NULL,
+                         &response, &response_code);
+  if (err != QDMI_SUCCESS) {
+    return err;
+  }
 
   if (response_code == HTTP_FORBIDDEN)
     return QDMI_ERROR_PERMISSIONDENIED;
@@ -810,6 +832,7 @@ int LRZ_QDMI_device_job_wait(LRZ_QDMI_Device_Job job, const size_t timeout) {
       if (status == QDMI_JOB_STATUS_DONE ||
           status == QDMI_JOB_STATUS_CANCELED ||
           status == QDMI_JOB_STATUS_FAILED) {
+        LRZ_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
         return QDMI_SUCCESS;
       }
     }
@@ -841,21 +864,11 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
   CURLcode res;
   long response_code;
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
+  int err = http_request(HTTP_METHOD_GET, url, job->session->token, NULL,
+                         &response, &response_code);
 
-  asprintf(&auth_header, "Authorization: Bearer %s", job->session->token);
-  headers = curl_slist_append(headers, auth_header);
-  headers = curl_slist_append(headers, "Content-Type: application/json");
-
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-  res = curl_easy_perform(curl);
-  if (res != CURLE_OK)
-    return QDMI_ERROR_BADSTATE;
-
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-  curl_slist_free_all(headers);
+  if (err != QDMI_SUCCESS)
+    return err;
 
   if (response_code == HTTP_FORBIDDEN)
     return QDMI_ERROR_PERMISSIONDENIED;
@@ -863,6 +876,7 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
   if (response_code != HTTP_OK || response.response == NULL)
     return QDMI_ERROR_FATAL;
   job->raw_results = response.response;
+  printf("%s\n", job->raw_results);
   char *hist_keys = "";
   cJSON *parsed = cJSON_Parse(response.response);
   cJSON *results = cJSON_GetObjectItem(parsed, "result");
@@ -876,7 +890,6 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
   if (parsed_results == NULL) {
     return QDMI_ERROR_FATAL;
   }
-
   size_t array_size = (size_t)cJSON_GetArraySize(parsed_results);
   char *f_item = cJSON_GetArrayItem(parsed_results, 0)->string;
   job->prob_dense_size = (1 << strlen(f_item)) * sizeof(double);
@@ -900,10 +913,15 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
     job->hist_values[index] = value;
 
     job->prob_dense[key_int] = prob;
+    
     asprintf(&hist_keys, "%s,%s", hist_keys, key);
   }
-  job->hist_keys = malloc(strlen(hist_keys) - 1);
-  strcpy(job->hist_keys, ++hist_keys);
+  ++hist_keys;
+  size_t hist_keys_size = strlen(hist_keys) +1;
+  job->hist_keys = malloc(hist_keys_size);
+  
+  strncpy(job->hist_keys, hist_keys, hist_keys_size);
+  job->hist_keys[hist_keys_size - 1] = '\0';
   return QDMI_SUCCESS;
 }
 
@@ -941,8 +959,8 @@ int LRZ_QDMI_device_job_get_results(LRZ_QDMI_Device_Job job,
 
   ADD_STRING_PROPERTY(QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, job->hist_keys,
                       result, size, data, size_ret)
-  ADD_LIST_PROPERTY(QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, int,
-                    job->prob_values, job->prob_value_size / sizeof(double),
+  ADD_LIST_PROPERTY(QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, double,
+                    job->prob_values, (job->prob_value_size / sizeof(double)),
                     result, size, data, size_ret)
 
   if (result == QDMI_JOB_RESULT_PROBABILITIES_DENSE) {

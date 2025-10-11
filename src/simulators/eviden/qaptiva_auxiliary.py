@@ -15,10 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-
-
 ## @file qaptiva_auxiliary.py
 #  @brief The Custom Module for handling the connection and submitting jobs.
+
 
 
 def create_remote_qpu(host):
@@ -34,6 +33,33 @@ def create_remote_qpu(host):
     except:
         return None
     return qpu
+
+
+def submit_noisy_job(host, qasm_string, nshots, t1=40000, t2=22000):
+    """Submits job via HTTP to Flask backend instead of RemoteQPU."""
+    from flask import jsonify
+    import math
+    import requests
+    try:
+        if t1 <= 0 or t2 <= 0 or math.isnan(t1) or math.isnan(t2):
+            return jsonify({"error": "t1 and t2 must be positive floats"}), 400
+        payload = {"aqasm": qasm_string, "t1": t1, "t2": t2, "nbshots": nshots}
+
+        response = requests.post(host, json=payload)
+        if response.status_code != 200:
+            print("Error from server:", response.text)
+            return None
+
+        data = response.json()
+        result = data.get("result", {})
+        probs = result.get("state_probabilities", {})
+        states = list(probs.keys())
+        probabilities = list(probs.values())
+        return_value = [",".join(states)] + probabilities
+        return return_value
+    except Exception as e:
+        print("HTTP submit error:", e)
+        raise e
 
 
 def submit_job(remote_qpu, qasm_string, nshots):
@@ -59,3 +85,4 @@ def submit_job(remote_qpu, qasm_string, nshots):
         return return_value
     except:
         return None
+

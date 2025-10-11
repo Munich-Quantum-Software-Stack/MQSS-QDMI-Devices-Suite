@@ -34,18 +34,18 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <qaptiva_qdmi/types.h>
 
 /** @brief The definition for the auxiliary script's location.
- * @details `QLM_AUXILIARY_SCRIPT_LOCATION` is an environment variable that
+ * @details `QAPTIVA_AUXILIARY_SCRIPT_LOCATION` is an environment variable that
  * corresponse to location of the `qlm_auxiliary.py`. In this project, it should
  * be {PROJECT_SOURCE_DIR}/src/eviden/
  */
-#define SCRIPT_LOCATION "QLM_AUXILIARY_SCRIPT_LOCATION"
+#define SCRIPT_LOCATION "QAPTIVA_AUXILIARY_SCRIPT_LOCATION"
 
 /** @brief The file name of the auxiliary script.
- * @details `QLM_AUXILIARY_SCRIPT_NAME` is an environment variable that
+ * @details `QAPTIVA_AUXILIARY_SCRIPT_NAME` is an environment variable that
  * corresponse to the file name of the auxiliary script. In this project, it
  * should be `qlm_auxiliary`
  */
-#define SCRIPT_NAME "QLM_AUXILIARY_SCRIPT_NAME"
+#define SCRIPT_NAME "QAPTIVA_AUXILIARY_SCRIPT_NAME"
 
 /// The name of the function that used to create remote qpu.
 #define REMOTE_QPU_CREATE_FUNCTION_NAME "create_remote_qpu"
@@ -53,8 +53,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 /// The name of the function that used to submit quantum job.
 #define SUBMIT_JOB_FUNCTION_NAME "submit_job"
 
-/// The default number of the shot for a quantum job
-#define DEFAULT_NUM_SHOT 0
+/// The name of the function that used to submit quantum job.
+#define SUBMIT_NOISY_JOB_FUNCTION_NAME "submit_noisy_job"
 
 /**
  * @brief Enum of the session status that can be set internally.
@@ -81,6 +81,9 @@ typedef struct QAPTIVA_QDMI_Device_Session_impl_d {
 
   /// The url of the Qaptiva device's host.
   char *url;
+
+  /// Flag to indicate if this is a noisy session (HTTP-based)
+  int *is_noisy_session;
 
   /// Current status of the session
   enum QAPTIVA_QDMI_DEVICE_SESSION_STATUS status;
@@ -112,7 +115,7 @@ typedef struct QAPTIVA_QDMI_Device_Job_impl_d {
   QDMI_Job_Status status;
 
   /// Status of the `QDMI_Job`.
-  size_t num_shots;
+  size_t *num_shots;
 
   /// The <a
   /// href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a475336f0c08bd0218dd76a6016098231">
@@ -132,10 +135,14 @@ typedef struct QAPTIVA_QDMI_Device_Job_impl_d {
   double *probability_values;
 
   /// The number of the possible states of the results.
-  size_t n_state;
+  size_t *n_state;
 
   /// The size of the results.
-  size_t results_size;
+  size_t *results_size;
+
+  double *t1;
+
+  double *t2;
 
 } QAPTIVA_QDMI_Device_Job_impl_t;
 
@@ -351,7 +358,7 @@ https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/3aec97c03c714584c498c
  */
 #define GET_VALUE_DATA(type, multiplier)                                       \
   {                                                                            \
-    required_size = job->results_size * sizeof(type);                          \
+    required_size = *(job->results_size) * sizeof(type);                       \
     if (data) {                                                                \
       if (size < required_size)                                                \
         return QDMI_ERROR_INVALIDARGUMENT;                                     \
@@ -424,11 +431,25 @@ static PyObject **get_remote_qpu(void) {
 }
 
 /**
+ * @brief Static function to get the noisy `remote qpu`.
+ *
+ * @details The noisy `remote qpu` is created while initialting the noisy
+ * session and re-used while submitting noisy jobs via HTTP.
+ * @return The noisy `remote qpu` pointer if it is created. Otherwise, NULL;
+ * @see submit_job_http
+ * @see create_noisy_remote_qpu
+ */
+
+static PyObject **get_noisy_remote_qpu(void) {
+  static PyObject *noisy_remote_qpu = NULL;
+  return &noisy_remote_qpu;
+}
+
+/**
  * @brief Static function to get the auxiliary Python Module
  *
  * @details The auxiliary Python Module is frequintly used thoughtout the
  * backend after it is imported while initialting the session.
- *
  * @return The `custom python module` pointer if it is created. Otherwise, NULL;
  * @see create_remote_qpu
  * @see submit_job
@@ -512,7 +533,7 @@ int QAPTIVA_QDMI_device_session_query_device_property(
   if (prop >= QDMI_DEVICE_PROPERTY_MAX || (value == NULL && size_ret == NULL)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "QLM", prop, size, value,
+  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "QAPTIVA", prop, size, value,
                       size_ret)
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_VERSION, "0.0.1", prop, size, value,
                       size_ret)
@@ -532,12 +553,12 @@ int QAPTIVA_QDMI_device_session_query_device_property(
 /**
  * @brief Query a site property.
  * @details The Qaptiva device's `QDMI_Site`s only has indexes. Therefore, only
-their indexes can be queried.
+ * their indexes can be queried.
  * @param[in] session The session used for the query. Must not be @c NULL.
  * @param[in] site The site to query. Must not be @c NULL.
  * @param[in] prop The property to query. Must be one of the values specified
  * for <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a69ef10d452cc6f03cac8a917ba48d6e2">QDMI_Site_Property</a>.
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a69ef10d452cc6f03cac8a917ba48d6e2">QDMI_Site_Property</a>.
  * @param[in] size The size of the memory pointed to by @p value in bytes. Must
  * be greater or equal to the size of the return type specified for @p prop,
  * except when @p value is @c NULL, in which case it is ignored.
@@ -546,16 +567,16 @@ href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a69
  * @param[out] size_ret The actual size of the data being queried in bytes. If
  * this is @c NULL, it is ignored.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  * if the device supports the specified property and,
  * when @p value is not @c NULL, the property was successfully retrieved.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
- if the device does not support the
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
+ + if the device does not support the
  * property.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
-* if
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if
  *  - @p session or @p site is @c NULL,
  *  - @p prop is invalid, or
  *  - @p value is not @c NULL and @p size is less than the size of the data
@@ -623,12 +644,17 @@ int QAPTIVA_QDMI_device_session_create_device_job(
 
   (*job)->id = rand();
   (*job)->status = QDMI_JOB_STATUS_CREATED;
-  (*job)->num_shots = DEFAULT_NUM_SHOT;
+  (*job)->num_shots = NULL;
   (*job)->program = NULL;
 
   (*job)->probability_dense = NULL;
   (*job)->probability_keys = NULL;
   (*job)->probability_values = NULL;
+  (*job)->results_size = NULL;
+  (*job)->n_state = NULL;
+
+  (*job)->t1 = NULL;
+  (*job)->t2 = NULL;
 
   return QDMI_SUCCESS;
 }
@@ -646,16 +672,16 @@ int QAPTIVA_QDMI_device_session_create_device_job(
  * the parameter to be set. The data pointed to by @p value is copied and can be
  * safely reused after this function returns. If this is @c NULL, it is ignored.
  * @return <a
-href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
-if the device supports the specified <a
-* href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a40dd25c531ebf99fb4b46469083b609e">QDMI_Device_Job_Parameter</a> @p param and, when @p value is not @c NULL, the
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the device supports the specified <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a40dd25c531ebf99fb4b46469083b609e">QDMI_Device_Job_Parameter</a> @p param and, when @p value is not @c NULL, the
  * parameter was successfully set.
  * @return <a
-* href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
-* if the device does not support the
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a327c1ff469cce7beacddd9c6d428b651">QDMI_ERROR_NOTSUPPORTED</a>
+ * if the device does not support the
  * parameter or the value of the parameter.
  * @return <a
-* href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
  * if
  *  - @p job is @c NULL,
  *  - @p param is invalid, or
@@ -663,7 +689,6 @@ if the device supports the specified <a
  *    the parameter (if specified by the <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a40dd25c531ebf99fb4b46469083b609ec">QDMI_Device_Job_Parameter</a>
  * documentation).
-
  * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a916e0810bf915e2ad67f2c1430c54fec">QDMI_ERROR_BADSTATE</a> if the parameter cannot be set in the
  * current state of the job, for example, because the job is already submitted.
@@ -704,12 +729,35 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
 
   if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAM) {
     job->program = malloc(size);
-    strcpy(job->program, (const char *)value);
+    strncpy(job->program, (const char *)value, size - 1);
+    job->program[size - 1] = '\0';
     return QDMI_SUCCESS;
   }
 
   if (param == QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM) {
-    job->num_shots = *(const size_t *)value;
+    size_t shots = *(const size_t *)value;
+    job->num_shots = malloc(sizeof(size_t));
+    memcpy(job->num_shots, (size_t *)value, sizeof(size_t));
+    return QDMI_SUCCESS;
+  }
+
+  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM1) {
+
+    if (size != sizeof(double))
+      return QDMI_ERROR_INVALIDARGUMENT;
+
+    size_t t1 = *(const size_t *)value;
+    job->t1 = malloc(sizeof(double));
+    memcpy(job->t1, (size_t *)value, sizeof(double));
+    return QDMI_SUCCESS;
+  }
+
+  if (param == QDMI_DEVICE_JOB_PARAMETER_CUSTOM2) {
+    if (size != sizeof(double))
+      return QDMI_ERROR_INVALIDARGUMENT;
+    size_t t2 = *(const size_t *)value;
+    job->t2 = malloc(sizeof(double));
+    memcpy(job->t2, (size_t *)value, sizeof(double));
     return QDMI_SUCCESS;
   }
 
@@ -723,6 +771,7 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
  * named myQLM. Therefore, this function calls the `submit_job` from the
  * `qlm_auxiliary` to submit the given job.
  *
+ *
  * @see QAPTIVA_QDMI_device_job_submit
  * @return <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
@@ -731,7 +780,6 @@ int QAPTIVA_QDMI_device_job_set_parameter(QAPTIVA_QDMI_Device_Job job,
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
  * if an error occur
  */
-
 int submit_job(QAPTIVA_QDMI_Device_Job job) {
   PyGILState_STATE gstate;
 
@@ -750,7 +798,7 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
   PyObject *qasm_string = PyUnicode_FromString(job->program);
   CHECK_PYTHON_ERROR(qasm_string, *isFromPython())
 
-  PyObject *num_shot = PyLong_FromUnsignedLong(job->num_shots);
+  PyObject *num_shot = PyLong_FromUnsignedLong(*(job->num_shots));
   CHECK_PYTHON_ERROR(num_shot, *isFromPython())
 
   PyObject *pArgs = PyTuple_Pack(3, *remote_qpu, qasm_string, num_shot);
@@ -772,9 +820,87 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
     pProbability = PyList_GetItem(pResults, (long)i);
     job->probability_values[i - 1] = PyFloat_AS_DOUBLE(pProbability);
   }
-  job->results_size = resultSize - 1;
+  job->results_size = malloc(sizeof(size_t));
+  memcpy(job->results_size, &resultSize, sizeof(size_t));
 
   job->status = QDMI_JOB_STATUS_DONE;
+  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+
+  if (!*isFromPython())
+    PyGILState_Release(gstate);
+
+  return QDMI_SUCCESS;
+}
+/**
+ * @brief An auxiliary function for submitting job to a noisy QPU backend
+ *
+ * @param[in] job A handle to a job to be submitted
+ * @details This function calls the `submit_noisy_job` from the
+ * `qlm_auxiliary` to submit the given job. It requires the correct server to be up
+ * and running in QLM2.
+ *
+ * @see QAPTIVA_QDMI_device_job_submit
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job submitted successfully
+ * @return <a
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if an error occur
+ */
+int submit_noisy_job(QAPTIVA_QDMI_Device_Job job) {
+
+  PyGILState_STATE gstate;
+  if (!*isFromPython())
+    gstate = PyGILState_Ensure();
+
+  PyObject *custom_python_module = *get_custom_python_module();
+  PyObject *pFunc = PyObject_GetAttrString(custom_python_module,
+                                           SUBMIT_NOISY_JOB_FUNCTION_NAME);
+  CHECK_PYTHON_ERROR(pFunc, *isFromPython());
+
+  PyObject *pHost = PyUnicode_FromString(job->session->url);
+  CHECK_PYTHON_ERROR(pHost, *isFromPython());
+
+  PyObject *qasm_string = PyUnicode_FromString(job->program);
+  CHECK_PYTHON_ERROR(qasm_string, *isFromPython());
+
+  PyObject *num_shots = PyLong_FromUnsignedLong(*(job->num_shots));
+  CHECK_PYTHON_ERROR(num_shots, *isFromPython());
+
+  // Add t1 and t2 parameters
+  PyObject *py_t1 = PyFloat_FromDouble(*(job->t1));
+  PyObject *py_t2 = PyFloat_FromDouble(*(job->t2));
+
+  PyObject *pArgs =
+      PyTuple_Pack(5, pHost, qasm_string, num_shots, py_t1, py_t2);
+  CHECK_PYTHON_ERROR(pArgs, *isFromPython());
+
+  job->status = QDMI_JOB_STATUS_RUNNING;
+  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_BUSY);
+
+  PyObject *pResults = PyObject_CallObject(pFunc, pArgs);
+  CHECK_PYTHON_ERROR(pResults, *isFromPython());
+
+  // Parse results
+  Py_ssize_t resultSize = PyList_GET_SIZE(pResults);
+  if (resultSize < 1) {
+    job->status = QDMI_JOB_STATUS_FAILED;
+    QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+    return QDMI_ERROR_FATAL;
+  }
+
+  PyObject *pBitstring = PyList_GET_ITEM(pResults, 0);
+  asprintf(&(job->probability_keys), "%s", PyUnicode_AsUTF8(pBitstring));
+
+  job->probability_values = malloc(sizeof(double) * (resultSize - 1));
+  for (Py_ssize_t i = 1; i < resultSize; ++i) {
+    PyObject *pValue = PyList_GET_ITEM(pResults, i);
+    job->probability_values[i - 1] = PyFloat_AsDouble(pValue);
+  }
+  job->results_size = malloc(sizeof(size_t));
+  memcpy(job->results_size, &resultSize, sizeof(size_t));
+  job->status = QDMI_JOB_STATUS_DONE;
+
   QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
 
   if (!*isFromPython())
@@ -787,17 +913,11 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
  * @brief Submit a job to the device.
  * @details To submit a job this device, we need to use Qaptiva's Python Package
  * named myQLM. The out-of-the box job submission function is a
- * blocking-function that waits
+ * blocking-function that waits until job is completed.
  * @param[in] job The job to submit. Must not be @c NULL.
- * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- * if the job was successfully submitted.
- * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
- * if @p job is @c NULL.
- * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
- * if the job submission failed.
+ * @return @ref QDMI_SUCCESS if the job was successfully submitted.
+ * @return @ref QDMI_ERROR_INVALIDARGUMENT if @p job is @c NULL.
+ * @return @ref QDMI_ERROR_FATAL if the job submission failed.
  *
  * @see submit_job
  * @see QAPTIVA_QDMI_device_session_create_device_job
@@ -814,32 +934,41 @@ int QAPTIVA_QDMI_device_job_submit(QAPTIVA_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
 
   if (job->status != QDMI_JOB_STATUS_CREATED || job->program == NULL ||
-      job->num_shots == DEFAULT_NUM_SHOT)
+      job->num_shots == NULL) {
+
     return QDMI_ERROR_INVALIDARGUMENT;
+  }
 
+  int err = 0;
   job->status = QDMI_JOB_STATUS_SUBMITTED;
-  int err = submit_job(job);
-  if (err)
-    job->status = QDMI_JOB_STATUS_FAILED;
+  if (job->session->is_noisy_session) {
+    if (job->t1 == NULL || job->t2 == NULL)
+      return QDMI_ERROR_INVALIDARGUMENT;
+    err = submit_noisy_job(job);
+  } else {
+    err = submit_job(job);
+  }
 
+  if (err) {
+    job->status = QDMI_JOB_STATUS_FAILED;
+  }
   return QDMI_SUCCESS;
 }
 
 /**
  * @brief Cancel an already created job.
- *
  * @details The submitted jobs cannot be canceled due to nature of the device.
- * Therefore, we can only cancel the created jobs.
+ * Therefore, this function is not supported.
  * @param[in] job The job to cancel. Must not be @c NULL.
  * @return <a
- href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
- if the job was successfully canceled.
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
+ * if the job was successfully canceled.
  * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a> if @p job is @c NULL or the job
- * already has the status QDMI_JOB_STATUS_DONE.
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a72b5274b4f2a76101255ac8409410642">QDMI_ERROR_INVALIDARGUMENT</a>
+ * if @p job is @c NULL or the job already has the status QDMI_JOB_STATUS_DONE.
  * @return <a
- * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a> if the job could not be canceled.
-
+ * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
+ * if the job could not be canceled.
  * @see QAPTIVA_QDMI_device_session_create_device_job
  * @see QAPTIVA_QDMI_device_job_submit
  * @see QAPTIVA_QDMI_device_job_set_parameter
@@ -849,25 +978,7 @@ int QAPTIVA_QDMI_device_job_submit(QAPTIVA_QDMI_Device_Job job) {
  * @see QAPTIVA_QDMI_device_job_free
  */
 int QAPTIVA_QDMI_device_job_cancel(QAPTIVA_QDMI_Device_Job job) {
-  if (job == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status != QDMI_JOB_STATUS_RUNNING &&
-      job->status != QDMI_JOB_STATUS_SUBMITTED &&
-      job->status != QDMI_JOB_STATUS_CREATED)
-    return QDMI_ERROR_INVALIDARGUMENT;
-  if (job->status != QDMI_JOB_STATUS_CREATED) {
-    void *ret_val;
-    //    int isErr = pthread_join(job->offload_thread, &(ret_val));
-    int isErr = 0;
-    if (ret_val != NULL || isErr)
-      return QDMI_ERROR_FATAL;
-  }
-
-  job->status = QDMI_JOB_STATUS_CANCELED;
-  QAPTIVA_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-
-  return QDMI_SUCCESS;
+  return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /**
@@ -920,22 +1031,7 @@ int QAPTIVA_QDMI_device_job_check(QAPTIVA_QDMI_Device_Job job,
  * has finished or has been canceled.
  */
 int QAPTIVA_QDMI_device_job_wait(QAPTIVA_QDMI_Device_Job job, size_t timeout) {
-  if (job == NULL)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status == QDMI_JOB_STATUS_CANCELED)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  if (job->status != QDMI_JOB_STATUS_DONE &&
-      job->status != QDMI_JOB_STATUS_CREATED) {
-    void *ret_val = NULL;
-
-    if (ret_val != NULL)
-      job->status = QDMI_JOB_STATUS_CANCELED;
-    else
-      job->status = QDMI_JOB_STATUS_DONE;
-  }
-  return QDMI_SUCCESS;
+  return QDMI_ERROR_NOTSUPPORTED;
 }
 
 /**
@@ -988,7 +1084,8 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->probability_keys, size);
+      strncpy(data, job->probability_keys, size - 1);
+      ((char *)data)[size - 1] = '\0';
       return QDMI_SUCCESS;
     }
     if (size_ret)
@@ -997,7 +1094,7 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
   }
 
   if (result == QDMI_JOB_RESULT_HIST_VALUES)
-    GET_VALUE_DATA(int, job->num_shots)
+    GET_VALUE_DATA(double, *(job->num_shots))
 
   if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES)
     GET_VALUE_DATA(double, 1)
@@ -1012,11 +1109,12 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
       asprintf(&bitstream, "%s", job->probability_keys);
       while (bitstream[++n_qubit] != ',')
         ;
-      job->n_state = 1 << n_qubit;
-      required_size = job->n_state * sizeof(double);
+      job->n_state = malloc(sizeof(size_t));
+      *(job->n_state) = 1 << n_qubit;
+      required_size = *(job->n_state) * sizeof(double);
 
       job->probability_dense = malloc(required_size);
-      memset(job->probability_dense, 0, sizeof(double) * job->n_state);
+      memset(job->probability_dense, 0, sizeof(double) * *(job->n_state));
 
       key = strtok(bitstream, ",");
       while (key != NULL) {
@@ -1025,14 +1123,14 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
         job->probability_dense[index] = job->probability_values[stream_index++];
       }
     }
-    required_size = job->n_state * sizeof(double);
+    required_size = *(job->n_state) * sizeof(double);
     if (size_ret)
       *size_ret = required_size;
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
       double *data_ptr = data;
-      memset(data_ptr, 0, sizeof(double) * job->n_state);
+      memset(data_ptr, 0, sizeof(double) * *(job->n_state));
       for (int index = 0; index < required_size / sizeof(double); index++) {
         *data_ptr++ = job->probability_dense[index];
       }
@@ -1050,10 +1148,8 @@ int QAPTIVA_QDMI_device_job_get_results(QAPTIVA_QDMI_Device_Job job,
 void QAPTIVA_QDMI_device_job_free(QAPTIVA_QDMI_Device_Job job) {
   free(job->probability_dense);
   job->probability_dense = NULL;
-
   free(job->probability_keys);
   job->probability_keys = NULL;
-
   free(job->probability_values);
   job->probability_values = NULL;
 
@@ -1188,10 +1284,23 @@ int create_remote_qpu(const char *hostname) {
   return QDMI_SUCCESS;
 }
 
+int create_noisy_remote_connection(const char *hostname) {
+  // For noisy sessions, we don't need to create a QLM QPU object
+  // since we use HTTP requests directly. We just store the hostname
+  // and validate the connection is available.
+
+  // We could add a simple HTTP ping here to validate the server is up
+  // For now, we just assume it's working since it's a local server
+
+  return QDMI_SUCCESS;
+}
 /** @brief Checks if the required environment variables are set
  *
  * @details Two environment variables needs to be set to locate the custom
- * auxiliary module: @ref SCRIPT_LOCATION indicates the location of the file and
+  * auxiliary module: @ref SCRIPT_LOCATION indicates the location of the file
+ and
+
+
  * @ref SCRIPT_NAME indicates the name of the file.
  * @returns returns <a
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a74b2c0dafe09d9c6d819751e1ec120d3">QDMI_ERROR_FATAL</a>
@@ -1200,7 +1309,6 @@ int create_remote_qpu(const char *hostname) {
  * href="https://munich-quantum-software-stack.github.io/QDMI/constants_8h.html#a450b1adf81abc6f0accbf0ce4abe92f8a8039f5cd8202553b2a91a1c0b01d6751">QDMI_SUCCESS</a>
  * if both is set.
  */
-
 int check_env_variable(void) {
   if (getenv(SCRIPT_LOCATION) == NULL || getenv(SCRIPT_NAME) == NULL)
     return QDMI_ERROR_FATAL;
@@ -1249,13 +1357,18 @@ int QAPTIVA_QDMI_device_finalize(void) {
     *get_custom_python_module() = NULL;
   }
 
-  /*
+  // Clean up regular QPU
   if (*get_remote_qpu() != NULL) {
     Py_DECREF(*get_remote_qpu());
     *get_remote_qpu() = NULL;
   }
 
-  */
+  // Clean up noisy QPU (if any Python objects were created)
+  if (*get_noisy_remote_qpu() != NULL) {
+    Py_DECREF(*get_noisy_remote_qpu());
+    *get_noisy_remote_qpu() = NULL;
+  }
+
   if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython()) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Py_Finalize();
@@ -1282,6 +1395,7 @@ int QAPTIVA_QDMI_device_session_alloc(QAPTIVA_QDMI_Device_Session *session) {
   *session = (QAPTIVA_QDMI_Device_Session)malloc(
       sizeof(QAPTIVA_QDMI_Device_Session_impl_t));
   (*session)->url = NULL;
+  (*session)->is_noisy_session = NULL; // Default to regular session
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
 }
@@ -1321,10 +1435,16 @@ int QAPTIVA_QDMI_device_session_init(QAPTIVA_QDMI_Device_Session session) {
     return QDMI_ERROR_BADSTATE;
   }
 
-  int err = create_remote_qpu(session->url);
+  int err;
+  if (session->is_noisy_session)
+    err = create_noisy_remote_connection(session->url);
+  else
+    err = create_remote_qpu(session->url);
+
   CHECK_QDMI_ERROR(err)
 
   session->status = INITIALIZED;
+
   return QDMI_SUCCESS;
 }
 /**
@@ -1383,6 +1503,7 @@ int QAPTIVA_QDMI_device_session_set_parameter(
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM3 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM4 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM5)) {
+
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -1392,7 +1513,13 @@ int QAPTIVA_QDMI_device_session_set_parameter(
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
     session->url = (char *)malloc(size);
-    strcpy(session->url, (const char *)value);
+    strncpy(session->url, (const char *)value, size - 1);
+    session->url[size - 1] = '\0';
+  }
+
+  if (param == QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1) {
+    session->is_noisy_session = malloc(sizeof(int));
+    memcpy(session->is_noisy_session, (int *)value, size);
   }
 
   return QDMI_SUCCESS;

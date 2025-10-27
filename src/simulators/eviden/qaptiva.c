@@ -836,8 +836,8 @@ int submit_job(QAPTIVA_QDMI_Device_Job job) {
  *
  * @param[in] job A handle to a job to be submitted
  * @details This function calls the `submit_noisy_job` from the
- * `qlm_auxiliary` to submit the given job. It requires the correct server to be up
- * and running in QLM2.
+ * `qlm_auxiliary` to submit the given job. It requires the correct server to be
+ * up and running in QLM2.
  *
  * @see QAPTIVA_QDMI_device_job_submit
  * @return <a

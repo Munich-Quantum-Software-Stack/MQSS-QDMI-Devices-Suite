@@ -85,4 +85,3 @@ def submit_job(remote_qpu, qasm_string, nshots):
         return return_value
     except:
         return None
-

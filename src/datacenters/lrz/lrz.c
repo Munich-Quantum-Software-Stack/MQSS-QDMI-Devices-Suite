@@ -60,8 +60,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
         if ((size) < strlen(prop_value) + 1) {                                 \
           return QDMI_ERROR_INVALIDARGUMENT;                                   \
         }                                                                      \
-        strncpy((char *)(value), prop_value, (size)-1);                        \
-        ((char *)(value))[(size)-1] = '\0';                                    \
+        strncpy((char *)(value), prop_value, (size) - 1);                      \
+        ((char *)(value))[(size) - 1] = '\0';                                  \
       }                                                                        \
       if ((size_ret) != NULL) {                                                \
         *(size_ret) = strlen(prop_value) + 1;                                  \
@@ -912,13 +912,13 @@ int fetch_results(LRZ_QDMI_Device_Job job) {
     job->hist_values[index] = value;
 
     job->prob_dense[key_int] = prob;
-    
+
     asprintf(&hist_keys, "%s,%s", hist_keys, key);
   }
   ++hist_keys;
-  size_t hist_keys_size = strlen(hist_keys) +1;
+  size_t hist_keys_size = strlen(hist_keys) + 1;
   job->hist_keys = malloc(hist_keys_size);
-  
+
   strncpy(job->hist_keys, hist_keys, hist_keys_size);
   job->hist_keys[hist_keys_size - 1] = '\0';
   return QDMI_SUCCESS;

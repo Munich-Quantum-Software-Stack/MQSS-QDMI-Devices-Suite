@@ -32,12 +32,12 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 </p>
 <!-- [DOXYGEN MAIN] -->
 
-The MQSS **QDMI Devices Suite** is a collection of QDMI
-implementations for various quantum devices. The QDMI Devices are integrated into the Munich Quantum
-Software Stack (MQSS) infrastructure to execute quantum programs and query device information to
-optimize, transform, and lower the quantum programs. These devices vary from quantum emulators to
-neutral atom quantum computers. The implementations serve as a hardware abstraction layer, enabling
-QDMI clients to interact with the devices through QDMI drivers.
+The MQSS **QDMI Devices Suite** is a collection of QDMI implementations for various quantum devices.
+The QDMI Devices are integrated into the Munich Quantum Software Stack (MQSS) infrastructure to
+execute quantum programs and query device information to optimize, transform, and lower the quantum
+programs. These devices vary from quantum emulators to neutral atom quantum computers. The
+implementations serve as a hardware abstraction layer, enabling QDMI clients to interact with the
+devices through QDMI drivers.
 
 <!-- [DOXYGEN MAIN] -->
 

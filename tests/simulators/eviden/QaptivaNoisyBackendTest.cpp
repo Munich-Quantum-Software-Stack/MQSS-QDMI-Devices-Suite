@@ -200,7 +200,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitJobImplemented) {
   ASSERT_EQ(QAPTIVA_QDMI_device_session_create_device_job(session, &job),
             QDMI_SUCCESS);
   ASSERT_NE(QAPTIVA_QDMI_device_job_submit(job), QDMI_ERROR_NOTIMPLEMENTED);
-  
+
   QAPTIVA_QDMI_device_job_free(job);
 }
 
@@ -310,7 +310,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   double t2 = 5000;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
                                                 0, nullptr, &histogram_size),
@@ -341,7 +340,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   double t2 = 5000;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  
 
   ASSERT_EQ(
       QAPTIVA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
@@ -372,7 +370,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
   double t2 = 5000;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS, 0, nullptr,
@@ -403,7 +400,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   double t2 = 5000;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES, 0, nullptr,
@@ -434,7 +430,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
   double t2 = 5000;
   CREATE_JOB(job, nShot, qasmFormat, c_t_c, t1, t2);
   ASSERT_EQ(QAPTIVA_QDMI_device_job_submit(job), QDMI_SUCCESS);
-
 
   ASSERT_EQ(QAPTIVA_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_PROBABILITIES_DENSE, 0, nullptr,

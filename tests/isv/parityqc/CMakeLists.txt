@@ -10,10 +10,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Creates qdmi_test_<prefix>_device_defs. Provided by QDMI project.
 generate_device_defs_executable(${PARITYQC_QDMI_PREFIX})
 
-add_executable(ParityOSDeviceTest ParityOSDeviceTest.cpp)
+add_executable(ParityOSDeviceTest test_main.cpp ParityOSDeviceTest.cpp)
 
 target_link_libraries(
-  ParityOSDeviceTest PRIVATE gtest gtest_main qdmi::qdmi parityos_device
+  ParityOSDeviceTest PRIVATE gtest qdmi::qdmi parityos_device
                              qdmi::project_warnings)
 
 add_dependencies(ParityOSDeviceTest

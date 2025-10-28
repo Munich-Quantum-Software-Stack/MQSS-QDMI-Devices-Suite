@@ -10,39 +10,150 @@
 #include <Python.h>
 #include <assert.h>
 #include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <optional>
 #include <parityos_qdmi/device.h>
 #include <string>
+#include <string_view>
 
 //===----------------------------------------------------------------------===//
-// Private code
+// Private code 1/2
 //===----------------------------------------------------------------------===//
 
 namespace {
 
-/// NOTE: For ease of discoverability we prefix private functions with `local_`.
+/// Environment variable containing absolute path to the folder containing all
+/// relevant python scripts.
+#define SCRIPT_PATH "PARITYQC_SCRIPT_PATH"
+/// Environment variable containing basename of the python script without
+/// extension (e.g. `my_script`, not `my_script.py`).
+#define SCRIPT_NAME "PARITYQC_PARITYOS_WRAPPER_SCRIPT_NAME"
+
+/// TODO: setting the initial value upon first usage is a bit indirect. We
+/// should put all the python stuff into one object for better resource
+/// management.
+///
+/// It can happen that our device is called within a process which already runs
+/// python. In that case one must not initialize (and release) the python
+/// interpreter.
+bool is_from_python() {
+  static bool is_initialized = Py_IsInitialized() != 0;
+  return is_initialized;
+}
+
+/// RAII pattern to manage python's global interpreter lock (GIL).
+struct GilGuard {
+  GilGuard() : gstate(PyGILState_LOCKED) {
+    // NOTE: It is realistic that the API around PyGILState becomes deprecated
+    // (see https://peps.python.org/pep-0788/, as of writing this the pep is
+    // still a draft).
+    gstate = PyGILState_Ensure();
+  }
+
+  ~GilGuard() { PyGILState_Release(gstate); }
+
+private:
+  PyGILState_STATE gstate;
+};
 
 enum class SESSION_STATUS {
   /// Session starts in allocated state.
   ALLOCATED,
-  /// A session move to the initialized state once
+  /// A session moves to the initialized state once
   /// ParityOS_QDMI_device_session_init was called.
   INITIALIZED,
 };
 
-/// TODO: This was in the template. Document what the device status even means
-/// for us! After that check if this implementation really satisfies our
-/// specification.
-QDMI_Device_Status *local_get_device_status(void) {
-  static QDMI_Device_Status device_status = QDMI_DEVICE_STATUS_OFFLINE;
-  return &device_status;
+/// TODO: handle device status? For us not everything makes sense, but the
+/// following might make sense: OFFLINE, MAINTENANCE. Unfortunately there is
+/// nothing in there for "everything is fine".
+
+/** @brief Checks if there is a python related error.
+ *
+ * This macro checks whether the `value` is `nullptr` or `Py_None`. If it is, it
+ * returns a `QDMI_ERROR_FATAL`.
+ *
+ * TODO: emitting FATAL on any error is not helpful for error diagnostics. Work
+ * out a better strategy to communicate the error.
+ */
+#define CHECK_PYTHON_ERROR(value)                                              \
+  {                                                                            \
+    if (value == Py_None || value == nullptr) {                                \
+      PyErr_Print();                                                           \
+      return QDMI_ERROR_FATAL;                                                 \
+    }                                                                          \
+  }
+
+/// Refers to the parityos wrapper script.
+PyObject **get_parityos_wrapper_module() {
+  static PyObject *python_module = nullptr;
+  return &python_module;
 }
 
-QDMI_Device_Status local_read_device_status(void) {
-  return *local_get_device_status();
+/**
+ * Call this function before any other python related functions.
+ *
+ * It checks if python is already initialized. If not it will initialize it.
+ * Then the parityos wrapper script is loaded and available via
+ * `get_parityos_module`.
+ */
+QDMI_STATUS initialize_python() {
+  const auto script_path = std::getenv(SCRIPT_PATH);
+  const auto script_name = std::getenv(SCRIPT_NAME);
+
+  /// Useful for development. TODO: logger would be better for production.
+  assert(script_path && "Missing script path");
+  assert(script_name && "Missing script name");
+
+  if (std::strlen(script_path) == 0 || std::strlen(script_name) == 0)
+    return QDMI_ERROR_FATAL;
+
+  if (!is_from_python()) {
+    Py_Initialize();
+    PyThreadState *_save = PyEval_SaveThread();
+  }
+
+  auto _gil_quard = GilGuard();
+
+  PyObject *sys = PyImport_ImportModule("sys");
+  PyObject *sys_path = PyObject_GetAttrString(sys, "path");
+
+  PyList_Append(sys_path, PyUnicode_FromString(script_path));
+
+  PyObject *pName = PyUnicode_DecodeFSDefault(script_name);
+  CHECK_PYTHON_ERROR(pName);
+
+  auto py_module = PyImport_Import(pName);
+  *get_parityos_wrapper_module() = py_module;
+  CHECK_PYTHON_ERROR(*get_parityos_wrapper_module());
+
+  Py_XDECREF(pName);
+
+  return QDMI_SUCCESS;
 }
 
-void local_set_device_status(QDMI_Device_Status status) {
-  *local_get_device_status() = status;
+/// Calls the python function with the same name (and *essentially* the same
+/// signature).
+QDMI_STATUS create_parityos_client(PyObject **out, std::string_view username,
+                                   std::string_view base_url) {
+  auto _gil_quard = GilGuard();
+
+  /// TODO: we should distinguish FATAL from PERMISSION DENIED errors.
+
+  PyObject *pFunc = PyObject_GetAttrString(*get_parityos_wrapper_module(),
+                                           "create_parityos_client");
+  CHECK_PYTHON_ERROR(pFunc);
+
+  PyObject *pArgs = PyTuple_Pack(2, PyUnicode_FromString(username.data()),
+                                 PyUnicode_FromString(base_url.data()));
+  CHECK_PYTHON_ERROR(pArgs);
+
+  PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
+  CHECK_PYTHON_ERROR(pResult);
+
+  *out = pResult;
+  return QDMI_SUCCESS;
 }
 
 } // namespace
@@ -92,14 +203,38 @@ void local_set_device_status(QDMI_Device_Status status) {
     }                                                                          \
   }
 
+/// If `value` is not a qdmi success return it.
+#define CHECK_QDMI_ERROR(value)                                                \
+  {                                                                            \
+    if (value != QDMI_SUCCESS) {                                               \
+      return value;                                                            \
+    }                                                                          \
+  }
+
 //===----------------------------------------------------------------------===//
 // QDMI opaque types implementation
 //===----------------------------------------------------------------------===//
 
 struct ParityOS_QDMI_Device_Session_impl_d {
   enum SESSION_STATUS status = SESSION_STATUS::ALLOCATED;
-  /// Secret token for authentication with parityos
-  std::string token = "";
+  /// For authentication with parityapi, e.g. `https://api.parityqc.com/`.
+  std::string base_url = "";
+  /// For authentication with parityapi
+  std::string username = "";
+  /// Let it be hardcoded for now.
+  const unsigned api_version = 3;
+  /// This is set iff it is in the `INITIALIZED` status (authentication with
+  /// parityapi was successfull). The session owns the client.
+  PyObject *client = nullptr;
+
+  /// Whether the session has set all fields relevant for authentication with
+  /// parityos.
+  bool has_auth_data() { return base_url != "" && username != ""; }
+
+  ~ParityOS_QDMI_Device_Session_impl_d() {
+    auto _gil_quard = GilGuard();
+    Py_XDECREF(client);
+  }
 };
 
 /// TODO: We might want to refactor this object once we have a working
@@ -109,51 +244,142 @@ struct ParityOS_QDMI_Device_Job_impl_d {
 
   /// NOTE: Session *not* managed by this object!
   const ParityOS_QDMI_Device_Session session = nullptr;
-  /// TODO: In case we need an id it probably should be universally unique (e.g.
-  /// uuid).
-  const int id = -1;
 
   // Mutable fields:
 
   QDMI_Job_Status status = QDMI_JOB_STATUS_CREATED;
-  /// TODO: Here we probably need a *custom* (json) format. We probably cannot
+  /// Custom json format for the problem representation. We probably cannot
   /// validate at this point if the format is consistent with program. I think
   /// it is OK that the service just returns an error if the program is not as
   /// the format claims.
   QDMI_Program_Format format = QDMI_PROGRAM_FORMAT_CUSTOM1;
-  /// TODO: This will probaly contain parityqc problem representation in json
+  /// ParityQC problem representation in json
   /// format
-  void *program = nullptr;
-
-  /// TODO: add more fields as needed.
+  std::string program;
+  /// Gets a valid (strictly positive) value only after the job is submitted
+  /// (status).
+  unsigned long long submission_id = 0;
+  /// A quake circuit solving the problem. TODO: In what sense (QAOA etc.)?
+  std::string result;
 
   ParityOS_QDMI_Device_Job_impl_d(const ParityOS_QDMI_Device_Session session_)
-      : session(session_), id(42) {
+      : session(session_) {
     assert(session != nullptr && "session must not be null");
-  }
-
-  ~ParityOS_QDMI_Device_Job_impl_d() {
-    delete[] static_cast<char *>(program); // if allocated with new[]
   }
 };
 
-/// Trivial implementation as we provide a compilation service.
+/// Trivial implementation because we provide a compilation service.
 struct ParityOS_QDMI_Site_impl_d {};
 
-/// Trivial implementation as we provide a compilation service.
+/// Trivial implementation because we provide a compilation service.
 struct ParityOS_QDMI_Operation_impl_d {};
+
+//===----------------------------------------------------------------------===//
+// Private code 2/2
+//===----------------------------------------------------------------------===//
+
+/// Call the python function with the same name and store the `submission_id` in
+/// the `job`.
+QDMI_STATUS submit_job(ParityOS_QDMI_Device_Job job) {
+  assert(job && "job must not be null");
+  assert(job->session->status == SESSION_STATUS::INITIALIZED &&
+         "session not initialized");
+
+  job->status = QDMI_JOB_STATUS_SUBMITTED;
+
+  auto _gil_quard = GilGuard();
+
+  PyObject *py_module = *get_parityos_wrapper_module();
+
+  PyObject *pFunc = PyObject_GetAttrString(py_module, "submit_job");
+  CHECK_PYTHON_ERROR(pFunc);
+
+  /// TODO: Double check with program format if it is meant to be json.
+  PyObject *json_string = PyUnicode_FromString(job->program.c_str());
+  CHECK_PYTHON_ERROR(json_string);
+
+  PyObject *pArgs = PyTuple_Pack(2, job->session->client, json_string);
+  CHECK_PYTHON_ERROR(pArgs);
+
+  job->status = QDMI_JOB_STATUS_RUNNING;
+
+  PyObject *py_submission_id = PyObject_CallObject(pFunc, pArgs);
+  CHECK_PYTHON_ERROR(py_submission_id);
+  job->submission_id = PyLong_AsUnsignedLongLong(py_submission_id);
+  if (PyErr_Occurred()) {
+    return QDMI_ERROR_FATAL;
+  }
+
+  return QDMI_SUCCESS;
+}
+
+/** Call the python function of the same name.
+ *
+ * We call the parityos API to ask for the results of the job, using the
+ * submission id to identify it. If the result is not yet available result will
+ * contain a null option.
+ *
+ * TODO: The python side is not yet fully implemented, but once it is we intend
+ * to store the result locally in order to quickly retrieve it once we have
+ * already recieved it. That way you can use the function to test whether the
+ * result is available. Once it is you can be assured that retrieval will be
+ * quick.
+ */
+QDMI_STATUS get_result(std::optional<std::string> &result,
+                       ParityOS_QDMI_Device_Job job) {
+  assert(job && "job must not be null");
+  assert(job->status >= QDMI_JOB_STATUS_SUBMITTED && "job must be submitted");
+  assert(job->status <= QDMI_JOB_STATUS_DONE &&
+         "job must be in a normal state");
+
+  auto _gil_quard = GilGuard();
+
+  PyObject *py_module = *get_parityos_wrapper_module();
+
+  PyObject *pFunc = PyObject_GetAttrString(py_module, "get_result");
+  CHECK_PYTHON_ERROR(pFunc);
+
+  PyObject *py_submission_id = PyLong_FromUnsignedLongLong(job->submission_id);
+
+  PyObject *pArgs = PyTuple_Pack(1, py_submission_id);
+  CHECK_PYTHON_ERROR(pArgs);
+
+  PyObject *py_result = PyObject_CallObject(pFunc, pArgs);
+
+  if (py_result == Py_None) {
+    result = std::nullopt;
+    return QDMI_SUCCESS;
+  }
+
+  if (!PyUnicode_Check(py_result)) {
+    return QDMI_ERROR_FATAL;
+  }
+
+  result = PyUnicode_AsUTF8(py_result);
+
+  return QDMI_SUCCESS;
+}
 
 //===----------------------------------------------------------------------===//
 // QDMI device API implementation
 //===----------------------------------------------------------------------===//
 
 int ParityOS_QDMI_device_initialize(void) {
-  local_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+  CHECK_QDMI_ERROR(initialize_python());
   return QDMI_SUCCESS;
 }
 
 int ParityOS_QDMI_device_finalize(void) {
-  local_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
+  if (*get_parityos_wrapper_module() != nullptr) {
+    Py_DECREF(*get_parityos_wrapper_module());
+    *get_parityos_wrapper_module() = nullptr;
+  }
+
+  if (Py_IsInitialized() && !_Py_IsFinalizing() && !is_from_python()) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Py_Finalize();
+  }
+
   return QDMI_SUCCESS;
 }
 
@@ -179,21 +405,18 @@ int ParityOS_QDMI_device_session_init(ParityOS_QDMI_Device_Session session) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  switch (local_read_device_status()) {
-  case QDMI_DEVICE_STATUS_ERROR:
-  case QDMI_DEVICE_STATUS_OFFLINE:
-  case QDMI_DEVICE_STATUS_MAINTENANCE:
-    return QDMI_ERROR_FATAL;
-  default:
-    break;
+  // After a session is successfully initialized we do not allow any further
+  // attempts.
+  if (session->status != SESSION_STATUS::ALLOCATED) {
+    return QDMI_ERROR_BADSTATE;
   }
 
-  /// TODO: just a demo:
-  if (session->token != "foo") {
+  if (!session->has_auth_data()) {
     return QDMI_ERROR_PERMISSIONDENIED;
   }
 
-  /// TODO: Add meaningful implementation
+  CHECK_QDMI_ERROR(create_parityos_client(&session->client, session->username,
+                                          session->base_url));
 
   session->status = SESSION_STATUS::INITIALIZED;
   return QDMI_SUCCESS;
@@ -218,13 +441,22 @@ int ParityOS_QDMI_device_session_set_parameter(
     return QDMI_ERROR_BADSTATE;
   }
 
-  if (param != QDMI_DEVICE_SESSION_PARAMETER_TOKEN) {
-    /// TODO: Add possibly more things we want to set.
+  if (param != QDMI_DEVICE_SESSION_PARAMETER_BASEURL &&
+      param != QDMI_DEVICE_SESSION_PARAMETER_USERNAME) {
     return QDMI_ERROR_NOTSUPPORTED;
   }
 
   if (value != nullptr) {
-    session->token = std::string(static_cast<const char *>(value), size);
+    switch (param) {
+    case QDMI_DEVICE_SESSION_PARAMETER_BASEURL:
+      session->base_url = std::string(static_cast<const char *>(value), size);
+      break;
+    case QDMI_DEVICE_SESSION_PARAMETER_USERNAME:
+      session->username = std::string(static_cast<const char *>(value), size);
+      break;
+    default:
+      return QDMI_ERROR_NOTSUPPORTED;
+    }
   }
 
   return QDMI_SUCCESS;
@@ -288,8 +520,7 @@ int ParityOS_QDMI_device_job_set_parameter(
     return QDMI_SUCCESS;
   case QDMI_DEVICE_JOB_PARAMETER_PROGRAM:
     if (value != nullptr) {
-      job->program = new char[size];
-      memcpy(job->program, value, size);
+      job->program = std::string(static_cast<const char *>(value), size);
     }
     return QDMI_SUCCESS;
   default:
@@ -311,7 +542,7 @@ int ParityOS_QDMI_device_job_query_property(ParityOS_QDMI_Device_Job job,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  const auto id_str = std::to_string(job->id);
+  const auto id_str = std::to_string(job->submission_id);
 
   ADD_STRING_PROPERTY(QDMI_DEVICE_JOB_PROPERTY_ID, id_str.c_str(), prop, size,
                       value, size_ret)
@@ -328,25 +559,7 @@ int ParityOS_QDMI_device_job_submit(ParityOS_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  // Not explicitly mentioned by interface:
-  if (job->status != QDMI_JOB_STATUS_CREATED || job->program == nullptr)
-    return QDMI_ERROR_INVALIDARGUMENT;
-
-  job->status = QDMI_JOB_STATUS_SUBMITTED;
-
-  /// TODO: here we have to reach out to our python client. We probably want an
-  /// async call here. The interface itself allows both: sync and async.
-  int err = 1;
-
-  if (err) {
-    /// Here I assume that err means that submission itself failed.
-    job->status = QDMI_JOB_STATUS_FAILED;
-    return QDMI_ERROR_FATAL;
-  }
-
-  /// TODO: Not exactly sure what "busy" should mean and how to make sure it is
-  /// reset reliably once the computation comes back.
-  local_set_device_status(QDMI_DEVICE_STATUS_BUSY);
+  CHECK_QDMI_ERROR(submit_job(job));
 
   return QDMI_SUCCESS;
 }
@@ -356,9 +569,8 @@ int ParityOS_QDMI_device_job_cancel(ParityOS_QDMI_Device_Job job) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  job->status = QDMI_JOB_STATUS_CANCELED;
-  local_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-  return QDMI_SUCCESS;
+  /// TODO:
+  return QDMI_ERROR_NOTIMPLEMENTED;
 }
 
 int ParityOS_QDMI_device_job_check(ParityOS_QDMI_Device_Job job,
@@ -367,21 +579,38 @@ int ParityOS_QDMI_device_job_check(ParityOS_QDMI_Device_Job job,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  /// TODO: implement this.
-  local_set_device_status(QDMI_DEVICE_STATUS_IDLE);
-  job->status = QDMI_JOB_STATUS_FAILED;
-  *status = job->status;
-
-  return QDMI_SUCCESS;
+  /// TODO:
+  return QDMI_ERROR_NOTIMPLEMENTED;
 }
 
 int ParityOS_QDMI_device_job_wait(ParityOS_QDMI_Device_Job job,
-                                  [[maybe_unused]] const size_t timeout) {
+                                  const size_t timeout) {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  /// TODO: implement this properly
+  if (timeout != 0) {
+    return QDMI_ERROR_NOTSUPPORTED;
+  }
+
+  if (job->status == QDMI_JOB_STATUS_DONE) {
+    return QDMI_SUCCESS;
+  }
+
+  if (job->status < QDMI_JOB_STATUS_DONE) {
+    /// TODO: At the moment the job is synchronous so we only have to retrieve
+    /// the result without error.
+    std::optional<std::string> maybe_result;
+    CHECK_QDMI_ERROR(get_result(maybe_result, job));
+
+    if (maybe_result.has_value()) {
+      job->status = QDMI_JOB_STATUS_DONE;
+      job->result = maybe_result.value();
+    }
+
+    return QDMI_SUCCESS;
+  }
+
   return QDMI_ERROR_FATAL;
 }
 
@@ -399,8 +628,20 @@ int ParityOS_QDMI_device_job_get_results(ParityOS_QDMI_Device_Job job,
   }
 
   switch (result) {
-  case QDMI_JOB_RESULT_CUSTOM1:
-    /// TODO: we need custom results right now as nothing else fits.
+  case QDMI_JOB_RESULT_CUSTOM1: {
+    auto result_size = job->result.size() + 1; // including \0 terminator
+    if (data != nullptr && size < result_size) {
+      return QDMI_ERROR_INVALIDARGUMENT;
+    }
+
+    if (size_ret)
+      *size_ret = result_size;
+
+    if (data)
+      memcpy(data, job->result.data(), size);
+
+    return QDMI_SUCCESS;
+  }
   default:
     return QDMI_ERROR_NOTSUPPORTED;
   }
@@ -417,7 +658,6 @@ int ParityOS_QDMI_device_session_query_device_property(
   /// TODO: we do not have terribly important info to provide. But those entries
   /// are just adhoc value. Reconsider them at some point.
 
-  // TODO: Bettern name?
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "ParityOS", prop, size, value,
                       size_ret)
   // TODO: Version of parityos?
@@ -427,11 +667,6 @@ int ParityOS_QDMI_device_session_query_device_property(
   // somewhere?
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_LIBRARYVERSION, "1.2.0", prop, size,
                       value, size_ret)
-
-  /// This is probably the only interesting info we can provide:
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_STATUS, QDMI_Device_Status,
-                            local_read_device_status(), prop, size, value,
-                            size_ret)
 
   // Anything else refers to a quantum computer.
   return QDMI_ERROR_NOTSUPPORTED;

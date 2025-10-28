@@ -17,6 +17,17 @@
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
     "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
 
-    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
-  }
+    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1",
+
+    // TODO: It isn't great to set the values for all developers at once.
+    "PARITYQC_SCRIPT_PATH": "/workspaces/MQSS-QDMI-Devices-Suite/src/isv/parityqc/",
+    "PARITYQC_PARITYOS_WRAPPER_SCRIPT_NAME": "parityos_wrapper",
+    // Local parity api. You have to set it up yourself.
+    "PARITYQC_PARITYOS_BASEURL": "http://localhost:8000/v3"
+  },
+
+  // TODO: this is needed for accessing local version of parityapi at localhost. For local testing
+  // something like this will still be needed. Have to figure this out or discuss if this can even
+  // stay here.
+  "runArgs": ["--network=host"]
 }

@@ -13,7 +13,7 @@ generate_device_defs_executable(${PARITYQC_QDMI_PREFIX})
 add_executable(ParityOSDeviceTest test_main.cpp ParityOSDeviceTest.cpp)
 
 target_link_libraries(
-  ParityOSDeviceTest PRIVATE gtest qdmi::qdmi parityos_device
+  ParityOSDeviceTest PRIVATE gtest gmock qdmi::qdmi parityos_device
                              qdmi::project_warnings)
 
 add_dependencies(ParityOSDeviceTest

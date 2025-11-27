@@ -23,7 +23,7 @@
     "PARITYQC_SCRIPT_PATH": "/workspaces/MQSS-QDMI-Devices-Suite/src/isv/parityqc/",
     "PARITYQC_PARITYOS_WRAPPER_SCRIPT_NAME": "parityos_wrapper",
     // Local parity api. You have to set it up yourself.
-    "PARITYQC_PARITYOS_BASEURL": "http://localhost:8000/v3"
+    "PARITYQC_PARITYOS_BASEURL": "http://localhost:8000"
   },
 
   // TODO: this is needed for accessing local version of parityapi at localhost. For local testing

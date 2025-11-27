@@ -2,6 +2,8 @@
 
 #include "parityos_qdmi/device.h"
 #include "qdmi/constants.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include <cstdlib>
 #include <gtest/gtest.h>
 
@@ -17,16 +19,17 @@
 
 class ParityOSDeviceTest : public ::testing::Test {
 private:
-  static void assert_parityos_pass_is_set_or_exit(const char *username) {
+  static void assert_parityos_auth_envs_are_set_or_exit() {
     auto pass_var = "PARITYOS_PASS";
+    auto user_var = "PARITYOS_USER";
 
-    auto pass = std::getenv(pass_var);
-    if (!pass) {
-      std::cerr << "\nERROR: Please export `" << pass_var
-                << "` into your environment. It should contain the parityos "
-                   "password of the user `"
-                << username << "` which is used for testing." << std::endl;
-      exit(1);
+    for (const auto var : {user_var, pass_var}) {
+      auto val = std::getenv(var);
+      if (!val) {
+        std::cerr << "\nERROR: Please export `" << var
+                  << "` into your environment." << std::endl;
+        exit(1);
+      }
     }
   }
 
@@ -49,9 +52,8 @@ protected:
 
   static void SetUpTestSuite() {
     const char *base_url = get_base_url_or_exit();
-    const char *username = "testuser";
 
-    assert_parityos_pass_is_set_or_exit(username);
+    assert_parityos_auth_envs_are_set_or_exit();
 
     // This function *must* be called first (and exactly once):
     ASSERT_EQ(ParityOS_QDMI_device_initialize(), QDMI_SUCCESS)
@@ -68,12 +70,6 @@ protected:
                   strlen(base_url) * sizeof(char), base_url),
               QDMI_SUCCESS)
         << "Failed to set base url";
-
-    ASSERT_EQ(ParityOS_QDMI_device_session_set_parameter(
-                  session, QDMI_DEVICE_SESSION_PARAMETER_USERNAME,
-                  strlen(username) * sizeof(char), username),
-              QDMI_SUCCESS)
-        << "Failed to set username";
 
     // This function has to be called before using the `session` with the device
     // query or device job interface.
@@ -147,7 +143,6 @@ TEST_F(ParityOSDeviceTest, JobQueryPropertyImplemented) {
 class JobTest : public ParityOSDeviceTest {
 protected:
   static const std::string program;
-  static const std::string result;
 
   ParityOS_QDMI_Device_Job job = nullptr;
 
@@ -172,8 +167,33 @@ protected:
   void TearDown() override { ParityOS_QDMI_device_job_free(job); }
 };
 
-const std::string JobTest::program = "{ \"content\": \"hello\" }";
-const std::string JobTest::result = "is english";
+// This is the json-serialization of
+// problem = ProblemRepresentation(
+//        hamiltonian=1.0 * Z(q(0)) * Z(q(1))
+//        + 1.0 * Z(q(1)) * Z(q(2))
+//        - 2.0 * Z(q(2)) * Z(q(0))
+//    )
+const std::string JobTest::program =
+    "{\"_data\": {\"hamiltonian\": {\"_data\": {\"term_coefficient_pairs\": "
+    "{\"_data\": [{\"_data\": [{\"_data\": {\"operators\": {\"_data\": "
+    "[{\"_data\": {\"qubit\": {\"_data\": {\"id\": 0}, \"_cls\": "
+    "\"IntQubit\"}}, \"_cls\": \"Z\"}, {\"_data\": {\"qubit\": {\"_data\": "
+    "{\"id\": 1}, \"_cls\": \"IntQubit\"}}, \"_cls\": \"Z\"}], \"_cls\": "
+    "\"frozenset\"}}, \"_cls\": \"OperatorProduct\", 1.0], \"_cls\": "
+    "\"tuple\"}, {\"_data\": [{\"_data\": {\"operators\": {\"_data\": "
+    "[{\"_data\": {\"qubit\": {\"_data\": {\"id\": 0}, \"_cls\": "
+    "\"IntQubit\"}}, \"_cls\": \"Z\"}, {\"_data\": {\"qubit\": {\"_data\": "
+    "{\"id\": 2}, \"_cls\": \"IntQubit\"}}, \"_cls\": \"Z\"}], \"_cls\": "
+    "\"frozenset\"}}, \"_cls\": \"OperatorProduct\", -2.0], \"_cls\": "
+    "\"tuple\"}, {\"_data\": [{\"_data\": {\"operators\": {\"_data\": "
+    "[{\"_data\": {\"qubit\": {\"_data\": {\"id\": 1}, \"_cls\": "
+    "\"IntQubit\"}}, \"_cls\": \"Z\"}, {\"_data\": {\"qubit\": {\"_data\": "
+    "{\"id\": 2}, \"_cls\": \"IntQubit\"}}, \"_cls\": \"Z\"}], \"_cls\": "
+    "\"frozenset\"}}, \"_cls\": \"OperatorProduct\", 1.0], \"_cls\": "
+    "\"tuple\"}]}, \"_cls\": \"frozenset\"}}, \"_cls\": "
+    "\"OperatorPolynomial\"}, \"product_constraints\": {\"_data\": [], "
+    "\"_cls\": \"frozenset\"}, \"sum_constraints\": {\"_data\": [], \"_cls\": "
+    "\"frozenset\"}}, \"_cls\": \"ProblemRepresentation\"}";
 
 TEST_F(JobTest, Cancel) {
   ASSERT_EQ(ParityOS_QDMI_device_job_cancel(nullptr),
@@ -209,12 +229,13 @@ TEST_F(JobTest, GetResults) {
   ASSERT_EQ(ParityOS_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_CUSTOM1,
                                                  0, nullptr, &size_ret),
             QDMI_SUCCESS);
-  ASSERT_EQ(size_ret, result.size() + 1); // including \0
+  ASSERT_GE(size_ret, 2); // non-empty. NOTE: includes \0
   std::string data(size_ret - 1, '\0');
   ASSERT_EQ(ParityOS_QDMI_device_job_get_results(
                 job, QDMI_JOB_RESULT_CUSTOM1, size_ret, data.data(), nullptr),
             QDMI_SUCCESS);
-  ASSERT_EQ(data, result);
+  ASSERT_THAT(data, ::testing::HasSubstr("_data"));
+  ASSERT_THAT(data, ::testing::ContainsRegex("\"_cls\":\\s*\"Circuit\""));
 }
 
 //===----------------------------------------------------------------------===//

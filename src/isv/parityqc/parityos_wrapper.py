@@ -5,65 +5,83 @@ Auxiliary script to conveniently use parityos functionality from parityos.cpp vi
 
 # TODO: Make sure parityos is installed whenever this script is executed.
 
-from typing import Optional
+from functools import wraps
+
+# TODO: it would be better to explicitly signal an error. E.g. by sending back some special object
+# which possibly contains an error message.
+def exceptions_to_none(func):
+    """The functions we call from C code must not raise any exceptions. Otherwise the whole process
+    just terminates. We have to avoid this, even at the cost of worse error reporting.
+
+    This is also the reason why we import all but the builtin packages within the function body.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print("ERROR from wrapper script:", e)
+            return None
+        except:
+            # just in case
+            print("ERROR from wrapper script: ???")
+            return None
+
+    return wrapper
+
 
 # TODO: this is just toy code for the fake_backend. The actual parityos backend does not need this.
-submission_results: dict[int, str] = dict()
+_submission_results: dict[int, str] = dict()
 
 
-def create_parityos_client(username: str, base_url: str) -> Optional["HTTPClient"]:
+@exceptions_to_none
+def create_parityos_client(base_url: str) -> "HTTPClient":
     """Create the parityos http client.
 
     If the creation succeeds this implies that authentication worked.
 
-    It is expected that the password is set via an environment variable. If anything goes wrong it
-    returns `None` otherwise the client.
+    It is expected that the username and password are set via an environment variable. If anything
+    goes wrong it returns `None` otherwise the client.
     """
-    try:
-        from parityos.services.client import HTTPClient
-        client = HTTPClient(username=username, host=base_url)
-        return client
-    except:
-        return None
+    from parityos.services.authentication import EnvVarAuth
+    from parityos.services.client import HTTPClient
+
+    auth = EnvVarAuth()
+    client = HTTPClient(authenticator=auth, host_url=base_url)
+    return client
 
 
 # TODO: this is still a fake implementation. The real one would use the client.
-def submit_job(client: "HTTPClient", program: str) -> int | None:
+@exceptions_to_none
+def submit_job(client: "HTTPClient", program: str) -> int :
     """Submit a program to the parityos web service to be compiled to a circuit.
 
     It returns the submission id which can be used to identify the job results once they are
     available. Returns `None` if anything goes wrong.
     """
-    try:
-        assert client is not None, "missing client"
-        import json
-        parsed = json.loads(program)
-        assert "content" in parsed
-        content = parsed["content"]
+    assert client is not None, "missing client"
 
-        submission_id = _next_submission_id()
-        _fake_backend(content, submission_id)
-        # TODO: actual remote call will probably take some time but be non-blocking. Caller has to
-        # actively poll for the result (`get_result`).
+    submission_id = _next_submission_id()
+    _fake_backend(program, submission_id)
 
-        return submission_id
-    except:
-        return None
+    return submission_id
 
 
-# TODO: this is still a fake implementation.
-def get_result(submission_id: int) -> str | None:
+@exceptions_to_none
+def poll_result(submission_id: int) -> str | None:
     """Return the compilation result of a job or `None` if not available.
 
-    Right now it also returns `None` if anything goes wrong.
+    NOTE: If the result is available it is removed from the global dict holding the results. This
+    implies that if the result is never polled a memory leak can occur.
+
+    NOTE: Right now it also returns `None` if anything goes wrong.
     """
-    try:
-        global submission_results
-        if submission_id in submission_results:
-            return submission_results[submission_id]
-        else:
-            return None
-    except:
+    global _submission_results
+    if submission_id in _submission_results:
+        result = _submission_results[submission_id]
+        del _submission_results[submission_id]
+        return result
+    else:
         return None
 
 
@@ -73,7 +91,7 @@ def _next_submission_id():
     global _gen
 
     def make_gen():
-        i = 42 # arbitrary strictly positive number
+        i = 1 # arbitrary strictly positive number
         while True:
             yield i
             i += 1
@@ -84,18 +102,19 @@ def _next_submission_id():
     return next(_gen)
 
 
-def _fake_backend(content: str, submission_id) -> None:
-    try:
-        global submission_results
-        result = None
+def _fake_backend(program: str, submission_id) -> None:
+    """Placeholder for the calls to the parity api.
 
-        if content == "hello":
-            result = "is english"
-        elif content == "hallo":
-            result = "is german"
-        else:
-            result = "invalid input"
+    The actual implementation would probably need to fire up an async computation to call the
+    different core services and assemble a QAOA circuit from the outputs.
+    """
+    global _submission_results
+    result = None
 
-        submission_results[submission_id] = result
-    except:
-        return # fatal error
+    # Tiny heuristic validation.
+    assert "ProblemRepresentation" in program, "invalid input (expected problem representation)"
+
+    # placeholder for the actual result.
+    result = """{ "_cls": "Circuit", "_data": {} }"""
+
+    _submission_results[submission_id] = result

@@ -15,10 +15,21 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-if(BUILD_BACKEND_LRZ)
-  add_subdirectory(lrz)
-endif()
+find_package(CURL REQUIRED)
+find_package(cJSON REQUIRED)
 
-if(BUILD_BACKEND_WMI)
-  add_subdirectory(wmi)
-endif()
+add_library(wmi_device SHARED wmi.c)
+
+target_link_libraries(wmi_device PUBLIC qdmi::qdmi qdmi::project_warnings curl
+                                        cjson)
+
+generate_prefixed_qdmi_headers(${WMI_QDMI_PREFIX})
+
+target_include_directories(wmi_device
+                           PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+add_library(qdmi::wmi_device ALIAS wmi_device)
+target_compile_definitions(wmi_device PRIVATE MAQCS)
+
+target_compile_options(wmi_device PRIVATE --coverage -fprofile-arcs
+                                          -ftest-coverage -O0)
+target_link_libraries(wmi_device PRIVATE gcov --coverage)

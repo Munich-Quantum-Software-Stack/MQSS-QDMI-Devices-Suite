@@ -36,10 +36,10 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(AVAILABLE_MODULES lrz eviden dcdb databases datacenters simulators)
+set(AVAILABLE_MODULES lrz eviden wmi dcdb databases datacenters simulators)
 # Main config variable for users
 set(BUILD_MODULES
-    "all"
+    "wmi;"
     CACHE STRING "Semicolon-separated list of modules to build (or 'all')")
 
 # Normalize and parse user input
@@ -78,6 +78,8 @@ foreach(module ${AVAILABLE_MODULES})
       option(BUILD_BACKEND_EVIDEN "Build EVIDEN Backend" ON)
     elseif(module STREQUAL "dcdb")
       option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
+    elseif(module STREQUAL "wmi")
+      option(BUILD_BACKEND_WMI "Build WMI Backend" ON)
     elseif(module STREQUAL "simulators")
       option(BUILD_SIMULATOR "Build Simulator Backends" ON)
     elseif(module STREQUAL "datacenters")
@@ -118,6 +120,10 @@ endif()
 
 if(BUILD_BACKEND_LRZ)
   set(LRZ_QDMI_PREFIX "LRZ")
+endif()
+
+if(BUILD_BACKEND_WMI)
+  set(WMI_QDMI_PREFIX "WMI")
 endif()
 
 if(ENABLE_COVERAGE)

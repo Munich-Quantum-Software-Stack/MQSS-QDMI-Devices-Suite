@@ -6,6 +6,7 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "postCreateCommand": "bash ./.devcontainer/post_create_commands.sh",
   "remoteEnv": {
     "QAPTIVA_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/simulators/eviden",
     "QAPTIVA_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",
@@ -17,6 +18,19 @@
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
     "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
 
+    // require token 
+    "TOKEN_WMI": "${containerWorkspaceFolder}/config/token.txt",
+    "CWD": "${containerWorkspaceFolder}",
+
     "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "donjayamanne.git-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools-extension-pack"
+      ]
+    }
   }
 }

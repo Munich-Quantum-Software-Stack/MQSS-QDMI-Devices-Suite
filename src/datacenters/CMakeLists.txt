@@ -22,3 +22,7 @@ endif()
 if(BUILD_BACKEND_CESGA)
   add_subdirectory(cesga)
 endif()
+
+if(BUILD_BACKEND_WMI)
+  add_subdirectory(wmi)
+endif()

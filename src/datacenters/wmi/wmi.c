@@ -812,7 +812,9 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
 
   if (result == QDMI_JOB_RESULT_HIST_VALUES) {
     if (data) {
+      if (size_ret) { // allow nullptr
       *size_ret = job->results_size;
+      }
       memcpy(data, job->result_hist_values, sizeof(size_t)*job->results_size);
       return QDMI_SUCCESS;
     }

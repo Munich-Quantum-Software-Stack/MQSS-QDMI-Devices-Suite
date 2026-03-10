@@ -306,7 +306,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   WMI_QDMI_device_job_free(job);
 }
 
-/*
+
 TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   WMI_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
@@ -347,7 +347,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   WMI_QDMI_device_job_free(job);
 }
 
-
+/*
 TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
   WMI_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;

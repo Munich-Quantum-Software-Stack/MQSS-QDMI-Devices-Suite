@@ -233,6 +233,9 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 
   WMI_QDMI_device_job_free(job);
+  free(program);         
+  free(job_status); 
+  free(device_status);
 }
 
 TEST_F(QDMIImplementationTest, ControlCheckImplemented) {
@@ -304,6 +307,8 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
+  free(program);         
+  free(job_status);   
 }
 
 
@@ -345,6 +350,8 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
+  free(program);         
+  free(job_status); 
 }
 
 
@@ -389,6 +396,8 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
+  free(program);         
+  free(job_status); 
 }
 
 TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
@@ -440,6 +449,8 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   ASSERT_NEAR(sum,1.0, 1e-12);
 
   WMI_QDMI_device_job_free(job);
+  free(program);         
+  free(job_status); 
 }
 
 TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {

@@ -272,7 +272,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
   char *buffer = 0;
   long length;
   FILE *f = fopen(circuit_path, "rb");
@@ -314,7 +314,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
   char *buffer = 0;
   long length;
   FILE *f = fopen(circuit_path, "rb");
@@ -360,7 +360,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
   char *buffer = 0;
   long length;
   FILE *f = fopen(circuit_path, "rb");
@@ -404,7 +404,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
   char *buffer = 0;
   long length;
   FILE *f = fopen(circuit_path, "rb");
@@ -432,40 +432,16 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
                 probability_values_size, probability_values, nullptr),
             QDMI_SUCCESS);
 
-  WMI_QDMI_device_job_free(job);
-}
-
-/*
-TEST_F(QDMIImplementationTest, ControlGetDataProbabilityDense) {
-  WMI_QDMI_Device_Job job = nullptr;
-  size_t nShot = 1024;
-  const QDMI_Program_Format qasmFormat = QDMI_PROGRAM_FORMAT_QASM2;
-  std::string test_circuit = Get_test_circuit();
-  const char *c_t_c = test_circuit.c_str();
-
-  QDMI_Job_Status *job_status =
-      (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
-  size_t probability_dense_size;
-  double *probability_dense;
-  CREATE_JOB(job, nShot, qasmFormat, c_t_c);
-  ASSERT_EQ(WMI_QDMI_device_job_submit(job), QDMI_SUCCESS);
-  ASSERT_EQ(WMI_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
-
-  ASSERT_EQ(
-      WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                                      0, nullptr, &probability_dense_size),
-      QDMI_SUCCESS);
-
-  probability_dense = (double *)malloc(probability_dense_size);
-
-  ASSERT_EQ(WMI_QDMI_device_job_get_results(
-                job, QDMI_JOB_RESULT_PROBABILITIES_DENSE,
-                probability_dense_size, probability_dense, nullptr),
-            QDMI_SUCCESS);
+  double sum = 0.0;
+  size_t num_probs = probability_values_size / sizeof(double);
+  for (size_t i = 0; i < num_probs; ++i) {
+    sum += probability_values[i];
+  }
+  ASSERT_NEAR(sum,1.0, 1e-12);
 
   WMI_QDMI_device_job_free(job);
 }
-*/
+
 TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {
 
   ASSERT_EQ(WMI_QDMI_device_session_query_device_property(

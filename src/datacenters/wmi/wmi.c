@@ -680,7 +680,6 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
       long bitstring_idx;
       char *bitstring_string;
 
-      const cJSON *count_object = NULL;
       cJSON *counts_array = cJSON_GetObjectItemCaseSensitive(response.json, "counts");
       if (counts_array == NULL || !cJSON_IsArray(counts_array)) {
         fprintf(stderr, "   [Backend].............Invalid or missing 'counts' array in response JSON\n");
@@ -692,26 +691,27 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
         *status = QDMI_JOB_STATUS_FAILED;
         return QDMI_ERROR_FATAL;
       }
-      job->results_size = (size_t)cJSON_GetArraySize(counts_array);
-      
+
+      // IMPORTANT: assume just one circuit will be sent !!
+      const cJSON *count_object = cJSON_GetArrayItem(counts_array, 0);
+
+      job->results_size = (size_t)cJSON_GetArraySize(count_object);
       job->result_hist_keys = malloc(job->results_size*sizeof(char)*(numbits+1));
       job->result_hist_values = malloc(job->results_size*sizeof(size_t));
 
       char *result_keys_ptr = job->result_hist_keys;
       size_t *result_values_ptr = job->result_hist_values;
 
-      cJSON_ArrayForEach(count_object, counts_array)
-      {       
-        cJSON *count;
-        cJSON_ArrayForEach(count, count_object)
-        {
-            // keys as a long string with bitstrings separated by ","
-            strncpy(result_keys_ptr, count->string, numbits);
-            strcat(result_keys_ptr, ",");
-            *result_values_ptr = (size_t)count->valueint;
-            result_values_ptr++; 
-        }
+      cJSON *count;
+      cJSON_ArrayForEach(count, count_object)
+      {
+          // keys as a long string with bitstrings separated by ","
+          strncpy(result_keys_ptr, count->string, numbits);
+          strcat(result_keys_ptr, ",");
+          *result_values_ptr = (size_t)count->valueint;
+          result_values_ptr++; 
       }
+      
       
       if (result_keys_ptr[job->results_size] == ',') {
         result_keys_ptr[job->results_size] = '\0'; 

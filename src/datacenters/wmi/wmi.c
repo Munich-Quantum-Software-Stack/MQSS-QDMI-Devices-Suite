@@ -792,7 +792,8 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
 
   if (result == QDMI_JOB_RESULT_STATEVECTOR_DENSE ||
       result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_KEYS ||
-      result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_VALUES) 
+      result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_VALUES ||
+      result == QDMI_JOB_RESULT_PROBABILITIES_DENSE ) 
     return QDMI_ERROR_NOTSUPPORTED;
 
   size_t required_size;
@@ -834,6 +835,25 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
     }
     if (size_ret)
       *size_ret = required_size;
+    return QDMI_SUCCESS;
+  }
+
+  if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_VALUES) {
+    required_size = job->results_size * sizeof(double);
+    if (data) {
+      if (size_ret) { // allow nullptr
+      *size_ret = required_size;
+      }
+      
+      for (size_t i = 0; i < job->results_size; ++i) {
+            ((double*)data)[i] = (double)job->result_hist_values[i] / (double)job->num_shots;
+        }
+        
+      return QDMI_SUCCESS;
+    }
+    if (size_ret) 
+      *size_ret = required_size; 
+  
     return QDMI_SUCCESS;
   }
 

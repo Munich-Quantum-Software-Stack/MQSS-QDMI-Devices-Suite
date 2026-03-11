@@ -127,7 +127,7 @@ typedef struct WMI_QDMI_Device_Job_impl_d {
   QDMI_Job_Status status;
   size_t num_shots;
 
-  size_t results_size;
+  size_t results_size; // number of states in result histogram
   char *result_hist_keys; 
   size_t *result_hist_values;
 
@@ -798,11 +798,11 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
 
   size_t required_size;
   if (result == QDMI_JOB_RESULT_HIST_KEYS) {
-    required_size = strlen(job->result_hist_keys);
+    required_size = strlen(job->result_hist_keys)+1;
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->result_hist_keys, size);
+      strncpy(data, job->result_hist_keys, required_size);
       return QDMI_SUCCESS;
     }
     if (size_ret)
@@ -811,15 +811,16 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
   }
 
   if (result == QDMI_JOB_RESULT_HIST_VALUES) {
+    required_size = job->results_size * sizeof(size_t);
     if (data) {
       if (size_ret) { // allow nullptr
-      *size_ret = job->results_size;
+      *size_ret = required_size;
       }
-      memcpy(data, job->result_hist_values, sizeof(size_t)*job->results_size);
+      memcpy(data, job->result_hist_values, required_size);
       return QDMI_SUCCESS;
     }
     if (size_ret) 
-      *size_ret = job->results_size; 
+      *size_ret = required_size; 
   
     return QDMI_SUCCESS;
   }

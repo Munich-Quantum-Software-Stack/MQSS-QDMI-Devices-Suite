@@ -63,6 +63,23 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     }                                                                          \
   }
 
+static char* load_program(const char* path, size_t* out_size) {
+    FILE* f = fopen(path, "rb");
+    if (!f) return nullptr;
+    fseek(f, 0, SEEK_END);
+    size_t size = (size_t)ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char* buffer = (char*)malloc(size);
+    if (!buffer) {
+        fclose(f);
+        return nullptr;
+    }
+    fread(buffer, 1, size, f);
+    fclose(f);
+    if (out_size) *out_size = size;
+    return buffer;
+}
+
 class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
@@ -198,16 +215,9 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
   asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(circuit_path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t sizebuffer = (size_t)ftell(f);
-  fseek(f, 0, SEEK_SET);
-  
-  char *program= (char*)malloc(sizebuffer);
-  fread(program, 1, sizebuffer, f);
-  fclose(f);
+
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
 
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
@@ -276,16 +286,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
   asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(circuit_path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t sizebuffer = (size_t)ftell(f);
-  fseek(f, 0, SEEK_SET);
   
-  char *program= (char*)malloc(sizebuffer);
-  fread(program, 1, sizebuffer, f);
-  fclose(f);
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
 
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
@@ -320,16 +323,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
   asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(circuit_path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t sizebuffer = (size_t)ftell(f);
-  fseek(f, 0, SEEK_SET);
   
-  char *program= (char*)malloc(sizebuffer);
-  fread(program, 1, sizebuffer, f);
-  fclose(f);
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
 
   QDMI_Job_Status *job_status =
       (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
@@ -368,16 +364,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
   asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(circuit_path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t sizebuffer = (size_t)ftell(f);
-  fseek(f, 0, SEEK_SET);
   
-  char *program= (char*)malloc(sizebuffer);
-  fread(program, 1, sizebuffer, f);
-  fclose(f);
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
 
   CREATE_JOB(job, nShot, qirFormat, program, sizebuffer);
 
@@ -414,16 +403,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
   asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(circuit_path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t sizebuffer = (size_t)ftell(f);
-  fseek(f, 0, SEEK_SET);
   
-  char *program= (char*)malloc(sizebuffer);
-  fread(program, 1, sizebuffer, f);
-  fclose(f);
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
 
   CREATE_JOB(job, nShot, qirFormat, program, sizebuffer);
 

@@ -792,8 +792,7 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
 
   if (result == QDMI_JOB_RESULT_STATEVECTOR_DENSE ||
       result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_KEYS ||
-      result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_VALUES ||
-      result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS)
+      result == QDMI_JOB_RESULT_STATEVECTOR_SPARSE_VALUES) 
     return QDMI_ERROR_NOTSUPPORTED;
 
   size_t required_size;
@@ -824,6 +823,20 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
   
     return QDMI_SUCCESS;
   }
+
+  if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS) {
+    required_size = strlen(job->result_hist_keys)+1;
+    if (data) {
+      if (size < required_size)
+        return QDMI_ERROR_INVALIDARGUMENT;
+      strncpy(data, job->result_hist_keys, required_size);
+      return QDMI_SUCCESS;
+    }
+    if (size_ret)
+      *size_ret = required_size;
+    return QDMI_SUCCESS;
+  }
+
   return QDMI_SUCCESS;
 }
 // to my understanding this should not free session, as it is freed later. 

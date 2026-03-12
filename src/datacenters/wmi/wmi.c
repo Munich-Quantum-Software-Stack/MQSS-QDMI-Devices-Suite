@@ -704,6 +704,9 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
       const cJSON *count_object = cJSON_GetArrayItem(counts_array, 0);
 
       job->results_size = (size_t)cJSON_GetArraySize(count_object);
+
+      free(job->result_hist_keys);
+      free(job->result_hist_values);
       job->result_hist_keys = malloc(job->results_size*sizeof(char)*(numbits+1));
       job->result_hist_values = malloc(job->results_size*sizeof(size_t));
 

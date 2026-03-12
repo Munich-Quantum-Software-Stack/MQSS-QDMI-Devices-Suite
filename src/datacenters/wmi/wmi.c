@@ -592,13 +592,14 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job) {
     job->status = QDMI_JOB_STATUS_RUNNING;
   }
 
-  free(string);
-  free(response.json);
-  free(token_header);
-  free(configuration);
-  free(options);
+  free(string);  
+  free(token_header);  
   free(configuration_string);
   free(options_string);
+
+  cJSON_Delete(response.json);
+  cJSON_Delete(configuration);
+  cJSON_Delete(options);
 
   curl_mime_free(form);
   curl_slist_free_all(headers);
@@ -688,7 +689,8 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
       cJSON *counts_array = cJSON_GetObjectItemCaseSensitive(response.json, "counts");
       if (counts_array == NULL || !cJSON_IsArray(counts_array)) {
         fprintf(stderr, "   [Backend].............Invalid or missing 'counts' array in response JSON\n");
-        free(response.json);
+
+        cJSON_Delete(response.json);
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
         
@@ -717,7 +719,8 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
           result_values_ptr++; 
       }
       
-      
+      cJSON_Delete(count);
+
       if (result_keys_ptr[job->results_size] == ',') {
         result_keys_ptr[job->results_size] = '\0'; 
     }
@@ -738,7 +741,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
       fprintf(stderr, "   [Backend].............Request problem: %ld - %s\n", http_code, string);
       
-      free(response.json);
+      cJSON_Delete(response.json);
       curl_slist_free_all(headers);
       curl_easy_cleanup(curl);
 
@@ -747,7 +750,8 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
       return QDMI_ERROR_FATAL;
   }
 
-  free(response.json);
+  cJSON_Delete(response.json);
+
   free(token_header);
 
   curl_slist_free_all(headers);

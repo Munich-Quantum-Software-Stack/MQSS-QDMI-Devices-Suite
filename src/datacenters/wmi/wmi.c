@@ -206,6 +206,7 @@ char *get_token()
     }
 
     fgets(token, BUZZ_SIZE, f);
+    token[strcspn(token, "\r\n")] = 0;
     fclose(f);
 
     char *token_header = NULL;

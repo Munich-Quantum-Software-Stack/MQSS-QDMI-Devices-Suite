@@ -594,6 +594,11 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job) {
 
   free(string);
   free(response.json);
+  free(token_header);
+  free(configuration);
+  free(options);
+  free(configuration_string);
+  free(options_string);
 
   curl_mime_free(form);
   curl_slist_free_all(headers);
@@ -743,6 +748,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
   }
 
   free(response.json);
+  free(token_header);
 
   curl_slist_free_all(headers);
   curl_easy_cleanup(curl);

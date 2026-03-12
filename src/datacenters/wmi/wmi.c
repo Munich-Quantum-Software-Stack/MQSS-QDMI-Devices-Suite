@@ -910,7 +910,7 @@ int WMI_QDMI_device_session_alloc(WMI_QDMI_Device_Session *session) {
   }
   *session =
       (WMI_QDMI_Device_Session)malloc(sizeof(WMI_QDMI_Device_Session_impl_t));
-  (*session)->url = (char *)malloc(sizeof(base_url));
+  (*session)->url = (char *)malloc(strlen(base_url)+1);
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
 }
@@ -962,8 +962,12 @@ int WMI_QDMI_device_session_set_parameter(
   }
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
-    session->url = (char *)malloc(size);
-    strcpy(session->url, (const char *)value);
+    if (strlen((const char *)value) <= strlen(session->url)) {
+      strcpy(session->url, (const char *)value);
+    } else {
+      return QDMI_ERROR_INVALIDARGUMENT;
+    }
+
   }
 
   return QDMI_SUCCESS;

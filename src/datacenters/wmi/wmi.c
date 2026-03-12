@@ -156,7 +156,7 @@ typedef struct QDMI_Operation_impl_d {
 // not sure, these names are understood by the compiler. 
 const WMI_QDMI_Operation DEVICE_OPERATIONS[] = { 
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"cz",2,0},
-    (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"íd",1,0},
+    (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"id",1,0},
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"x",1,0},
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"y",1,0},
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"sx",1,0},

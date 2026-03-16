@@ -17,4 +17,5 @@
 
 add_subdirectory(databases)
 add_subdirectory(datacenters)
+add_subdirectory(isv)
 add_subdirectory(simulators)

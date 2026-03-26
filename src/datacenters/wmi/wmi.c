@@ -249,6 +249,90 @@ struct ResponseStruct
   size_t size;
 };
 
+// directly parsing response to json
+size_t parse_json(void *contents, size_t size, size_t nmemb, struct ResponseStruct *response)
+{
+  size_t realsize = size * nmemb;
+
+  struct ResponseStruct *mem = (struct ResponseStruct *)response;
+  cJSON *ptr = cJSON_ParseWithLength(contents, realsize);
+
+  if (!ptr)
+  {
+    /* out of memory! */
+    printf("   [Backend].............Not enough memory (realloc returned NULL)\n");
+    return 0;
+  }
+
+  mem->json = ptr;
+  mem->size += realsize;
+
+  return realsize;
+}
+
+static CURLcode send_curl_request(
+    const char *url,
+    const char *token,
+    struct curl_slist *headers,
+    const char *method,
+    const char *payload,
+    curl_mime *form,
+    struct ResponseStruct *response_struct,
+    long *http_code)
+{
+  CURL *curl = curl_easy_init();
+  if (!curl)
+    return CURLE_FAILED_INIT;
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_struct);
+  curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+  // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // debugging requests
+
+  // build token header
+  int token_size_int =
+      snprintf(NULL, 0, "access-token: %s", token) + 1;
+  // if (token_size_int < 0)
+  //{
+  //   return NULL;
+  // }
+
+  size_t token_size = (size_t)token_size_int + 1;
+
+  char *token_header = NULL;
+  token_header = malloc(token_size);
+
+  if (token_header != NULL)
+  {
+    snprintf(token_header, token_size, "access-token: %s", token);
+  }
+
+  headers = curl_slist_append(headers, token_header);
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+  // payload in the form of multipart or single part request
+  if (form)
+    curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
+
+  if (payload)
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
+  CURLcode result = curl_easy_perform(curl);
+
+  if (result != CURLE_OK)
+  {
+    fprintf(stderr, "[Backend].............Request problem: %s\n", curl_easy_strerror(result));
+    return result;
+  }
+
+  if (http_code)
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, http_code);
+
+  curl_easy_cleanup(curl);
+  return result;
+}
+
 cJSON *backend_configuration()
 {
   char *configuration_string = "{ \
@@ -294,27 +378,6 @@ cJSON *backend_options(size_t shots)
   cJSON *options = cJSON_ParseWithLength(option_string, option_len);
 
   return options;
-}
-
-// directly parsing response to json
-size_t parse_json(void *contents, size_t size, size_t nmemb, struct ResponseStruct *response)
-{
-  size_t realsize = size * nmemb;
-
-  struct ResponseStruct *mem = (struct ResponseStruct *)response;
-  cJSON *ptr = cJSON_ParseWithLength(contents, realsize);
-
-  if (!ptr)
-  {
-    /* out of memory! */
-    printf("   [Backend].............Not enough memory (realloc returned NULL)\n");
-    return 0;
-  }
-
-  mem->json = ptr;
-  mem->size += realsize;
-
-  return realsize;
 }
 
 /* QUERY INTERFACE STARTS*/
@@ -572,30 +635,8 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
   printf("   [Backend].............Circuit received\n");
 
   CURL *curl = curl_easy_init();
-
   if (!curl)
-  {
-    fprintf(stderr, "[Backend].............Curl init failed\n");
     return QDMI_ERROR_OUTOFMEM;
-  }
-
-  // token
-  int token_size_int =
-      snprintf(NULL, 0, "access-token: %s", job->session->token) + 1;
-  if (token_size_int < 0)
-  {
-    return QDMI_ERROR_OUTOFMEM;
-  }
-
-  size_t token_size = (size_t)token_size_int + 1;
-
-  char *token_header = NULL;
-  token_header = malloc(token_size);
-
-  if (token_header != NULL)
-  {
-    snprintf(token_header, token_size, "access-token: %s", job->session->token);
-  }
 
   // init variables
   struct curl_slist *headers = NULL;
@@ -611,15 +652,8 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
   char url[256];
   snprintf(url, sizeof(url), "%s%s", job->session->url, "/1/qiskitSimulator/qir");
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-
   // set headers
-  headers = curl_slist_append(headers, token_header);
   headers = curl_slist_append(headers, "Content-Type: multipart/form-data");
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
   // payload
   cJSON *configuration = backend_configuration();
@@ -650,22 +684,21 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
   curl_mime_type(field, "application/json");
   curl_mime_data(field, job_id_str, CURL_ZERO_TERMINATED);
 
-  curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
-  curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-
-  // send request
-  CURLcode result = curl_easy_perform(curl);
-  if (result != CURLE_OK)
-  {
-    fprintf(stderr, "[Backend].............Request problem: %s\n", curl_easy_strerror(result));
-    return QDMI_ERROR_FATAL;
-  }
+  // exucute request
+  long http_code = 0;
+  CURLcode result = send_curl_request(
+      url,
+      job->session->token,
+      headers,
+      "PUT",
+      NULL,
+      form,
+      &response,
+      &http_code);
 
   job->status = QDMI_JOB_STATUS_SUBMITTED;
 
   // process data
-  long http_code = 0;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
   cJSON *message = cJSON_GetObjectItemCaseSensitive(response.json, "message");
   char *string = cJSON_Print(message);
 
@@ -680,7 +713,6 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
   }
 
   free(string);
-  free(token_header);
   free(configuration_string);
   free(options_string);
 
@@ -728,57 +760,29 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
   int err = 0;
 
-  int token_size_int =
-      snprintf(NULL, 0, "access-token: %s", job->session->token) + 1;
-  if (token_size_int < 0)
-  {
-    return QDMI_ERROR_OUTOFMEM;
-  }
-
-  size_t token_size = (size_t)token_size_int + 1;
-
-  char *token_header = NULL;
-  token_header = malloc(token_size);
-
-  if (token_header != NULL)
-  {
-    snprintf(token_header, token_size, "access-token: %s", job->session->token);
-  }
-
   struct ResponseStruct response;
   response.json = NULL;
   response.size = 0;
 
-  // set options
   char url[256];
   snprintf(url, sizeof(url), "%s%s", job->session->url, "/1/qiskitSimulator/qobj");
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
   // headers
   struct curl_slist *headers = NULL;
-  headers = curl_slist_append(headers, token_header);
   headers = curl_slist_append(headers, "Content-Type: application/json");
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-  // payload
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, job->id_json);
-  curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-
-  // send request
-  CURLcode result = curl_easy_perform(curl);
-  if (result != CURLE_OK)
-  {
-    fprintf(stderr, "[Backend].............Request problem: %s\n", curl_easy_strerror(result));
-
-    return QDMI_ERROR_BADSTATE;
-  }
-
-  // process data
+  // exucute request
   long http_code = 0;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+  CURLcode result = send_curl_request(
+      url,
+      job->session->token,
+      headers,
+      "POST",
+      job->id_json,
+      NULL,
+      &response,
+      &http_code);
+
   if (http_code == 200)
   {
     // printf("   [Backend].............Job finished\n");
@@ -859,8 +863,6 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
   }
 
   cJSON_Delete(response.json);
-
-  free(token_header);
 
   curl_slist_free_all(headers);
   curl_easy_cleanup(curl);

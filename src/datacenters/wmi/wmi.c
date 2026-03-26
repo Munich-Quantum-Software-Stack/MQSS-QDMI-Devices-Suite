@@ -19,8 +19,6 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "qdmi/constants.h"
 #include <wmi_qdmi/device.h>
 
-#define __STDC_WANT_LIB_EXT2__ 1 // for asprintf  to not be implicit
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -209,8 +207,19 @@ char *get_token()
     token[strcspn(token, "\r\n")] = 0;
     fclose(f);
 
+    int token_size_int = snprintf(NULL, 0, "access-token: %s", token) + 1;
+    if (token_size_int < 0) {
+        return NULL;
+    }
+    
+    size_t token_size = (size_t)token_size_int + 1;
+
     char *token_header = NULL;
-    asprintf(&token_header, "access-token: %s", token);
+    token_header = malloc(token_size);
+
+    if (token_header != NULL) {
+      snprintf(token_header, token_size, "access-token: %s", token);
+    }
 
     return (token_header);
 }
@@ -250,11 +259,21 @@ cJSON *backend_configuration()
 cJSON *backend_options(size_t shots)
 {
     char *option_string = NULL;
-    asprintf(&option_string, "{ \"shots\": %zu}", shots);
+    
+    int option_len_int = snprintf(NULL, 0, "{ \"shots\": %zu}", shots);
+    if (option_len_int < 0) {
+        return NULL;
+    }
 
-    size_t len = strlen(option_string);
+    size_t option_len = (size_t)option_len_int + 1;
 
-    cJSON *options = cJSON_ParseWithLength(option_string, len);
+    option_string = malloc(option_len);
+    if (!option_string) {
+        return NULL;
+    }
+    snprintf(option_string, option_len, "{ \"shots\": %zu}", shots);
+
+    cJSON *options = cJSON_ParseWithLength(option_string, option_len);
 
     return options;
 }

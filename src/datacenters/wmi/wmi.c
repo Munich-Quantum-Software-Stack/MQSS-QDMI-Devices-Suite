@@ -26,7 +26,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-#define BUZZ_SIZE 65
+#define TOKEN_SIZE 65
 #define base_url "https://badwwmi-cloudapi.wmi.badw.de"
 #define DEFAULT_NUM_SHOT 0
 
@@ -138,6 +138,7 @@ enum QDMI_Device_Session_Parameter
 typedef struct WMI_QDMI_Device_Session_impl_d
 {
   char *url;
+  char *token;
   enum WMI_QDMI_DEVICE_SESSION_STATUS status;
 } WMI_QDMI_Device_Session_impl_t;
 
@@ -208,7 +209,7 @@ const char *gate_set[] =
 char *get_token()
 {
 
-  char token[BUZZ_SIZE];
+  char *token = malloc(TOKEN_SIZE);
   char *token_wmi_path = getenv("TOKEN_WMI");
 
   if (token_wmi_path == NULL)
@@ -224,27 +225,22 @@ char *get_token()
     return NULL;
   }
 
-  fgets(token, BUZZ_SIZE, f);
+  fgets(token, TOKEN_SIZE, f);
   token[strcspn(token, "\r\n")] = 0;
   fclose(f);
 
-  int token_size_int = snprintf(NULL, 0, "access-token: %s", token) + 1;
-  if (token_size_int < 0)
+  token[TOKEN_SIZE - 1] = '\0';
+  char *newline = strchr(token, '\n');
+  if (newline)
+    *newline = '\0';
+
+  if (strlen(token) == 0)
   {
+    free(token);
     return NULL;
   }
 
-  size_t token_size = (size_t)token_size_int + 1;
-
-  char *token_header = NULL;
-  token_header = malloc(token_size);
-
-  if (token_header != NULL)
-  {
-    snprintf(token_header, token_size, "access-token: %s", token);
-  }
-
-  return (token_header);
+  return token;
 }
 
 struct ResponseStruct
@@ -584,7 +580,22 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
   }
 
   // token
-  char *token_header = get_token();
+  int token_size_int =
+      snprintf(NULL, 0, "access-token: %s", job->session->token) + 1;
+  if (token_size_int < 0)
+  {
+    return QDMI_ERROR_OUTOFMEM;
+  }
+
+  size_t token_size = (size_t)token_size_int + 1;
+
+  char *token_header = NULL;
+  token_header = malloc(token_size);
+
+  if (token_header != NULL)
+  {
+    snprintf(token_header, token_size, "access-token: %s", job->session->token);
+  }
 
   // init variables
   struct curl_slist *headers = NULL;
@@ -598,7 +609,7 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job)
 
   // set general options
   char url[256];
-  snprintf(url, sizeof(url), "%s%s", base_url, "/1/qiskitSimulator/qir");
+  snprintf(url, sizeof(url), "%s%s", job->session->url, "/1/qiskitSimulator/qir");
 
   curl_easy_setopt(curl, CURLOPT_URL, url);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
@@ -717,7 +728,22 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
   int err = 0;
 
-  char *token_header = get_token();
+  int token_size_int =
+      snprintf(NULL, 0, "access-token: %s", job->session->token) + 1;
+  if (token_size_int < 0)
+  {
+    return QDMI_ERROR_OUTOFMEM;
+  }
+
+  size_t token_size = (size_t)token_size_int + 1;
+
+  char *token_header = NULL;
+  token_header = malloc(token_size);
+
+  if (token_header != NULL)
+  {
+    snprintf(token_header, token_size, "access-token: %s", job->session->token);
+  }
 
   struct ResponseStruct response;
   response.json = NULL;
@@ -725,7 +751,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
   // set options
   char url[256];
-  snprintf(url, sizeof(url), "%s%s", base_url, "/1/qiskitSimulator/qobj");
+  snprintf(url, sizeof(url), "%s%s", job->session->url, "/1/qiskitSimulator/qobj");
 
   curl_easy_setopt(curl, CURLOPT_URL, url);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
@@ -1012,6 +1038,7 @@ int WMI_QDMI_device_session_alloc(WMI_QDMI_Device_Session *session)
   *session =
       (WMI_QDMI_Device_Session)malloc(sizeof(WMI_QDMI_Device_Session_impl_t));
   (*session)->url = (char *)malloc(strlen(base_url) + 1);
+  (*session)->token = (char *)malloc(TOKEN_SIZE);
   (*session)->status = ALLOCATED;
   return QDMI_SUCCESS;
 }
@@ -1033,7 +1060,27 @@ int WMI_QDMI_device_session_init(WMI_QDMI_Device_Session session)
     break;
   }
 
+  int retval = WMI_QDMI_device_session_set_parameter(
+      session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL, strlen(base_url) + 1,
+      base_url);
+  if (retval != QDMI_SUCCESS)
+  {
+    return retval;
+  }
+
+  char *token = get_token();
+  retval = WMI_QDMI_device_session_set_parameter(
+      session, QDMI_DEVICE_SESSION_PARAMETER_TOKEN, TOKEN_SIZE, token);
+  if (retval != QDMI_SUCCESS)
+  {
+    free(token);
+    return retval;
+  }
+
   session->status = INITIALIZED;
+
+  free(token);
+
   return QDMI_SUCCESS;
 }
 
@@ -1043,6 +1090,8 @@ void WMI_QDMI_device_session_free(WMI_QDMI_Device_Session session)
   {
     free(session->url);
     session->url = NULL;
+    free(session->token);
+    session->token = NULL;
     free(session);
     session = NULL;
   }
@@ -1054,8 +1103,6 @@ int WMI_QDMI_device_session_set_parameter(
 {
   if (session == NULL || (value != NULL && size == 0) ||
       (param >= QDMI_DEVICE_SESSION_PARAMETER_MAX &&
-       param != QDMI_DEVICE_SESSION_PARAMETER_TOKEN &&
-       param != QDMI_DEVICE_SESSION_PARAMETER_BASEURL &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM2 &&
        param != QDMI_DEVICE_SESSION_PARAMETER_CUSTOM3 &&
@@ -1072,14 +1119,13 @@ int WMI_QDMI_device_session_set_parameter(
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL)
   {
-    if (strlen((const char *)value) <= strlen(session->url))
-    {
-      strcpy(session->url, (const char *)value);
-    }
-    else
-    {
-      return QDMI_ERROR_INVALIDARGUMENT;
-    }
+    strcpy(session->url, (const char *)value);
+  }
+
+  if (param == QDMI_DEVICE_SESSION_PARAMETER_TOKEN)
+  {
+    strncpy(session->token, (const char *)value, TOKEN_SIZE - 1);
+    session->token[TOKEN_SIZE - 1] = '\0';
   }
 
   return QDMI_SUCCESS;

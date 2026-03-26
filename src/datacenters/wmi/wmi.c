@@ -436,7 +436,7 @@ int WMI_QDMI_device_session_query_device_property(
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, WMI_QDMI_Site, DEVICE_SITES, 3,
                     prop, size, value, size_ret)
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_OPERATIONS, WMI_QDMI_Operation,
-                    DEVICE_OPERATIONS, 4, prop, size, value, size_ret)
+                    DEVICE_OPERATIONS, 7, prop, size, value, size_ret)
   // assume all-to-all connectivity
   ADD_LIST_PROPERTY(
       QDMI_DEVICE_PROPERTY_COUPLINGMAP, WMI_QDMI_Site,

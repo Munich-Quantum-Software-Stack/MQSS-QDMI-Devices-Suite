@@ -209,36 +209,16 @@ const char *gate_set[] =
 char *get_token()
 {
 
-  char *token = malloc(TOKEN_SIZE);
-  char *token_wmi_path = getenv("TOKEN_WMI");
-
-  if (token_wmi_path == NULL)
-  {
-    printf("   [Backend].............WMI token path not set in environment.\n");
-    return NULL;
-  }
-
-  FILE *f = fopen(token_wmi_path, "r");
-  if (!f)
-  {
-    printf("   [Backend].............Failed to open token file\n");
-    return NULL;
-  }
-
-  fgets(token, TOKEN_SIZE, f);
-  token[strcspn(token, "\r\n")] = 0;
-  fclose(f);
-
-  token[TOKEN_SIZE - 1] = '\0';
-  char *newline = strchr(token, '\n');
-  if (newline)
-    *newline = '\0';
+  char *token = getenv("TOKEN_WMI");
 
   if (strlen(token) == 0)
   {
+    printf("   [Backend].............WMI token not set in environment.\n");
     free(token);
     return NULL;
   }
+
+  token[TOKEN_SIZE - 1] = '\0';
 
   return token;
 }
@@ -1081,8 +1061,6 @@ int WMI_QDMI_device_session_init(WMI_QDMI_Device_Session session)
 
   session->status = INITIALIZED;
 
-  free(token);
-
   return QDMI_SUCCESS;
 }
 
@@ -1126,7 +1104,7 @@ int WMI_QDMI_device_session_set_parameter(
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_TOKEN)
   {
-    strncpy(session->token, (const char *)value, TOKEN_SIZE - 1);
+    strncpy(session->token, (const char *)value, TOKEN_SIZE);
     session->token[TOKEN_SIZE - 1] = '\0';
   }
 

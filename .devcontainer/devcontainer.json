@@ -18,8 +18,6 @@
     "DCDB_SOURCE_LOCATION": "/workspaces/DCDB/dcdb/",
     "LD_LIBRARY_PATH": "/workspaces/DCDB/install/lib",
 
-    // require token 
-    "TOKEN_WMI": "${containerWorkspaceFolder}/config/token.txt",
     "CWD": "${containerWorkspaceFolder}",
 
     "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"

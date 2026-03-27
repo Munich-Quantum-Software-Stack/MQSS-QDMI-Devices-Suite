@@ -214,7 +214,7 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_excited.bc", CWD_path);
 
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
@@ -285,7 +285,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
   
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
@@ -322,7 +322,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
   
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
@@ -363,7 +363,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
   
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
@@ -402,7 +402,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/config/circuit_hadamard_decomposed.bc", CWD_path);
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
   
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);

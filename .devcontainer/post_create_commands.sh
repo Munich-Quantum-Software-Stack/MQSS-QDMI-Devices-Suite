@@ -10,16 +10,6 @@ make install
 cd .. 
 ln -s /usr/local/bin/doxygen /usr/bin/doxygen 
 rm -rf doxzyen* 
-# cJSON
-git clone https://github.com/DaveGamble/cJSON
-cd cJSON
-mkdir build
-cd build
-cmake .. -DENABLE_CJSON_UTILS=On -DENABLE_CJSON_TEST=Off -DCMAKE_INSTALL_PREFIX=/usr
-make
-make DESTDIR=$pkgdir install
-cd ../..
-rm -rf cJSON
 # gtest
 git clone https://github.com/google/googletest.git
 cd googletest

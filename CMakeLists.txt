@@ -36,7 +36,14 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(AVAILABLE_MODULES lrz eviden wmi dcdb databases datacenters simulators)
+set(AVAILABLE_MODULES
+    lrz
+    eviden
+    wmi
+    dcdb
+    databases
+    datacenters
+    simulators)
 # Main config variable for users
 set(BUILD_MODULES
     "all;"

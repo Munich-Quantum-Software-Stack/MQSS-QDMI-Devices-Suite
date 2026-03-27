@@ -36,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     ASSERT_TRUE(*job_status == expected_value);                                \
   }
 
-#define CREATE_JOB(job, n_shot, format, program, sizebuffer)                               \
+#define CREATE_JOB(job, n_shot, format, program, sizebuffer)                   \
   {                                                                            \
     ASSERT_EQ(WMI_QDMI_device_session_create_device_job(session, &job),        \
               QDMI_SUCCESS);                                                   \
@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
               QDMI_SUCCESS);                                                   \
     ASSERT_EQ(                                                                 \
         WMI_QDMI_device_job_set_parameter(                                     \
-            job, QDMI_DEVICE_JOB_PARAMETER_PROGRAM, sizebuffer, program), \
+            job, QDMI_DEVICE_JOB_PARAMETER_PROGRAM, sizebuffer, program),      \
         QDMI_SUCCESS);                                                         \
   }
 
@@ -63,21 +63,23 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
     }                                                                          \
   }
 
-static char* load_program(const char* path, size_t* out_size) {
-    FILE* f = fopen(path, "rb");
-    if (!f) return nullptr;
-    fseek(f, 0, SEEK_END);
-    size_t size = (size_t)ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char* buffer = (char*)malloc(size);
-    if (!buffer) {
-        fclose(f);
-        return nullptr;
-    }
-    fread(buffer, 1, size, f);
+static char *load_program(const char *path, size_t *out_size) {
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return nullptr;
+  fseek(f, 0, SEEK_END);
+  size_t size = (size_t)ftell(f);
+  fseek(f, 0, SEEK_SET);
+  char *buffer = (char *)malloc(size);
+  if (!buffer) {
     fclose(f);
-    if (out_size) *out_size = size;
-    return buffer;
+    return nullptr;
+  }
+  fread(buffer, 1, size, f);
+  fclose(f);
+  if (out_size)
+    *out_size = size;
+  return buffer;
 }
 
 class QDMIImplementationTest : public ::testing::Test {
@@ -88,13 +90,13 @@ protected:
 
   static void SetUpTestSuite() {
     int err;
-    //hostname = std::getenv(WMI_HOST_URL);
-    //if (!hostname) {
-    //  std::cout << "Please provide a hostname by using environment variable "
-    //               "WMI_HOST_URL."
-    //            << std::endl;
-    //  exit(1);
-    //}
+    // hostname = std::getenv(WMI_HOST_URL);
+    // if (!hostname) {
+    //   std::cout << "Please provide a hostname by using environment variable "
+    //                "WMI_HOST_URL."
+    //             << std::endl;
+    //   exit(1);
+    // }
 
     EXIT_ON_FAIL(WMI_QDMI_device_initialize(),
                  "Failed to initialize the device")
@@ -102,10 +104,10 @@ protected:
     EXIT_ON_FAIL(WMI_QDMI_device_session_alloc(&session),
                  "Failed to allocate a session")
 
-    //EXIT_ON_FAIL(WMI_QDMI_device_session_set_parameter(
-    //                 session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
-    //                 strlen(hostname) * sizeof(char), hostname),
-    //             "Failed to set baseurl for the session")
+    // EXIT_ON_FAIL(WMI_QDMI_device_session_set_parameter(
+    //                  session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
+    //                  strlen(hostname) * sizeof(char), hostname),
+    //              "Failed to set baseurl for the session")
 
     EXIT_ON_FAIL(
         WMI_QDMI_device_session_init(session),
@@ -214,7 +216,8 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_excited.bc", CWD_path);
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_excited.bc", CWD_path);
 
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
@@ -233,18 +236,18 @@ TEST_F(QDMIImplementationTest, ControlSubmitAndWaitJob) {
   ASSERT_EQ(WMI_QDMI_device_job_submit(job), QDMI_SUCCESS);
 
   // Wait until running
-  while (*job_status == QDMI_JOB_STATUS_SUBMITTED || *job_status == QDMI_JOB_STATUS_RUNNING )
+  while (*job_status == QDMI_JOB_STATUS_SUBMITTED ||
+         *job_status == QDMI_JOB_STATUS_RUNNING)
 
     WMI_QDMI_device_job_check(job, job_status);
-
 
   ASSERT_EQ(WMI_QDMI_device_job_wait(job, 0), QDMI_SUCCESS);
 
   CHECK_JOB_STATUS(job_status, QDMI_JOB_STATUS_DONE);
 
   WMI_QDMI_device_job_free(job);
-  free(program);         
-  free(job_status); 
+  free(program);
+  free(job_status);
   free(device_status);
 }
 
@@ -277,7 +280,6 @@ TEST_F(QDMIImplementationTest, ControlGetDataImplemented) {
   WMI_QDMI_device_job_free(job);
 }
 
-
 TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
   WMI_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
@@ -285,8 +287,10 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
-  
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc",
+           CWD_path);
+
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
 
@@ -310,10 +314,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramKeys) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
-  free(program);         
-  free(job_status);   
+  free(program);
+  free(job_status);
 }
-
 
 TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
   WMI_QDMI_Device_Job job = nullptr;
@@ -322,8 +325,10 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
-  
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc",
+           CWD_path);
+
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
 
@@ -346,10 +351,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataHistogramValue) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
-  free(program);         
-  free(job_status); 
+  free(program);
+  free(job_status);
 }
-
 
 TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
   WMI_QDMI_Device_Job job = nullptr;
@@ -363,8 +367,10 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
-  
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc",
+           CWD_path);
+
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
 
@@ -385,12 +391,12 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityKeys) {
             QDMI_SUCCESS);
 
   WMI_QDMI_device_job_free(job);
-  free(program);         
-  free(job_status); 
+  free(program);
+  free(job_status);
 }
 
 TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
-  
+
   WMI_QDMI_Device_Job job = nullptr;
   size_t nShot = 1024;
   const QDMI_Program_Format qirFormat = QDMI_PROGRAM_FORMAT_QIRBASESTRING;
@@ -402,8 +408,10 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
 
   char *CWD_path = getenv("CWD");
   char *circuit_path = NULL;
-  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc", CWD_path);
-  
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.bc",
+           CWD_path);
+
   size_t sizebuffer = 0;
   char *program = load_program(circuit_path, &sizebuffer);
 
@@ -428,11 +436,11 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   for (size_t i = 0; i < num_probs; ++i) {
     sum += probability_values[i];
   }
-  ASSERT_NEAR(sum,1.0, 1e-12);
+  ASSERT_NEAR(sum, 1.0, 1e-12);
 
   WMI_QDMI_device_job_free(job);
-  free(program);         
-  free(job_status); 
+  free(program);
+  free(job_status);
 }
 
 TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {
@@ -469,7 +477,7 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported) {
 }
 
 TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported) {
- 
+
   size_t size = 0;
   ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_OPERATIONS, 0, nullptr, &size),
@@ -551,10 +559,10 @@ TEST_F(QDMIImplementationTest, QuerySiteIDImplemented) {
       << "Devices must provide a list of sites";
   size_t id = 0;
   for (auto *site : sites) {
-    ASSERT_EQ(
-        WMI_QDMI_device_session_query_site_property(
-            session, site, QDMI_SITE_PROPERTY_INDEX, sizeof(size_t), &id, nullptr),
-        QDMI_SUCCESS)
+    ASSERT_EQ(WMI_QDMI_device_session_query_site_property(
+                  session, site, QDMI_SITE_PROPERTY_INDEX, sizeof(size_t), &id,
+                  nullptr),
+              QDMI_SUCCESS)
         << "Devices must provide a site id";
   }
 }

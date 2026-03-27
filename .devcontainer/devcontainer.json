@@ -6,7 +6,6 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "postCreateCommand": "bash ./.devcontainer/post_create_commands.sh",
   "remoteEnv": {
     "QAPTIVA_AUXILIARY_SCRIPT_LOCATION": "/workspaces/QDMI-Devices/src/simulators/eviden",
     "QAPTIVA_AUXILIARY_SCRIPT_NAME": "qaptiva_auxiliary",

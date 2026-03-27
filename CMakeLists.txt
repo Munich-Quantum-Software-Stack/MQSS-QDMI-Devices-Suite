@@ -39,7 +39,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(AVAILABLE_MODULES lrz eviden wmi dcdb databases datacenters simulators)
 # Main config variable for users
 set(BUILD_MODULES
-    "wmi;"
+    "all;"
     CACHE STRING "Semicolon-separated list of modules to build (or 'all')")
 
 # Normalize and parse user input

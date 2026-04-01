@@ -308,7 +308,7 @@ cJSON *backend_options(size_t shots) {
     return NULL; // handle overflow safely
   }
 
-  return cJSON_ParseWithLength(buf, len);
+  return cJSON_ParseWithLength(buf, (size_t)len);
 }
 
 /* QUERY INTERFACE STARTS*/
@@ -470,8 +470,15 @@ int WMI_QDMI_device_session_query_site_property(WMI_QDMI_Device_Session session,
                                                 const size_t size, void *value,
                                                 size_t *size_ret) {
 
-  if (session == NULL || site == NULL || (value != NULL && size == 0) ||
-      prop >= QDMI_SITE_PROPERTY_MAX) {
+  // ----------------------
+  // Argument validation
+  // ----------------------
+  if (session == NULL || (value != NULL && size == 0) ||
+      (prop >= QDMI_SITE_PROPERTY_MAX && prop != QDMI_SITE_PROPERTY_CUSTOM1 &&
+       prop != QDMI_SITE_PROPERTY_CUSTOM2 &&
+       prop != QDMI_SITE_PROPERTY_CUSTOM3 &&
+       prop != QDMI_SITE_PROPERTY_CUSTOM4 &&
+       prop != QDMI_SITE_PROPERTY_CUSTOM5)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
@@ -658,7 +665,13 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job) {
 }
 
 int WMI_QDMI_device_job_cancel(WMI_QDMI_Device_Job job) {
-  return QDMI_ERROR_NOTIMPLEMENTED;
+  if (job == NULL || job->status == QDMI_JOB_STATUS_DONE) {
+    return QDMI_ERROR_INVALIDARGUMENT;
+  };
+
+  job->status = QDMI_JOB_STATUS_CANCELED;
+
+  return QDMI_SUCCESS;
 }
 
 int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,

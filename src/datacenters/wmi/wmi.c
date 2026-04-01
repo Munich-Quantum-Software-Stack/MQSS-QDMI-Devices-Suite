@@ -200,20 +200,18 @@ struct ResponseStruct {
 size_t parse_json(void *contents, size_t size, size_t nmemb,
                   struct ResponseStruct *response) {
   size_t realsize = size * nmemb;
-
-  struct ResponseStruct *mem = (struct ResponseStruct *)response;
   cJSON *ptr = cJSON_ParseWithLength(contents, realsize);
 
   if (!ptr) {
     /* out of memory! */
-    printf(
+    fprintf(
+        stderr,
         "   [Backend].............Not enough memory (realloc returned NULL)\n");
     return 0;
   }
 
-  mem->json = ptr;
-  mem->size += realsize;
-
+  response->json = ptr;
+  response->size += realsize;
   return realsize;
 }
 

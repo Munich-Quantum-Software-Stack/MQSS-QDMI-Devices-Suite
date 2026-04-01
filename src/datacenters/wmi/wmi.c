@@ -169,19 +169,26 @@ const WMI_QDMI_Operation DEVICE_OPERATIONS[] = {
                                                                      0}};
 
 // import api token
-char *get_token() {
-
-  char *token = getenv("TOKEN_WMI");
-
-  if (strlen(token) == 0) {
-    printf("   [Backend].............WMI token not set in environment.\n");
-    free(token);
+static char *get_token(void) {
+  const char *env = getenv("TOKEN_WMI");
+  if (!env || strlen(env) == 0) {
+    fprintf(stderr,
+            " [Backend].............WMI token not set in environment.\n");
     return NULL;
   }
 
+  // Allocate a buffer of TOKEN_SIZE
+  char *token = malloc(TOKEN_SIZE);
+  if (!token) {
+    perror("malloc failed");
+    return NULL;
+  }
+
+  // Copy the environment variable, truncate if too long
+  strncpy(token, env, TOKEN_SIZE - 1);
   token[TOKEN_SIZE - 1] = '\0';
 
-  return token;
+  return token; // safe to free later
 }
 
 struct ResponseStruct {

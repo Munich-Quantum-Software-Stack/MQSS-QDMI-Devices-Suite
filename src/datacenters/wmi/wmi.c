@@ -429,6 +429,7 @@ int WMI_QDMI_device_session_query_device_property(
   // 1. Argument validation
   // ----------------------
   if (session == NULL || (value != NULL && size == 0) ||
+      (value == NULL && size_ret == NULL) ||
       (prop >= QDMI_DEVICE_PROPERTY_MAX &&
        prop != QDMI_DEVICE_PROPERTY_CUSTOM1 &&
        prop != QDMI_DEVICE_PROPERTY_CUSTOM2 &&

@@ -165,8 +165,14 @@ const WMI_QDMI_Operation DEVICE_OPERATIONS[] = {
                                                                      0},
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"rz", 1,
                                                                      1},
-    (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"mz", 2,
+    (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"mz", 1,
                                                                      0}};
+
+// All-to-all coupling map for 3 qubits (directed pairs)
+static const WMI_QDMI_Site DEVICE_COUPLING_MAP[12] = {
+    DEVICE_SITES[0], DEVICE_SITES[1], DEVICE_SITES[1], DEVICE_SITES[0],
+    DEVICE_SITES[1], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[1],
+    DEVICE_SITES[0], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[0]};
 
 // import api token
 static char *get_token(void) {
@@ -319,7 +325,12 @@ int WMI_QDMI_device_session_query_operation_property(
     const double *params, const QDMI_Operation_Property prop, const size_t size,
     void *value, size_t *size_ret) {
 
-  if (session == NULL || operation == NULL || (value != NULL && size == 0) ||
+  // ----------------------
+  // 1. Argument validation
+  // ----------------------
+  if (session == NULL || operation == NULL ||
+      (sites != NULL && num_sites == 0) ||
+      (params != NULL && num_params == 0) || (value != NULL && size == 0) ||
       (prop >= QDMI_OPERATION_PROPERTY_MAX &&
        prop != QDMI_OPERATION_PROPERTY_CUSTOM1 &&
        prop != QDMI_OPERATION_PROPERTY_CUSTOM2 &&
@@ -329,68 +340,84 @@ int WMI_QDMI_device_session_query_operation_property(
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  // 2q gate
+  // ----------------------
+  // 2. Operation handling
+  // ----------------------
+
+  // -------- 2-qubit gate (CZ) --------
   if (operation == DEVICE_OPERATIONS[0]) {
 
     ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "cz", prop, size, value,
-                        size_ret)
-    if (sites != NULL && num_sites != 2) {
-      return QDMI_ERROR_INVALIDARGUMENT;
-    }
+                        size_ret);
+
     ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
+                              prop, size, value, size_ret);
+
+    // Validate sites
+    if (sites != NULL && num_sites != 2)
+      return QDMI_ERROR_INVALIDARGUMENT;
+
+    // If sites not provided → only metadata
     if (sites == NULL) {
       ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_QUBITSNUM, size_t, 2,
-                                prop, size, value, size_ret)
+                                prop, size, value, size_ret);
       return QDMI_ERROR_NOTSUPPORTED;
     }
-    if (sites[0] == sites[1]) {
+
+    // Same qubit twice → invalid
+    if (sites[0] == sites[1])
       return QDMI_ERROR_INVALIDARGUMENT;
-    }
-  } else if (operation ==
-             DEVICE_OPERATIONS[1]) { // all 1q gates have different names and
-                                     // number of parameters. Assuming qubit
-                                     // location is not a parameter
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "id", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
-  } else if (operation == DEVICE_OPERATIONS[2]) {
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "x", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
-  } else if (operation == DEVICE_OPERATIONS[3]) {
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "y", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
-  } else if (operation == DEVICE_OPERATIONS[4]) {
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "sx", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
-  } else if (operation == DEVICE_OPERATIONS[5]) {
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "rz", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 1,
-                              prop, size, value, size_ret)
-  } else if (operation == DEVICE_OPERATIONS[6]) {
-    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, "mz", prop, size, value,
-                        size_ret)
-    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t, 0,
-                              prop, size, value, size_ret)
-  } else {
-    return QDMI_ERROR_INVALIDARGUMENT;
+
+    // Coupling map (important!)
+    ADD_LIST_PROPERTY(QDMI_OPERATION_PROPERTY_SITES, WMI_QDMI_Site,
+                      DEVICE_COUPLING_MAP, 12, prop, size, value, size_ret);
   }
 
-  // common for all single qubit operations
-  if ((sites != NULL && num_sites != 1) ||
-      (params != NULL && num_params != 1)) {
+  // -------- 1-qubit gates --------
+  else if (operation == DEVICE_OPERATIONS[1] ||
+           operation == DEVICE_OPERATIONS[2] ||
+           operation == DEVICE_OPERATIONS[3] ||
+           operation == DEVICE_OPERATIONS[4] ||
+           operation == DEVICE_OPERATIONS[5] ||
+           operation == DEVICE_OPERATIONS[6]) {
+
+    // Name mapping
+    const char *name = NULL;
+    size_t params_num = 0;
+
+    if (operation == DEVICE_OPERATIONS[1])
+      name = "id";
+    else if (operation == DEVICE_OPERATIONS[2])
+      name = "x";
+    else if (operation == DEVICE_OPERATIONS[3])
+      name = "y";
+    else if (operation == DEVICE_OPERATIONS[4])
+      name = "sx";
+    else if (operation == DEVICE_OPERATIONS[5]) {
+      name = "rz";
+      params_num = 1;
+    } else if (operation == DEVICE_OPERATIONS[6])
+      name = "mz";
+
+    ADD_STRING_PROPERTY(QDMI_OPERATION_PROPERTY_NAME, name, prop, size, value,
+                        size_ret);
+
+    // Validate inputs
+    if ((sites != NULL && num_sites != 1) ||
+        (params != NULL && num_params != params_num))
+      return QDMI_ERROR_INVALIDARGUMENT;
+
+    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_PARAMETERSNUM, size_t,
+                              params_num, prop, size, value, size_ret);
+
+    ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_QUBITSNUM, size_t, 1,
+                              prop, size, value, size_ret);
+  }
+
+  // -------- Unknown operation --------
+  else {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_OPERATION_PROPERTY_QUBITSNUM, size_t, 1, prop,
-                            size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
 }

@@ -425,9 +425,22 @@ int WMI_QDMI_device_session_query_operation_property(
 int WMI_QDMI_device_session_query_device_property(
     WMI_QDMI_Device_Session session, const QDMI_Device_Property prop,
     const size_t size, void *value, size_t *size_ret) {
-  if (prop >= QDMI_DEVICE_PROPERTY_MAX || (value == NULL && size_ret == NULL)) {
+  // ----------------------
+  // 1. Argument validation
+  // ----------------------
+  if (session == NULL || (value != NULL && size == 0) ||
+      (prop >= QDMI_DEVICE_PROPERTY_MAX &&
+       prop != QDMI_DEVICE_PROPERTY_CUSTOM1 &&
+       prop != QDMI_DEVICE_PROPERTY_CUSTOM2 &&
+       prop != QDMI_DEVICE_PROPERTY_CUSTOM3 &&
+       prop != QDMI_DEVICE_PROPERTY_CUSTOM4 &&
+       prop != QDMI_DEVICE_PROPERTY_CUSTOM5)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
+  if (session->status != INITIALIZED) {
+    return QDMI_ERROR_BADSTATE;
+  };
+
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_NAME, "WMI", prop, size, value,
                       size_ret)
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_VERSION, "0.1.0", prop, size, value,
@@ -444,13 +457,8 @@ int WMI_QDMI_device_session_query_device_property(
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_OPERATIONS, WMI_QDMI_Operation,
                     DEVICE_OPERATIONS, 7, prop, size, value, size_ret)
   // assume all-to-all connectivity
-  ADD_LIST_PROPERTY(
-      QDMI_DEVICE_PROPERTY_COUPLINGMAP, WMI_QDMI_Site,
-      ((WMI_QDMI_Site[]){DEVICE_SITES[0], DEVICE_SITES[1], DEVICE_SITES[1],
-                         DEVICE_SITES[0], DEVICE_SITES[1], DEVICE_SITES[2],
-                         DEVICE_SITES[2], DEVICE_SITES[1], DEVICE_SITES[0],
-                         DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[0]}),
-      12, prop, size, value, size_ret)
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_COUPLINGMAP, WMI_QDMI_Site,
+                    DEVICE_COUPLING_MAP, 12, prop, size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
 }

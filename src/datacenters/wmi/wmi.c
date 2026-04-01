@@ -319,6 +319,16 @@ int WMI_QDMI_device_session_query_operation_property(
     const double *params, const QDMI_Operation_Property prop, const size_t size,
     void *value, size_t *size_ret) {
 
+  if (session == NULL || operation == NULL || (value != NULL && size == 0) ||
+      (prop >= QDMI_OPERATION_PROPERTY_MAX &&
+       prop != QDMI_OPERATION_PROPERTY_CUSTOM1 &&
+       prop != QDMI_OPERATION_PROPERTY_CUSTOM2 &&
+       prop != QDMI_OPERATION_PROPERTY_CUSTOM3 &&
+       prop != QDMI_OPERATION_PROPERTY_CUSTOM4 &&
+       prop != QDMI_OPERATION_PROPERTY_CUSTOM5)) {
+    return QDMI_ERROR_INVALIDARGUMENT;
+  }
+
   // 2q gate
   if (operation == DEVICE_OPERATIONS[0]) {
 

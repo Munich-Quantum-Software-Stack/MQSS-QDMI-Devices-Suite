@@ -5,3 +5,4 @@ token.txt
 __pycache__
 .DC_Store
 .DS_Store
+.env

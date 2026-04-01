@@ -295,24 +295,14 @@ cJSON *backend_configuration() {
 }
 
 cJSON *backend_options(size_t shots) {
-  char *option_string = NULL;
+  char buf[64];
 
-  int option_len_int = snprintf(NULL, 0, "{ \"shots\": %zu}", shots);
-  if (option_len_int < 0) {
-    return NULL;
+  int len = snprintf(buf, sizeof(buf), "{ \"shots\": %zu }", shots);
+  if (len < 0 || len >= (int)sizeof(buf)) {
+    return NULL; // handle overflow safely
   }
 
-  size_t option_len = (size_t)option_len_int + 1;
-
-  option_string = malloc(option_len);
-  if (!option_string) {
-    return NULL;
-  }
-  snprintf(option_string, option_len, "{ \"shots\": %zu}", shots);
-
-  cJSON *options = cJSON_ParseWithLength(option_string, option_len);
-
-  return options;
+  return cJSON_ParseWithLength(buf, len);
 }
 
 /* QUERY INTERFACE STARTS*/

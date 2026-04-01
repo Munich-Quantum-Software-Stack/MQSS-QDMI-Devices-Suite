@@ -666,13 +666,7 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job) {
 }
 
 int WMI_QDMI_device_job_cancel(WMI_QDMI_Device_Job job) {
-  if (job == NULL || job->status == QDMI_JOB_STATUS_DONE) {
-    return QDMI_ERROR_INVALIDARGUMENT;
-  };
-
-  job->status = QDMI_JOB_STATUS_CANCELED;
-
-  return QDMI_SUCCESS;
+  return QDMI_ERROR_NOTIMPLEMENTED;
 }
 
 int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,

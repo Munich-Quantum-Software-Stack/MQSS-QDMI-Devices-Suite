@@ -129,18 +129,6 @@ TEST_F(QDMIImplementationTest, SessionSetParameterAfterAllocated) {
             QDMI_ERROR_BADSTATE);
 }
 
-namespace {
-std::string Get_test_circuit() {
-  return "OPENQASM 2.0;\n"
-         "include \"qelib1.inc\";\n"
-         "qreg q[2];\n"
-         "creg c[2];\n"
-         "h q[0];\n"
-         "cx q[0], q[1];\n"
-         "measure q -> c;\n";
-}
-} // namespace
-
 TEST_F(QDMIImplementationTest, ControlCreateJobImplemented) {
   WMI_QDMI_Device_Job job = nullptr;
   ASSERT_NE(WMI_QDMI_device_session_create_device_job(session, &job),

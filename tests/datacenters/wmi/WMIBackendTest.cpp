@@ -90,24 +90,12 @@ protected:
 
   static void SetUpTestSuite() {
     int err;
-    // hostname = std::getenv(WMI_HOST_URL);
-    // if (!hostname) {
-    //   std::cout << "Please provide a hostname by using environment variable "
-    //                "WMI_HOST_URL."
-    //             << std::endl;
-    //   exit(1);
-    // }
 
     EXIT_ON_FAIL(WMI_QDMI_device_initialize(),
                  "Failed to initialize the device")
 
     EXIT_ON_FAIL(WMI_QDMI_device_session_alloc(&session),
                  "Failed to allocate a session")
-
-    // EXIT_ON_FAIL(WMI_QDMI_device_session_set_parameter(
-    //                  session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
-    //                  strlen(hostname) * sizeof(char), hostname),
-    //              "Failed to set baseurl for the session")
 
     EXIT_ON_FAIL(
         WMI_QDMI_device_session_init(session),

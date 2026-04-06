@@ -546,7 +546,8 @@ int WMI_QDMI_device_job_set_parameter(WMI_QDMI_Device_Job job,
   // assume this is correct, what we had previously was a bitcode module
   if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT) {
     QDMI_Program_Format format = *(const QDMI_Program_Format *)value;
-    if (format != QDMI_PROGRAM_FORMAT_QIRBASESTRING)
+    if (format != QDMI_PROGRAM_FORMAT_QIRBASESTRING &&
+        format != QDMI_PROGRAM_FORMAT_QIRBASEMODULE)
       return QDMI_ERROR_NOTSUPPORTED;
     job->format = format;
     return QDMI_SUCCESS;
@@ -610,9 +611,14 @@ int WMI_QDMI_device_job_submit(WMI_QDMI_Device_Job job) {
   form = curl_mime_init(curl);
 
   field = curl_mime_addpart(form);
+  if (job->format == QDMI_PROGRAM_FORMAT_QIRBASESTRING) {
+    curl_mime_filename(field, "bitcode.ll");
+  } else if (job->format == QDMI_PROGRAM_FORMAT_QIRBASEMODULE) {
+    curl_mime_filename(field, "bitcode.bc");
+  }
   curl_mime_name(field, "qir");
   curl_mime_type(field, "application/form-data");
-  curl_mime_filename(field, "bitcode.bc"); // for the backend to see this as a
+  curl_mime_filename(field, "bitcode.ll"); // for the backend to see this as a
                                            // file and not convert it to string.
   curl_mime_data(field, job->program, job->sizebuffer);
 

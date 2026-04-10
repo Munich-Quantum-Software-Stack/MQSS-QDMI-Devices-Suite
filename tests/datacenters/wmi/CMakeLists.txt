@@ -15,10 +15,26 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-if(BUILD_BACKEND_LRZ)
-  add_subdirectory(lrz)
-endif()
+enable_testing()
+include(GoogleTest)
+enable_language(CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(BUILD_BACKEND_WMI)
-  add_subdirectory(wmi)
+generate_device_defs_executable(${WMI_QDMI_PREFIX})
+
+add_executable(WMIBackendTest WMIBackendTest.cpp)
+
+target_link_libraries(WMIBackendTest PRIVATE gtest gtest_main qdmi::qdmi
+                                             wmi_device qdmi::project_warnings)
+
+add_dependencies(WMIBackendTest qdmi_test_wmi_device_defs)
+
+gtest_discover_tests(WMIBackendTest)
+
+if(ENABLE_COVERAGE)
+  target_compile_options(WMIBackendTest INTERFACE --coverage -fprofile-arcs
+                                                  -ftest-coverage -O0)
+  target_link_libraries(WMIBackendTest INTERFACE gcov --coverage)
 endif()

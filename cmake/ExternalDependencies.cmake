@@ -119,6 +119,11 @@ if(BUILD_BACKEND_DCDB)
 
 endif()
 
+if(BUILD_BACKEND_WMI)
+  find_package(cJSON REQUIRED)
+
+endif()
+
 if(FETCH_PACKAGES)
   FetchContent_MakeAvailable(${FETCH_PACKAGES})
 endif()

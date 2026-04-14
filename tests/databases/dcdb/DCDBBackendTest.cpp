@@ -22,8 +22,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <sys/types.h>
-#include <vector>
 #include <thread>
+#include <vector>
 
 #define DCDB_HOST_URL "DCDB_HOST_URL"
 

@@ -22,6 +22,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <sys/types.h>
+#include <thread>
 #include <vector>
 
 #define DCDB_HOST_URL "DCDB_HOST_URL"
@@ -539,4 +540,239 @@ TEST_F(QDMIImplementationTest, QueyJobAndGetResult) {
             QDMI_SUCCESS);
 
   DCDB_QDMI_device_telemetrysensor_query_free(query);
+}
+
+TEST_F(QDMIImplementationTest, QueyJobAndGetResultLoop) {
+  size_t size = 0;
+  ASSERT_EQ(
+      DCDB_QDMI_device_session_query_device_property(
+          session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr, &size),
+      QDMI_SUCCESS)
+      << "Devices must provide a list of telemetry variables";
+
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(
+      size / sizeof(DCDB_QDMI_TelemetrySensor));
+  ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
+                static_cast<void *>(envs.data()), nullptr),
+            QDMI_SUCCESS)
+      << "Devices must provide a list of telemetry variables";
+
+  // --- Dynamic timestamps: from 2 hours ago to now ---
+  auto time_now = std::chrono::system_clock::now();
+  auto time_end = time_now - std::chrono::hours(2);
+  auto time_start = time_end - std::chrono::minutes(5);
+
+  uint64_t start_ts =
+      static_cast<uint64_t>(std::chrono::system_clock::to_time_t(time_start));
+  uint64_t end_ts =
+      static_cast<uint64_t>(std::chrono::system_clock::to_time_t(time_end));
+
+  // Print for verification
+  std::time_t t_start = static_cast<std::time_t>(start_ts);
+  std::time_t t_end = static_cast<std::time_t>(end_ts);
+  std::string str_start = std::ctime(&t_start);
+  std::string str_end = std::ctime(&t_end);
+  if (!str_start.empty() && str_start.back() == '\n')
+    str_start.pop_back();
+  if (!str_end.empty() && str_end.back() == '\n')
+    str_end.pop_back();
+
+  // --- Loop over sensor IDs 0 to 4 ---
+  for (int sensor_id = 0; sensor_id <= 4; ++sensor_id) {
+
+    if (sensor_id >= static_cast<int>(envs.size())) {
+      std::cerr << "Sensor ID " << sensor_id
+                << " out of range (envs.size()=" << envs.size()
+                << "), skipping.\n";
+      continue;
+    }
+    DCDB_QDMI_TelemetrySensor env = envs.at(sensor_id);
+
+    // Fresh query handle for each sensor
+    DCDB_QDMI_Device_TelemetrySensor_Query query;
+    ASSERT_EQ(DCDB_QDMI_device_session_create_device_telemetrysensor_query(
+                  session, &query),
+              QDMI_SUCCESS);
+
+    QDMI_TelemetrySensor_Query_Status status;
+    size_t result_size = 0;
+
+    // Set parameters
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_STARTTIME,
+                  sizeof(uint64_t), &start_ts),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_ENDTIME,
+                  sizeof(uint64_t), &end_ts),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query,
+                  QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_TELEMETRYSENSOR,
+                  sizeof(DCDB_QDMI_TelemetrySensor), &env),
+              QDMI_SUCCESS);
+
+    // Submit and wait
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_submit(query),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_wait(query, 0),
+              QDMI_SUCCESS);
+
+    // Check status
+    DCDB_QDMI_device_telemetrysensor_query_check_status(query, &status);
+    ASSERT_EQ(status, QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE)
+        << "Query failed for sensor_id=" << sensor_id;
+
+    // Get timestamps
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                  query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS, 0,
+                  nullptr, &result_size),
+              QDMI_SUCCESS);
+
+    std::vector<uint64_t> timestamps(result_size / sizeof(uint64_t));
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                  query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS,
+                  result_size, static_cast<void *>(timestamps.data()), nullptr),
+              QDMI_SUCCESS);
+
+    // Get values
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                  query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES, 0, nullptr,
+                  &result_size),
+              QDMI_SUCCESS);
+
+    std::vector<int64_t> values(result_size / sizeof(int64_t));
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                  query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES, result_size,
+                  static_cast<void *>(values.data()), nullptr),
+              QDMI_SUCCESS);
+
+    // Free query handle before next iteration
+    DCDB_QDMI_device_telemetrysensor_query_free(query);
+  }
+}
+
+TEST_F(QDMIImplementationTest, QueryDataLoop) {
+  size_t size = 0;
+  ASSERT_EQ(
+      DCDB_QDMI_device_session_query_device_property(
+          session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, 0, nullptr, &size),
+      QDMI_SUCCESS)
+      << "Devices must provide a list of telemetry variables";
+
+  std::vector<DCDB_QDMI_TelemetrySensor> envs(
+      size / sizeof(DCDB_QDMI_TelemetrySensor));
+  ASSERT_EQ(DCDB_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_TELEMETRYSENSORS, size,
+                static_cast<void *>(envs.data()), nullptr),
+            QDMI_SUCCESS)
+      << "Devices must provide a list of telemetry variables";
+
+  // --- Config ---
+  const int sensor_id = 0;        // sensor to query
+  const int total_iterations = 5; // number of loop iterations
+  const int window_minutes = 2;   // query window size in minutes
+  const int sleep_minutes = 2;    // sleep between iterations
+  const int base_hours_ago = 2;   // base offset from now
+
+  ASSERT_LT(sensor_id, static_cast<int>(envs.size()))
+      << "Sensor ID " << sensor_id << " out of range";
+
+  DCDB_QDMI_TelemetrySensor env = envs.at(sensor_id);
+
+  for (int iter = 0; iter < total_iterations; ++iter) {
+    // Each iteration shifts the window back by (iter * window_minutes)
+    // so windows don't overlap:
+    //   iter 0: [now-2h02m, now-2h00m]
+    //   iter 1: [now-2h04m, now-2h02m]
+    //   iter 2: [now-2h06m, now-2h04m]  etc.
+    auto time_now = std::chrono::system_clock::now();
+    auto time_end = time_now - std::chrono::hours(base_hours_ago) -
+                    std::chrono::minutes(iter * window_minutes);
+    auto time_start = time_end - std::chrono::minutes(window_minutes);
+
+    uint64_t start_ts =
+        static_cast<uint64_t>(std::chrono::system_clock::to_time_t(time_start));
+    uint64_t end_ts =
+        static_cast<uint64_t>(std::chrono::system_clock::to_time_t(time_end));
+
+    // Print time window
+    std::time_t t_start = static_cast<std::time_t>(start_ts);
+    std::time_t t_end = static_cast<std::time_t>(end_ts);
+    std::string str_start = std::ctime(&t_start);
+    std::string str_end = std::ctime(&t_end);
+    if (!str_start.empty() && str_start.back() == '\n')
+      str_start.pop_back();
+    if (!str_end.empty() && str_end.back() == '\n')
+      str_end.pop_back();
+
+    // Fresh query handle for each iteration
+    DCDB_QDMI_Device_TelemetrySensor_Query query;
+    ASSERT_EQ(DCDB_QDMI_device_session_create_device_telemetrysensor_query(
+                  session, &query),
+              QDMI_SUCCESS);
+
+    // Set parameters
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_STARTTIME,
+                  sizeof(uint64_t), &start_ts),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query, QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_ENDTIME,
+                  sizeof(uint64_t), &end_ts),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_set_parameter(
+                  query,
+                  QDMI_DEVICE_TELEMETRYSENSOR_QUERY_PARAMETER_TELEMETRYSENSOR,
+                  sizeof(DCDB_QDMI_TelemetrySensor), &env),
+              QDMI_SUCCESS);
+
+    // Submit and wait
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_submit(query),
+              QDMI_SUCCESS);
+    ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_wait(query, 0),
+              QDMI_SUCCESS);
+
+    // Check status
+    QDMI_TelemetrySensor_Query_Status status;
+    DCDB_QDMI_device_telemetrysensor_query_check_status(query, &status);
+    EXPECT_EQ(status, QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE)
+        << "Query failed at iteration " << iter;
+
+    if (status == QDMI_TELEMETRYSENSOR_QUERY_STATUS_DONE) {
+
+      // Get timestamps
+      size_t result_size = 0;
+      ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                    query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS, 0,
+                    nullptr, &result_size),
+                QDMI_SUCCESS);
+      std::vector<uint64_t> timestamps(result_size / sizeof(uint64_t));
+      ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                    query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_TIMESTAMPS,
+                    result_size, static_cast<void *>(timestamps.data()),
+                    nullptr),
+                QDMI_SUCCESS);
+
+      // Get values
+      ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                    query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES, 0, nullptr,
+                    &result_size),
+                QDMI_SUCCESS);
+      std::vector<int64_t> values(result_size / sizeof(int64_t));
+      ASSERT_EQ(DCDB_QDMI_device_telemetrysensor_query_get_results(
+                    query, QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES,
+                    result_size, static_cast<void *>(values.data()), nullptr),
+                QDMI_SUCCESS);
+    }
+
+    // Free query handle
+    DCDB_QDMI_device_telemetrysensor_query_free(query);
+
+    // Sleep between iterations (skip after last one)
+    if (iter < total_iterations - 1) {
+      std::this_thread::sleep_for(std::chrono::minutes(sleep_minutes));
+    }
+  }
 }

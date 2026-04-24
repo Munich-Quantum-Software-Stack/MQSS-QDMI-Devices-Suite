@@ -231,6 +231,13 @@ static CURLcode send_curl_request(const char *url, const char *token,
   if (!curl)
     return CURLE_FAILED_INIT;
 
+  char errorbuf[CURL_ERROR_SIZE] = {0};
+  curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
+  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+
   curl_easy_setopt(curl, CURLOPT_URL, url);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_json);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_struct);
@@ -263,11 +270,12 @@ static CURLcode send_curl_request(const char *url, const char *token,
   if (payload)
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
 
-  CURLcode result = curl_easy_perform(curl);
+    CURLcode result = curl_easy_perform(curl);
 
   if (result != CURLE_OK) {
-    fprintf(stderr, "[Backend].............Request problem: %s\n",
-            curl_easy_strerror(result));
+    fprintf(stderr, "curl_easy_perform failed: %s (%s)\n",
+            curl_easy_strerror(result),
+            errorbuf[0] ? errorbuf : "no error buffer");
     return result;
   }
 

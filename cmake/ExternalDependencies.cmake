@@ -20,10 +20,10 @@ include(FetchContent)
 set(FETCH_PACKAGES "")
 
 set(QDMI_VERSION
-    "1.1.0"
+    "1.2.2"
     CACHE STRING "QDMI version")
 set(QDMI_URL
-    "https://github.com/kayaercument/QDMI.git"
+    "https://github.com/Munich-Quantum-Software-Stack/QDMI.git"
     CACHE STRING "QDMI URL")
 
 set(BUILD_QDMI_DOCS OFF)

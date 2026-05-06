@@ -174,6 +174,12 @@ static const WMI_QDMI_Site DEVICE_COUPLING_MAP[12] = {
     DEVICE_SITES[1], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[1],
     DEVICE_SITES[0], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[0]};
 
+void print_cjson(const cJSON *json) {
+  char *str = cJSON_Print(json);
+  printf("%s\n", str);
+  free(str);
+}
+
 // import api token
 static char *get_token(void) {
   const char *env = getenv("TOKEN_WMI");

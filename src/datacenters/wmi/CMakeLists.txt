@@ -20,7 +20,7 @@ find_package(cJSON REQUIRED)
 
 add_library(wmi_device SHARED wmi.c)
 
-target_link_libraries(wmi_device PUBLIC qdmi::qdmi qdmi::project_warnings curl
+target_link_libraries(wmi_device PUBLIC qdmi::qdmi qdmi::qdmi_project_warnings curl
                                         cjson)
 
 generate_prefixed_qdmi_headers(${WMI_QDMI_PREFIX})

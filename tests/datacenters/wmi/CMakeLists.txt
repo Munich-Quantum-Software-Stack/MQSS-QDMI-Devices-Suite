@@ -27,7 +27,7 @@ generate_device_defs_executable(${WMI_QDMI_PREFIX})
 add_executable(WMIBackendTest WMIBackendTest.cpp)
 
 target_link_libraries(WMIBackendTest PRIVATE gtest gtest_main qdmi::qdmi
-                                             wmi_device qdmi::project_warnings)
+                                             wmi_device qdmi::qdmi_project_warnings)
 
 add_dependencies(WMIBackendTest qdmi_test_wmi_device_defs)
 

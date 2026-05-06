@@ -430,6 +430,10 @@ int WMI_QDMI_device_session_query_operation_property(
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
+const QDMI_Program_Format SUPPORTED_PROGRAM_FORMATS[] = {
+    QDMI_PROGRAM_FORMAT_QIRBASESTRING, QDMI_PROGRAM_FORMAT_QIRBASEMODULE};
+
+
 int WMI_QDMI_device_session_query_device_property(
     WMI_QDMI_Device_Session session, const QDMI_Device_Property prop,
     const size_t size, void *value, size_t *size_ret) {
@@ -468,6 +472,10 @@ int WMI_QDMI_device_session_query_device_property(
   // assume all-to-all connectivity
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_COUPLINGMAP, WMI_QDMI_Site,
                     DEVICE_COUPLING_MAP, 12, prop, size, value, size_ret)
+   
+  // add supported program formats
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS, QDMI_Program_Format, 
+                    SUPPORTED_PROGRAM_FORMATS, sizeof(SUPPORTED_PROGRAM_FORMATS)/sizeof(QDMI_Program_Format), prop, size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
 }

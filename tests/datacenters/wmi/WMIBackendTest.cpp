@@ -424,6 +424,20 @@ TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {
   ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
                 session, QDMI_DEVICE_PROPERTY_NAME, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
+    
+  // add supported program formats
+  size_t size = 0;
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS, 0, nullptr, &size),
+            QDMI_SUCCESS);
+  std::vector<QDMI_Program_Format> val2(size / sizeof(QDMI_Program_Format));
+
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS, size,
+                static_cast<void *>(val2.data()), nullptr),
+            QDMI_SUCCESS);
+  ASSERT_EQ(val2.size(), 2);
+
 }
 
 TEST_F(QDMIImplementationTest, QuerySitePropertyImplemented) {

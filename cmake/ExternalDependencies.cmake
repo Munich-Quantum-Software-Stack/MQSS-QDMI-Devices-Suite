@@ -20,7 +20,7 @@ include(FetchContent)
 set(FETCH_PACKAGES "")
 
 set(QDMI_VERSION
-    "1.2.2"
+    "v1.2.2"
     CACHE STRING "QDMI version")
 set(QDMI_URL
     "https://github.com/Munich-Quantum-Software-Stack/QDMI.git"
@@ -30,8 +30,8 @@ set(BUILD_QDMI_DOCS OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(
     qdmi
-    GIT_REPOSITORY https://github.com/kayaercument/QDMI.git
-    GIT_TAG 152-env-prop)
+    GIT_REPOSITORY ${QDMI_URL}
+    GIT_TAG ${QDMI_VERSION})
   list(APPEND FETCH_PACKAGES qdmi)
 else()
   find_package(qdmi ${QDMI_VERSION} QUIET)

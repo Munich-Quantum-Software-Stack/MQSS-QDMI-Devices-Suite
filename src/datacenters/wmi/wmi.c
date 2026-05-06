@@ -16,6 +16,8 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
 
+#define _POSIX_C_SOURCE 200809L
+
 #include "qdmi/constants.h"
 #include <wmi_qdmi/device.h>
 
@@ -129,7 +131,7 @@ typedef struct WMI_QDMI_Device_Job_impl_d {
   size_t num_shots;
 
   size_t results_size; // number of states in result histogram
-  char *result_hist_keys;
+  char **result_hist_keys;
   size_t *result_hist_values;
 
   QDMI_Program_Format format;
@@ -544,6 +546,7 @@ int WMI_QDMI_device_session_create_device_job(WMI_QDMI_Device_Session session,
 
   (*job)->status = QDMI_JOB_STATUS_CREATED;
   (*job)->num_shots = DEFAULT_NUM_SHOT;
+  (*job)->results_size = 0;
   (*job)->result_hist_keys = NULL;
   (*job)->result_hist_values = NULL;
   (*job)->program = NULL;
@@ -753,6 +756,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
     cJSON *counts_array =
         cJSON_GetObjectItemCaseSensitive(response.json, "counts");
+
     if (counts_array == NULL || !cJSON_IsArray(counts_array)) {
       fprintf(stderr, "   [Backend].............Invalid or missing 'counts' "
                       "array in response JSON\n");
@@ -768,32 +772,22 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
 
     // IMPORTANT: assume just one circuit will be sent !!
     const cJSON *count_object = cJSON_GetArrayItem(counts_array, 0);
-
     job->results_size = (size_t)cJSON_GetArraySize(count_object);
 
     free(job->result_hist_keys);
     free(job->result_hist_values);
-    job->result_hist_keys =
-        malloc(job->results_size * sizeof(char) * (numbits + 1));
+    job->result_hist_keys = malloc(job->results_size * sizeof(char *));
     job->result_hist_values = malloc(job->results_size * sizeof(size_t));
 
-    char *result_keys_ptr = job->result_hist_keys;
-    size_t *result_values_ptr = job->result_hist_values;
-
     cJSON *count;
+    i = 0;
     cJSON_ArrayForEach(count, count_object) {
-      // keys as a long string with bitstrings separated by ","
-      strncpy(result_keys_ptr, count->string, numbits);
-      strcat(result_keys_ptr, ",");
-      *result_values_ptr = (size_t)count->valueint;
-      result_values_ptr++;
+      job->result_hist_keys[i] = strdup(count->string);
+      job->result_hist_values[i] = (size_t)count->valueint;
+      i++;
     }
 
     cJSON_Delete(count);
-
-    if (result_keys_ptr[job->results_size] == ',') {
-      result_keys_ptr[job->results_size] = '\0';
-    }
 
     job->status = QDMI_JOB_STATUS_DONE;
     *status = QDMI_JOB_STATUS_DONE;
@@ -867,18 +861,35 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
       result == QDMI_JOB_RESULT_PROBABILITIES_DENSE)
     return QDMI_ERROR_NOTSUPPORTED;
 
-  size_t required_size;
-  if (result == QDMI_JOB_RESULT_HIST_KEYS) {
-    required_size = strlen(job->result_hist_keys) + 1;
+  size_t required_size = 0;
+  if (result == QDMI_JOB_RESULT_HIST_KEYS ||
+      result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS) {
+    // adding up all string lengths + comma separator
+    for (size_t i = 0; i < job->results_size; ++i) {
+      required_size += strlen(job->result_hist_keys[i]);
+      if (i < job->results_size - 1)
+        required_size += 1; // for comma
+    }
+    required_size += 1;
+
     if (data) {
       if (size < required_size)
         return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->result_hist_keys, required_size);
+      char *out = (char *)data;
+      size_t pos = 0;
+      for (size_t i = 0; i < job->results_size; ++i) {
+        size_t len = strlen(job->result_hist_keys[i]);
+        memcpy(out + pos, job->result_hist_keys[i], len);
+        pos += len;
+        if (i < job->results_size - 1) {
+          out[pos++] = ',';
+        }
+      }
+      out[pos] = '\0';
       return QDMI_SUCCESS;
     }
     if (size_ret)
       *size_ret = required_size;
-    return QDMI_SUCCESS;
   }
 
   if (result == QDMI_JOB_RESULT_HIST_VALUES) {
@@ -893,19 +904,6 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
     if (size_ret)
       *size_ret = required_size;
 
-    return QDMI_SUCCESS;
-  }
-
-  if (result == QDMI_JOB_RESULT_PROBABILITIES_SPARSE_KEYS) {
-    required_size = strlen(job->result_hist_keys) + 1;
-    if (data) {
-      if (size < required_size)
-        return QDMI_ERROR_INVALIDARGUMENT;
-      strncpy(data, job->result_hist_keys, required_size);
-      return QDMI_SUCCESS;
-    }
-    if (size_ret)
-      *size_ret = required_size;
     return QDMI_SUCCESS;
   }
 
@@ -935,6 +933,9 @@ int WMI_QDMI_device_job_get_results(WMI_QDMI_Device_Job job,
 void WMI_QDMI_device_job_free(WMI_QDMI_Device_Job job) {
   free(job->id_json);
   job->id_json = NULL;
+  for (size_t i = 0; i < job->results_size; ++i) {
+    free(job->result_hist_keys[i]);
+  }
   free(job->result_hist_keys);
   job->result_hist_keys = NULL;
   free(job->result_hist_values);

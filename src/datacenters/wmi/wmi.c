@@ -533,8 +533,6 @@ int WMI_QDMI_device_session_create_device_job(WMI_QDMI_Device_Session session,
     return QDMI_ERROR_BADSTATE;
   }
 
-  size_t num_qubits = 3;
-
   *job = (WMI_QDMI_Device_Job)malloc(sizeof(WMI_QDMI_Device_Job_impl_t));
   (*job)->session = session;
   (*job)->id = rand();
@@ -749,7 +747,10 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
     // printf("   [Backend].............Job finished\n");
 
     unsigned int i;
-    size_t numbits = 3;
+    size_t numbits = 0;
+    WMI_QDMI_device_session_query_device_property(
+        job->session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t), &numbits,
+        NULL);
 
     long bitstring_idx;
     char *bitstring_string;

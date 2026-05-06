@@ -419,6 +419,82 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
   free(job_status);
 }
 
+// this is to test whether the returned results actually make sense. I.e.
+// whether the avg measured state is  0.5.
+TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck) {
+  WMI_QDMI_Device_Job job = nullptr;
+  size_t nShot = 16384;
+  const QDMI_Program_Format qirFormat = QDMI_PROGRAM_FORMAT_QIRBASESTRING;
+
+  char *CWD_path = getenv("CWD");
+  char *circuit_path = NULL;
+  asprintf(&circuit_path,
+           "%s/tests/datacenters/wmi/circuits/circuit_hadamard_decomposed.ll",
+           CWD_path);
+
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
+
+  QDMI_Job_Status *job_status =
+      (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
+  size_t histogram_keys_size;
+  char *histogram_keys;
+  size_t histogram_values_size;
+  size_t *histogram_values;
+  CREATE_JOB(job, nShot, qirFormat, program, sizebuffer);
+  ASSERT_EQ(WMI_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(WMI_QDMI_device_job_wait(job, 100), QDMI_SUCCESS);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS, 0,
+                                            nullptr, &histogram_keys_size),
+            QDMI_SUCCESS);
+
+  histogram_keys = (char *)malloc(histogram_keys_size);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
+                                            histogram_keys_size, histogram_keys,
+                                            nullptr),
+            QDMI_SUCCESS);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
+                                            nullptr, &histogram_values_size),
+            QDMI_SUCCESS);
+
+  histogram_values = (size_t *)malloc(histogram_values_size);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
+                                            histogram_values_size,
+                                            histogram_values, nullptr),
+            QDMI_SUCCESS);
+
+  size_t num_qubits = 0;
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t),
+                &num_qubits, nullptr),
+            QDMI_SUCCESS);
+
+  size_t sum = 0;
+  double avg = 0.0;
+  size_t num_states = histogram_values_size / sizeof(double);
+
+  for (size_t i = 0; i < num_states; i++) {
+    const char *key_ptr = &histogram_keys[i * (num_qubits + 1)];
+    size_t key_int = (size_t)strtol(key_ptr, NULL, 2);
+    avg +=
+        static_cast<double>(key_int) * static_cast<double>(histogram_values[i]);
+    sum += histogram_values[i];
+  }
+
+  avg /= (int)nShot;
+
+  ASSERT_EQ(sum, (int)nShot);
+  ASSERT_NEAR(avg, 0.5, 0.05);
+
+  WMI_QDMI_device_job_free(job);
+  free(program);
+  free(job_status);
+}
+
 TEST_F(QDMIImplementationTest, QueryDevicePropertyImplemented) {
 
   ASSERT_EQ(WMI_QDMI_device_session_query_device_property(

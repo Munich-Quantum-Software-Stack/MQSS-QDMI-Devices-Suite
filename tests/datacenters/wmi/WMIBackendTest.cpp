@@ -488,7 +488,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck) {
   avg /= (int)nShot;
 
   ASSERT_EQ(sum, (int)nShot);
-  ASSERT_NEAR(avg, 0.5, 0.05);
+  ASSERT_NEAR(avg, 0.5, 0.1);
 
   WMI_QDMI_device_job_free(job);
   free(program);

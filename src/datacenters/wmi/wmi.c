@@ -143,11 +143,17 @@ typedef struct WMI_QDMI_Site_impl_d {
   size_t id;
 } WMI_QDMI_Site_impl_t;
 
-// three qubit dedicated device
-const WMI_QDMI_Site DEVICE_SITES[] =
-    { // should maybe be the implementation above
-        &(WMI_QDMI_Site_impl_t){0}, &(WMI_QDMI_Site_impl_t){1},
-        &(WMI_QDMI_Site_impl_t){2}};
+// 17q pathfinder chip
+const WMI_QDMI_Site DEVICE_SITES[] = {
+    &(WMI_QDMI_Site_impl_t){0},  &(WMI_QDMI_Site_impl_t){1},
+    &(WMI_QDMI_Site_impl_t){2},  &(WMI_QDMI_Site_impl_t){3},
+    &(WMI_QDMI_Site_impl_t){4},  &(WMI_QDMI_Site_impl_t){5},
+    &(WMI_QDMI_Site_impl_t){6},  &(WMI_QDMI_Site_impl_t){7},
+    &(WMI_QDMI_Site_impl_t){8},  &(WMI_QDMI_Site_impl_t){9},
+    &(WMI_QDMI_Site_impl_t){10}, &(WMI_QDMI_Site_impl_t){11},
+    &(WMI_QDMI_Site_impl_t){12}, &(WMI_QDMI_Site_impl_t){13},
+    &(WMI_QDMI_Site_impl_t){14}, &(WMI_QDMI_Site_impl_t){15},
+    &(WMI_QDMI_Site_impl_t){16}};
 
 typedef struct QDMI_Operation_impl_d {
   char *name;
@@ -170,11 +176,32 @@ const WMI_QDMI_Operation DEVICE_OPERATIONS[] = {
     (struct WMI_QDMI_Operation_impl_d *)&(WMI_QDMI_Operation_impl_t){"mz", 1,
                                                                      0}};
 
-// All-to-all coupling map for 3 qubits (directed pairs)
-static const WMI_QDMI_Site DEVICE_COUPLING_MAP[12] = {
-    DEVICE_SITES[0], DEVICE_SITES[1], DEVICE_SITES[1], DEVICE_SITES[0],
-    DEVICE_SITES[1], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[1],
-    DEVICE_SITES[0], DEVICE_SITES[2], DEVICE_SITES[2], DEVICE_SITES[0]};
+// Coupling map for 17 qubits (from your coupling_list)
+static const WMI_QDMI_Site DEVICE_COUPLING_MAP[96] = {
+    DEVICE_SITES[0],  DEVICE_SITES[1],  DEVICE_SITES[0],  DEVICE_SITES[4],
+    DEVICE_SITES[1],  DEVICE_SITES[0],  DEVICE_SITES[1],  DEVICE_SITES[5],
+    DEVICE_SITES[2],  DEVICE_SITES[3],  DEVICE_SITES[2],  DEVICE_SITES[6],
+    DEVICE_SITES[3],  DEVICE_SITES[2],  DEVICE_SITES[3],  DEVICE_SITES[4],
+    DEVICE_SITES[3],  DEVICE_SITES[7],  DEVICE_SITES[4],  DEVICE_SITES[0],
+    DEVICE_SITES[4],  DEVICE_SITES[3],  DEVICE_SITES[4],  DEVICE_SITES[5],
+    DEVICE_SITES[4],  DEVICE_SITES[8],  DEVICE_SITES[5],  DEVICE_SITES[1],
+    DEVICE_SITES[5],  DEVICE_SITES[4],  DEVICE_SITES[5],  DEVICE_SITES[9],
+    DEVICE_SITES[6],  DEVICE_SITES[2],  DEVICE_SITES[6],  DEVICE_SITES[7],
+    DEVICE_SITES[7],  DEVICE_SITES[3],  DEVICE_SITES[7],  DEVICE_SITES[6],
+    DEVICE_SITES[7],  DEVICE_SITES[8],  DEVICE_SITES[7],  DEVICE_SITES[11],
+    DEVICE_SITES[8],  DEVICE_SITES[4],  DEVICE_SITES[8],  DEVICE_SITES[7],
+    DEVICE_SITES[8],  DEVICE_SITES[9],  DEVICE_SITES[8],  DEVICE_SITES[12],
+    DEVICE_SITES[9],  DEVICE_SITES[5],  DEVICE_SITES[9],  DEVICE_SITES[8],
+    DEVICE_SITES[9],  DEVICE_SITES[10], DEVICE_SITES[9],  DEVICE_SITES[13],
+    DEVICE_SITES[10], DEVICE_SITES[9],  DEVICE_SITES[10], DEVICE_SITES[14],
+    DEVICE_SITES[11], DEVICE_SITES[7],  DEVICE_SITES[11], DEVICE_SITES[12],
+    DEVICE_SITES[11], DEVICE_SITES[15], DEVICE_SITES[12], DEVICE_SITES[8],
+    DEVICE_SITES[12], DEVICE_SITES[11], DEVICE_SITES[12], DEVICE_SITES[13],
+    DEVICE_SITES[12], DEVICE_SITES[16], DEVICE_SITES[13], DEVICE_SITES[9],
+    DEVICE_SITES[13], DEVICE_SITES[12], DEVICE_SITES[13], DEVICE_SITES[14],
+    DEVICE_SITES[14], DEVICE_SITES[10], DEVICE_SITES[14], DEVICE_SITES[13],
+    DEVICE_SITES[15], DEVICE_SITES[11], DEVICE_SITES[15], DEVICE_SITES[16],
+    DEVICE_SITES[16], DEVICE_SITES[12], DEVICE_SITES[16], DEVICE_SITES[15]};
 
 void print_cjson(const cJSON *json) {
   char *str = cJSON_Print(json);
@@ -296,9 +323,9 @@ static CURLcode send_curl_request(const char *url, const char *token,
 
 cJSON *backend_configuration() {
   char *configuration_string = "{ \
-    \"backend_name\": \"dedicatedSimulator\", \
+    \"backend_name\": \"pathfinderSimulator\", \
     \"backend_version\": \"1.0.0\", \
-    \"n_qubits\": 5, \
+    \"n_qubits\": 17, \
     \"basis_gates\": [\"id\", \"x\", \"y\", \"sx\", \"rz\", \"cz\", \"mz\"], \
     \"coupling_map\": null, \
     \"simulator\": false, \
@@ -386,7 +413,7 @@ int WMI_QDMI_device_session_query_operation_property(
 
     // Coupling map (important!)
     ADD_LIST_PROPERTY(QDMI_OPERATION_PROPERTY_SITES, WMI_QDMI_Site,
-                      DEVICE_COUPLING_MAP, 12, prop, size, value, size_ret);
+                      DEVICE_COUPLING_MAP, 96, prop, size, value, size_ret);
   }
 
   // -------- 1-qubit gates --------
@@ -467,18 +494,18 @@ int WMI_QDMI_device_session_query_device_property(
                       size_ret)
   ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_LIBRARYVERSION, "1.1.0", prop, size,
                       value, size_ret)
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, size_t, 3, prop,
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_QUBITSNUM, size_t, 17, prop,
                             size, value, size_ret)
   ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_PROPERTY_STATUS, QDMI_Device_Status,
                             WMI_QDMI_query_device_status(), prop, size, value,
                             size_ret)
-  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, WMI_QDMI_Site, DEVICE_SITES, 3,
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SITES, WMI_QDMI_Site, DEVICE_SITES, 17,
                     prop, size, value, size_ret)
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_OPERATIONS, WMI_QDMI_Operation,
                     DEVICE_OPERATIONS, 7, prop, size, value, size_ret)
   // assume all-to-all connectivity
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_COUPLINGMAP, WMI_QDMI_Site,
-                    DEVICE_COUPLING_MAP, 12, prop, size, value, size_ret)
+                    DEVICE_COUPLING_MAP, 96, prop, size, value, size_ret)
 
   // add supported program formats
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS,
@@ -770,7 +797,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
     // IMPORTANT: assume just one circuit will be sent !!
     const cJSON *count_object = cJSON_GetArrayItem(counts_array, 0);
     job->results_size = (size_t)cJSON_GetArraySize(count_object);
-    print_cjson(count_object);
+
     free(job->result_hist_keys);
     free(job->result_hist_values);
     job->result_hist_keys = malloc(job->results_size * sizeof(char *));

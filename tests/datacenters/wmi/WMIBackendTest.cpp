@@ -421,7 +421,7 @@ TEST_F(QDMIImplementationTest, ControlGetDataProbabilityValues) {
 
 // this is to test whether the returned results actually make sense. I.e.
 // whether the avg measured state is  0.5.
-TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck) {
+TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck1Q) {
   WMI_QDMI_Device_Job job = nullptr;
   size_t nShot = 16384;
   const QDMI_Program_Format qirFormat = QDMI_PROGRAM_FORMAT_QIRBASESTRING;
@@ -478,7 +478,9 @@ TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck) {
   size_t num_states = histogram_values_size / sizeof(double);
 
   for (size_t i = 0; i < num_states; i++) {
-    const char *key_ptr = &histogram_keys[i * (num_qubits + 1)];
+    const char *key_ptr =
+        &histogram_keys[i * (1 + 1)]; // assuming this is a string like "0,1",
+                                      // so each bitstring has length 1.
     size_t key_int = (size_t)strtol(key_ptr, NULL, 2);
     avg +=
         static_cast<double>(key_int) * static_cast<double>(histogram_values[i]);
@@ -489,6 +491,96 @@ TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck) {
 
   ASSERT_EQ(sum, (int)nShot);
   ASSERT_NEAR(avg, 0.5, 0.1);
+
+  WMI_QDMI_device_job_free(job);
+  free(program);
+  free(job_status);
+}
+
+// bell state
+TEST_F(QDMIImplementationTest, ControlGetDataResultSanityCheck2Q) {
+  WMI_QDMI_Device_Job job = nullptr;
+  size_t nShot = 16384;
+  const QDMI_Program_Format qirFormat = QDMI_PROGRAM_FORMAT_QIRBASESTRING;
+
+  char *CWD_path = getenv("CWD");
+  char *circuit_path = NULL;
+  asprintf(&circuit_path, "%s/tests/datacenters/wmi/circuits/circuit_bell.ll",
+           CWD_path);
+
+  size_t sizebuffer = 0;
+  char *program = load_program(circuit_path, &sizebuffer);
+
+  QDMI_Job_Status *job_status =
+      (QDMI_Job_Status *)malloc(sizeof(QDMI_Job_Status));
+  size_t histogram_keys_size;
+  char *histogram_keys;
+  size_t histogram_values_size;
+  size_t *histogram_values;
+  CREATE_JOB(job, nShot, qirFormat, program, sizebuffer);
+  ASSERT_EQ(WMI_QDMI_device_job_submit(job), QDMI_SUCCESS);
+  ASSERT_EQ(WMI_QDMI_device_job_wait(job, 100), QDMI_SUCCESS);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS, 0,
+                                            nullptr, &histogram_keys_size),
+            QDMI_SUCCESS);
+
+  histogram_keys = (char *)malloc(histogram_keys_size);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_KEYS,
+                                            histogram_keys_size, histogram_keys,
+                                            nullptr),
+            QDMI_SUCCESS);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES, 0,
+                                            nullptr, &histogram_values_size),
+            QDMI_SUCCESS);
+
+  histogram_values = (size_t *)malloc(histogram_values_size);
+
+  ASSERT_EQ(WMI_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_HIST_VALUES,
+                                            histogram_values_size,
+                                            histogram_values, nullptr),
+            QDMI_SUCCESS);
+
+  size_t num_qubits = 0;
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t),
+                &num_qubits, nullptr),
+            QDMI_SUCCESS);
+
+  size_t sum = 0;
+  double avg = 0.0;
+  size_t num_states = histogram_values_size / sizeof(double);
+  char state[3] = {0};
+  size_t count;
+  double P_00 = 0.0, P_01 = 0.0, P_10 = 0.0, P_11 = 0.0, P = 0.0;
+
+  for (size_t i = 0; i < num_states; i++) {
+    const char *key_ptr =
+        &histogram_keys[i * (2 + 1)]; // assuming bitstring length 2.
+    strncpy(state, key_ptr, 2);
+    count = (histogram_values[i]);
+    P = (double)count / (double)nShot;
+    if (strcmp(state, "00") == 0)
+      P_00 = P;
+    if (strcmp(state, "01") == 0)
+      P_01 = P;
+    if (strcmp(state, "10") == 0)
+      P_10 = P;
+    if (strcmp(state, "11") == 0)
+      P_11 = P;
+
+    sum += count;
+  }
+
+  avg /= (int)nShot;
+
+  ASSERT_EQ(sum, (int)nShot);
+  ASSERT_NEAR(P_00, 0.5, 0.1);
+  ASSERT_NEAR(P_11, 0.5, 0.1);
+  ASSERT_NEAR(P_01, 0.0, 0.1);
+  ASSERT_NEAR(P_10, 0.0, 0.1);
 
   WMI_QDMI_device_job_free(job);
   free(program);

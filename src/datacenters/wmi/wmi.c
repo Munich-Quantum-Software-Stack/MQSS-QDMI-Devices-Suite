@@ -747,10 +747,6 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
     // printf("   [Backend].............Job finished\n");
 
     unsigned int i;
-    size_t numbits = 0;
-    WMI_QDMI_device_session_query_device_property(
-        job->session, QDMI_DEVICE_PROPERTY_QUBITSNUM, sizeof(size_t), &numbits,
-        NULL);
 
     long bitstring_idx;
     char *bitstring_string;
@@ -774,7 +770,7 @@ int WMI_QDMI_device_job_check(WMI_QDMI_Device_Job job,
     // IMPORTANT: assume just one circuit will be sent !!
     const cJSON *count_object = cJSON_GetArrayItem(counts_array, 0);
     job->results_size = (size_t)cJSON_GetArraySize(count_object);
-
+    print_cjson(count_object);
     free(job->result_hist_keys);
     free(job->result_hist_values);
     job->result_hist_keys = malloc(job->results_size * sizeof(char *));

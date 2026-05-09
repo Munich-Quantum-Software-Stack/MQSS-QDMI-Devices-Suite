@@ -203,6 +203,32 @@ static const WMI_QDMI_Site DEVICE_COUPLING_MAP[96] = {
     DEVICE_SITES[15], DEVICE_SITES[11], DEVICE_SITES[15], DEVICE_SITES[16],
     DEVICE_SITES[16], DEVICE_SITES[12], DEVICE_SITES[16], DEVICE_SITES[15]};
 
+// For MQV dashboard to be able to plot the chip as it really looks.
+typedef struct {
+  double x;
+  double y;
+} QDMI_Device_Qubit_Position;
+
+// these are currently just approximate coordinates with a
+static const QDMI_Device_Qubit_Position DEVICE_QUBIT_POSITIONS[17] = {
+    {0.0, 0.48618057383522},
+    {0.00929861849096706, 0.73387733614109},
+    {0.231402763018066, 0.0},
+    {0.240701381509033, 0.24769676230587},
+    {0.25, 0.49539352461174},
+    {0.259298618490967, 0.74309028691761},
+    {0.481402763018066, 0.00921295077652014},
+    {0.490701381509033, 0.25690971308239},
+    {0.5, 0.50460647538826},
+    {0.509298618490967, 0.75230323769413},
+    {0.518597236981934, 1.0},
+    {0.740701381509033, 0.26612266385891},
+    {0.75, 0.51381942616478},
+    {0.759298618490967, 0.76151618847065},
+    {0.768597236981934, 1.00921295077652},
+    {0.990701381509033, 0.27533561463543},
+    {1.0, 0.5230323769413}};
+
 void print_cjson(const cJSON *json) {
   char *str = cJSON_Print(json);
   printf("%s\n", str);
@@ -477,7 +503,6 @@ int WMI_QDMI_device_session_query_device_property(
   if (session == NULL || (value != NULL && size == 0) ||
       (value == NULL && size_ret == NULL) ||
       (prop >= QDMI_DEVICE_PROPERTY_MAX &&
-       prop != QDMI_DEVICE_PROPERTY_CUSTOM1 &&
        prop != QDMI_DEVICE_PROPERTY_CUSTOM2 &&
        prop != QDMI_DEVICE_PROPERTY_CUSTOM3 &&
        prop != QDMI_DEVICE_PROPERTY_CUSTOM4 &&
@@ -513,6 +538,10 @@ int WMI_QDMI_device_session_query_device_property(
                     sizeof(SUPPORTED_PROGRAM_FORMATS) /
                         sizeof(QDMI_Program_Format),
                     prop, size, value, size_ret)
+
+  // for the MQV dashboard to plot how the chip actually looks.
+  ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_CUSTOM1, QDMI_Device_Qubit_Position,
+                    DEVICE_QUBIT_POSITIONS, 17, prop, size, value, size_ret)
 
   return QDMI_ERROR_NOTSUPPORTED;
 }

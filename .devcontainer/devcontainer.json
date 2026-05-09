@@ -19,7 +19,9 @@
 
     "CWD": "${containerWorkspaceFolder}",
 
-    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1"
+    "LRZ_HOST_URL": "https://portal.quantum.lrz.de:4000/v1",
+    "WMI_BASE_URL": "https://badwwmi-cloudapi.wmi.badw.de"
+
   },
   "customizations": {
     "vscode": {

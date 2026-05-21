@@ -1030,11 +1030,19 @@ int WMI_QDMI_device_session_set_parameter(
   }
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_BASEURL) {
+    session->url = malloc(size);
+    if (session->url == NULL) {
+      return QDMI_ERROR_OUTOFMEM;
+    }
     strncpy(session->url, (const char *)value, size);
     return QDMI_SUCCESS;
   }
 
   if (param == QDMI_DEVICE_SESSION_PARAMETER_TOKEN) {
+    session->token = malloc(size);
+    if (session->token == NULL) {
+      return QDMI_ERROR_OUTOFMEM;
+    }
     strncpy(session->token, (const char *)value, size);
     session->token[size - 1] = '\0';
     return QDMI_SUCCESS;

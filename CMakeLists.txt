@@ -46,7 +46,7 @@ set(AVAILABLE_MODULES
     simulators)
 # Main config variable for users
 set(BUILD_MODULES
-    "all;"
+    "all"
     CACHE STRING "Semicolon-separated list of modules to build (or 'all')")
 
 # Normalize and parse user input

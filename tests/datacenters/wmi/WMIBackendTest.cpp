@@ -17,6 +17,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
 
 #include "wmi_qdmi/device.h"
+#include <cstring>
 #include <gtest/gtest.h>
 
 #define WMI_HOST_URL "https://badwwmi-cloudapi.wmi.badw.de"
@@ -86,16 +87,27 @@ class QDMIImplementationTest : public ::testing::Test {
 private:
 protected:
   static WMI_QDMI_Device_Session session;
-  static char *hostname;
 
   static void SetUpTestSuite() {
     int err;
+    std::string BASE_URL = getenv("WMI_BASE_URL");
+    std::string TOKEN = getenv("TOKEN_WMI");
 
     EXIT_ON_FAIL(WMI_QDMI_device_initialize(),
                  "Failed to initialize the device")
 
     EXIT_ON_FAIL(WMI_QDMI_device_session_alloc(&session),
                  "Failed to allocate a session")
+
+    EXIT_ON_FAIL(WMI_QDMI_device_session_set_parameter(
+                     session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL,
+                     BASE_URL.size() + 1, BASE_URL.c_str()),
+                 "Failed to set baseurl for the session");
+
+    EXIT_ON_FAIL(WMI_QDMI_device_session_set_parameter(
+                     session, QDMI_DEVICE_SESSION_PARAMETER_TOKEN,
+                     TOKEN.size() + 1, TOKEN.c_str()),
+                 "Failed to set token for the session");
 
     EXIT_ON_FAIL(
         WMI_QDMI_device_session_init(session),
@@ -113,7 +125,6 @@ protected:
 };
 
 WMI_QDMI_Device_Session QDMIImplementationTest::session = nullptr;
-char *QDMIImplementationTest::hostname = nullptr;
 
 TEST_F(QDMIImplementationTest, SessionSetParameterImplemented) {
   ASSERT_EQ(WMI_QDMI_device_session_set_parameter(

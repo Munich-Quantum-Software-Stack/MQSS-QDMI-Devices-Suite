@@ -638,11 +638,6 @@ TEST_F(QDMIImplementationTest, QuerySitePropertyNotSupported) {
                 static_cast<void *>(sites.data()), nullptr),
             QDMI_SUCCESS)
       << "Devices must provide a list of sites";
-
-  ASSERT_EQ(WMI_QDMI_device_session_query_site_property(
-                session, sites.at(0), QDMI_SITE_PROPERTY_T1, sizeof(uint64_t),
-                nullptr, nullptr),
-            QDMI_ERROR_NOTSUPPORTED);
 }
 
 TEST_F(QDMIImplementationTest, QueryOperationPropertyNotSupported) {
@@ -733,6 +728,48 @@ TEST_F(QDMIImplementationTest, QuerySiteIDImplemented) {
                   nullptr),
               QDMI_SUCCESS)
         << "Devices must provide a site id";
+  }
+}
+
+TEST_F(QDMIImplementationTest, QuerySiteT1Implemented) {
+  size_t size = 0;
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_SITES, 0, nullptr, &size),
+            QDMI_SUCCESS)
+      << "Devices must provide a list of sites";
+  std::vector<WMI_QDMI_Site> sites(size / sizeof(WMI_QDMI_Site));
+  ASSERT_EQ(WMI_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_SITES, size,
+                static_cast<void *>(sites.data()), nullptr),
+            QDMI_SUCCESS)
+      << "Devices must provide a list of sites";
+  double t1 = 0.0, t2 = 0.0;
+  for (auto *site : sites) {
+    size = 0;
+
+    ASSERT_EQ(WMI_QDMI_device_session_query_site_property(
+                  session, site, QDMI_SITE_PROPERTY_T1, 0, nullptr, &size),
+              QDMI_SUCCESS);
+
+    t1 = 0.0;
+    ASSERT_EQ(
+        WMI_QDMI_device_session_query_site_property(
+            session, site, QDMI_SITE_PROPERTY_T1, sizeof(double), &t1, &size),
+        QDMI_SUCCESS);
+
+    size = 0;
+    ASSERT_EQ(WMI_QDMI_device_session_query_site_property(
+                  session, site, QDMI_SITE_PROPERTY_T2, 0, nullptr, &size),
+              QDMI_SUCCESS);
+
+    t2 = 0.0;
+    ASSERT_EQ(
+        WMI_QDMI_device_session_query_site_property(
+            session, site, QDMI_SITE_PROPERTY_T2, sizeof(double), &t2, &size),
+        QDMI_SUCCESS);
+
+    ASSERT_GT(t1, 0.0);
+    ASSERT_GT(t2, 0.0);
   }
 }
 

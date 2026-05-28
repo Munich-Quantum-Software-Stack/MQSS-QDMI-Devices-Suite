@@ -503,7 +503,6 @@ int WMI_QDMI_device_session_query_device_property(
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
-// assume site ID is the only relevant property for now
 int WMI_QDMI_device_session_query_site_property(WMI_QDMI_Device_Session session,
                                                 WMI_QDMI_Site site,
                                                 const QDMI_Site_Property prop,
@@ -522,12 +521,94 @@ int WMI_QDMI_device_session_query_site_property(WMI_QDMI_Device_Session session,
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  if (prop != QDMI_SITE_PROPERTY_INDEX)
-    return QDMI_ERROR_NOTSUPPORTED;
-
   ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_INDEX, size_t, site->id, prop,
                             size, value, size_ret)
 
+  CURL *curl = curl_easy_init();
+
+  if (!curl) {
+    fprintf(stderr, "[Backend].............Curl init failed\n");
+    return QDMI_ERROR_OUTOFMEM;
+  }
+
+  int err = 0;
+
+  struct ResponseStruct response;
+  response.json = NULL;
+  response.size = 0;
+
+  char url[256];
+  snprintf(url, sizeof(url), "%s%s", session->url, "/1/wmiqc/properties");
+
+  // headers
+  struct curl_slist *headers = NULL;
+  headers = curl_slist_append(headers, "Content-Type: application/json");
+
+  // exucute request
+  long http_code = 0;
+  CURLcode result = send_curl_request(url, session->token, headers, "GET",
+                                      "{\"backend_name\": \"pathfinder\"}",
+                                      NULL, &response, &http_code);
+
+  double t1 = 0.0, t2 = 0.0;
+  if (http_code == 200) {
+
+    cJSON *properties_array =
+        cJSON_GetObjectItemCaseSensitive(response.json, "properties");
+
+    if (properties_array == NULL || !cJSON_IsArray(properties_array)) {
+      fprintf(stderr, "   [Backend].............Invalid or missing 'counts' "
+                      "array in response JSON\n");
+
+      cJSON_Delete(response.json);
+      curl_slist_free_all(headers);
+      curl_easy_cleanup(curl);
+
+      return QDMI_ERROR_FATAL;
+    }
+
+    const cJSON *site_properties =
+        cJSON_GetArrayItem(properties_array, (int)site->id);
+
+    cJSON *t1_item = cJSON_GetObjectItemCaseSensitive(site_properties, "t1");
+    if (cJSON_IsNumber(t1_item)) {
+      t1 = t1_item->valuedouble;
+
+    } else {
+      return QDMI_ERROR_FATAL;
+    }
+
+    cJSON *t2_item = cJSON_GetObjectItemCaseSensitive(site_properties, "t2");
+    if (cJSON_IsNumber(t2_item)) {
+      t2 = t2_item->valuedouble;
+
+    } else {
+      return QDMI_ERROR_FATAL;
+    }
+
+  } else {
+    cJSON *message = cJSON_GetObjectItemCaseSensitive(response.json, "message");
+    char *string = cJSON_Print(message);
+
+    fprintf(stderr, "   [Backend].............Request problem: %ld - %s\n",
+            http_code, string);
+
+    cJSON_Delete(response.json);
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return QDMI_ERROR_FATAL;
+  }
+
+  cJSON_Delete(response.json);
+
+  curl_slist_free_all(headers);
+  curl_easy_cleanup(curl);
+
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_T1, double, t1, prop, size,
+                            value, size_ret)
+
+  ADD_SINGLE_VALUE_PROPERTY(QDMI_SITE_PROPERTY_T2, double, t2, prop, size,
+                            value, size_ret)
   return QDMI_ERROR_NOTSUPPORTED;
 }
 

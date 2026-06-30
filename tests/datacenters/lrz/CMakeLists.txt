@@ -26,8 +26,9 @@ generate_device_defs_executable(${LRZ_QDMI_PREFIX})
 
 add_executable(LRZBackendTest LRZBackendTest.cpp)
 
-target_link_libraries(LRZBackendTest PRIVATE gtest gtest_main qdmi::qdmi
-                                             lrz_device qdmi::project_warnings)
+target_link_libraries(
+  LRZBackendTest PRIVATE gtest gtest_main qdmi::qdmi lrz_device
+                         qdmi::qdmi_project_warnings)
 
 add_dependencies(LRZBackendTest qdmi_test_lrz_device_defs)
 

@@ -15,20 +15,21 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-find_package(CURL REQUIRED)
-find_package(cJSON REQUIRED)
+find_package(mqss_client REQUIRED)
 
-add_library(lrz_device SHARED lrz.c)
+add_library(lrz_device SHARED lrz.cpp)
 
-target_link_libraries(lrz_device PUBLIC qdmi::qdmi qdmi::project_warnings curl
-                                        cjson)
+fetch_qdmi("Munich-Quantum-Software-Stack" "v1.3.1")
+
+target_link_libraries(lrz_device PUBLIC qdmi::qdmi qdmi::qdmi_project_warnings
+                                        mqss_client)
 
 generate_prefixed_qdmi_headers(${LRZ_QDMI_PREFIX})
 
-target_include_directories(lrz_device
-                           PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  lrz_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
+                    ${MQSS_CLIENT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(qdmi::lrz_device ALIAS lrz_device)
-target_compile_definitions(lrz_device PRIVATE MAQCS)
 
 target_compile_options(lrz_device PRIVATE --coverage -fprofile-arcs
                                           -ftest-coverage -O0)

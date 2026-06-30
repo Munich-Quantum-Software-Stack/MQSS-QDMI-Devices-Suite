@@ -17,7 +17,7 @@
 # ------------------------------------------------------------------------------
 
 # set required cmake version
-cmake_minimum_required(VERSION 3.19...3.30)
+cmake_minimum_required(VERSION 3.24..4.2)
 
 project(
   Backends
@@ -36,76 +36,37 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(AVAILABLE_MODULES lrz eviden dcdb databases datacenters simulators)
+# Available modules
+set(AVAILABLE_MODULES lrz eviden dcdb)
+
 # Main config variable for users
-set(BUILD_MODULES
-    "all"
-    CACHE STRING "Semicolon-separated list of modules to build (or 'all')")
+set(BUILD_MODULE
+    ""
+    CACHE STRING "Module to build (choose one of: ${AVAILABLE_MODULES})")
 
-# Normalize and parse user input
-string(TOLOWER "${BUILD_MODULES}" BUILD_MODULES)
-string(REPLACE " " "" BUILD_MODULES "${BUILD_MODULES}")
-string(REPLACE "," ";" BUILD_MODULES "${BUILD_MODULES}")
+# Normalize user input
+string(TOLOWER "${BUILD_MODULE}" BUILD_MODULE)
+string(STRIP "${BUILD_MODULE}" BUILD_MODULE)
 
-set(ENABLED_MODULES "")
-
-if(BUILD_MODULES STREQUAL "all")
-  set(ENABLED_MODULES ${AVAILABLE_MODULES})
-else()
-  foreach(module ${BUILD_MODULES})
-    list(FIND AVAILABLE_MODULES ${module} index)
-    if(index EQUAL -1)
-      message(
-        FATAL_ERROR
-          "Unknown module: '${module}'. Available modules: ${AVAILABLE_MODULES}"
-      )
-    endif()
-    list(APPEND ENABLED_MODULES ${module})
-  endforeach()
+# Validate module
+if(NOT BUILD_MODULE IN_LIST AVAILABLE_MODULES)
+  message(
+    FATAL_ERROR
+      "Unknown or missing module: '${BUILD_MODULE}'. Available modules: ${AVAILABLE_MODULES}"
+  )
 endif()
 
-# Show what's being built
-message(STATUS "Enabled modules: ${ENABLED_MODULES}")
+# Enable only the chosen module
+set(ENABLED_MODULES ${BUILD_MODULE})
+message(STATUS "Enabled module: ${ENABLED_MODULES}")
 
-# Include submodules conditionally
-foreach(module ${AVAILABLE_MODULES})
-  list(FIND ENABLED_MODULES ${module} index)
-  if(NOT index EQUAL -1)
-    message(STATUS "Including module: ${module}")
-    if(module STREQUAL "lrz")
-      option(BUILD_BACKEND_LRZ "Build LRZ Backend" ON)
-    elseif(module STREQUAL "eviden")
-      option(BUILD_BACKEND_EVIDEN "Build EVIDEN Backend" ON)
-    elseif(module STREQUAL "dcdb")
-      option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
-    elseif(module STREQUAL "simulators")
-      option(BUILD_SIMULATOR "Build Simulator Backends" ON)
-    elseif(module STREQUAL "datacenters")
-      option(BUILD_DATACENTERS "Build Datacenter Backends" ON)
-    elseif(module STREQUAL "databases")
-      option(BUILD_DATABASES "Build Database Backends" ON)
-    endif()
-  else()
-    message(STATUS "Skipping module: ${module}")
-  endif()
-endforeach()
-
-if(BUILD_DATACENTERS)
-  set(BUILD_BACKEND_LRZ
-      ON
-      CACHE BOOL "" FORCE)
-endif()
-
-if(BUILD_DATABASES)
-  set(BUILD_BACKEND_DCDB
-      ON
-      CACHE BOOL "" FORCE)
-endif()
-
-if(BUILD_SIMULATOR)
-  set(BUILD_BACKEND_EVIDEN
-      ON
-      CACHE BOOL "" FORCE)
+# Include the chosen module
+if(BUILD_MODULE STREQUAL "lrz")
+  option(BUILD_BACKEND_LRZ "Build LRZ Backend" ON)
+elseif(BUILD_MODULE STREQUAL "eviden")
+  option(BUILD_BACKEND_EVIDEN "Build EVIDEN Backend" ON)
+elseif(BUILD_MODULE STREQUAL "dcdb")
+  option(BUILD_BACKEND_DCDB "Build DCDB Backend" ON)
 endif()
 
 if(BUILD_BACKEND_EVIDEN)

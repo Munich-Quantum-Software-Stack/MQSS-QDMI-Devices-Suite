@@ -19,27 +19,23 @@
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
-set(QDMI_VERSION
-    "1.1.0"
-    CACHE STRING "QDMI version")
-set(QDMI_URL
-    "https://github.com/kayaercument/QDMI.git"
-    CACHE STRING "QDMI URL")
+function(FETCH_QDMI QDMI_OWNER QDMI_TAG)
 
-set(BUILD_QDMI_DOCS OFF)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  set(QDMI_URL "https://github.com/${QDMI_OWNER}/QDMI.git")
+
+  set(BUILD_QDMI_DOCS OFF)
+  set(BUILD_QDMI_TESTS OFF)
+  set(BUILD_QDMI_EXAMPLES OFF)
+  set(BUILD_QDMI_TEMPLATES OFF)
+
   FetchContent_Declare(
     qdmi
-    GIT_REPOSITORY https://github.com/kayaercument/QDMI.git
-    GIT_TAG 152-env-prop)
-  list(APPEND FETCH_PACKAGES qdmi)
-else()
-  find_package(qdmi ${QDMI_VERSION} QUIET)
-  if(NOT qdmi_FOUND)
-    FetchContent_Declare(qdmi URL ${QDMI_URL})
-    list(APPEND FETCH_PACKAGES qdmi)
-  endif()
-endif()
+    GIT_REPOSITORY ${QDMI_URL}
+    GIT_TAG ${QDMI_TAG})
+
+  FetchContent_MakeAvailable(qdmi)
+
+endfunction()
 
 if(BUILD_DOCUMENTATION)
   find_package(Doxygen 1.13.1 REQUIRED)

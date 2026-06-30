@@ -19,8 +19,11 @@ find_package(Python3 3.10...3.12 REQUIRED COMPONENTS Interpreter Development)
 
 add_library(qaptiva_device SHARED qaptiva.c)
 
-target_link_libraries(qaptiva_device PUBLIC qdmi::qdmi qdmi::project_warnings
-                                            ${Python3_LIBRARIES})
+fetch_qdmi("Munich-Quantum-Software-Stack" "v1.3.1")
+
+target_link_libraries(
+  qaptiva_device PUBLIC qdmi::qdmi qdmi::qdmi_project_warnings
+                        ${Python3_LIBRARIES})
 generate_prefixed_qdmi_headers(${QAPTIVA_QDMI_PREFIX})
 target_include_directories(
   qaptiva_device PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include

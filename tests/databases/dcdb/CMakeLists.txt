@@ -28,7 +28,7 @@ add_executable(DCDBBackendTest DCDBBackendTest.cpp)
 
 target_link_libraries(
   DCDBBackendTest PRIVATE gtest gtest_main qdmi::qdmi qdmi::dcdb_device
-                          qdmi::project_warnings)
+                          qdmi::qdmi_project_warnings)
 
 gtest_discover_tests(DCDBBackendTest)
 

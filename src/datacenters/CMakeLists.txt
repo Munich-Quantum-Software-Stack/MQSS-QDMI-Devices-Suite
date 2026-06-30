@@ -18,7 +18,3 @@
 if(BUILD_BACKEND_LRZ)
   add_subdirectory(lrz)
 endif()
-
-if(BUILD_BACKEND_CESGA)
-  add_subdirectory(cesga)
-endif()

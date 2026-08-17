@@ -1,10 +1,10 @@
-# Copyright 2024 Munich Quantum Software Stack Project
+# Copyright (c) 2024 - 2026 MQSS Project All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 with LLVM Exceptions (the
-# "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License. You may
+# obtain a copy of the License at
 #
-# https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/blob/develop/LICENSE
+# https://llvm.org/LICENSE.txt
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -13,7 +13,6 @@
 # the License.
 #
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-# ------------------------------------------------------------------------------
 
 enable_testing()
 include(GoogleTest)

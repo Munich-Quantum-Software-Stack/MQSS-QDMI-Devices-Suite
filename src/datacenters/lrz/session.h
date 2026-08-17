@@ -1,39 +1,35 @@
-/*------------------------------------------------------------------------------
-Copyright 2024 Munich Quantum Software Stack Project
+/*
+ * Copyright (c) 2024 - 2026 MQSS Project
+ * All rights reserved.
+ *
+ * Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://llvm.org/LICENSE.txt
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ */
 
-Licensed under the Apache License, Version 2.0 with LLVM Exceptions (the
-"License"); you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-https://github.com/Munich-Quantum-Software-Stack/QDMI-Devices/blob/develop/LICENSE
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-License for the specific language governing permissions and limitations under
-the License.
-
-SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-------------------------------------------------------------------------------*/
 #pragma once
 #include "lrz_qdmi/constants.h"
 #include "lrz_qdmi/types.h"
 #include "mqss/job.h"
+
 #include <iostream>
+#include <memory>
 #include <mqss/client.h>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
-/** @file
- * @brief The header file for `LRZ_QDMI_Device_Session`
- */
-
-/**
- * @brief Enum of the session status that can be set internally.
- *
- * @see LRZ_QDMI_device_session_alloc
- */
 enum class LRZ_QDMI_DEVICE_SESSION_STATUS {
   /// The session is allocated but not yet initialized
   ALLOCATED,
@@ -45,22 +41,9 @@ enum class LRZ_QDMI_DEVICE_SESSION_STATUS {
   DEFAULT
 };
 
-struct LRZ_QDMI_Site_impl_d {
-  size_t index;
-
-public:
-  LRZ_QDMI_Site_impl_d(size_t idx) : index(idx){};
-};
-
-struct LRZ_QDMI_Operation_impl_d {
-
-public:
-  std::string name;
-  size_t qubitNumber;
-  size_t parameterNumber;
-  bool zoned = false;
-  std::vector<LRZ_QDMI_Site> supportedSites;
-};
+/** @file
+ * @brief The header file for `LRZ_QDMI_Device_Session`
+ */
 
 /**
  * @brief The implementation of the encapsulated type
@@ -82,66 +65,29 @@ private:
   std::optional<mqss::client::Resource> resource;
 
   /// Resource name
-  std::string resourceName;
+  std::string resourceName; // ok
 
   /// MQSS Client object. For more information, please see @return
   /// <ahref="https://munich-quantum-software-stack.github.io/MQSS-Client/>here</a>
-  mqss::client::MQSSClient client;
+  mqss::client::MQSSClient client; // ok
 
   /// The status of the session
   LRZ_QDMI_DEVICE_SESSION_STATUS status;
 
-  std::optional<std::vector<LRZ_QDMI_Site>> sites;
+  std::vector<LRZ_QDMI_Operation> operations = {}; // ok
 
-  std::optional<std::vector<LRZ_QDMI_Operation_impl_d>> operations;
+  std::vector<LRZ_QDMI_Site> sites = {}; // ok
 
-  std::optional<std::vector<LRZ_QDMI_Site>> couplingMap;
+  std::vector<LRZ_QDMI_Site> couplingMap; // ok
 
-  void setSites() {
-    if (sites.has_value())
-      sites->clear();
+  void setSites();
 
-    for (size_t index = 0; index < (*resource).getQubitCount(); index++) {
-      (*sites).push_back(new LRZ_QDMI_Site_impl_d(index));
-    }
-  }
+  void setOperations();
+
+  void setCouplingMap();
 
   std::vector<LRZ_QDMI_Site>
-  setSupportedSites(std::vector<std::vector<unsigned int>> supportedQubits) {
-    std::vector<LRZ_QDMI_Site> supportedSites;
-    for (auto qubitPair : supportedQubits) {
-      for (auto qubit : qubitPair) {
-        supportedSites.emplace_back((*sites).at(qubit));
-      }
-    }
-    return supportedSites;
-  }
-
-  void setOperations() {
-    if (operations.has_value())
-      operations->clear();
-    auto x = (*resource).getNativeGateset();
-    for (auto gate : (*resource).getNativeGateset()) {
-      LRZ_QDMI_Operation operation = new LRZ_QDMI_Operation_impl_d();
-      operation->name = gate.getName();
-      operation->qubitNumber = gate.getQubitNumber();
-      operation->parameterNumber = gate.getParameterNumber();
-      operation->zoned = false;
-      operation->supportedSites =
-          setSupportedSites(gate.getSupportedQubits());
-      operations->emplace_back(*operation);
-    }
-  }
-
-  void setCouplingMap() {
-    if (couplingMap.has_value())
-      couplingMap->clear();
-    for (auto qubitPair : (*resource).getCouplingMap()) {
-      for (auto qubit : qubitPair) {
-        (*couplingMap).emplace_back((*sites).at(qubit));
-      }
-    }
-  }
+  setSupportedSites(std::vector<std::vector<unsigned int>> supportedQubits);
 
 public:
   /**
@@ -156,11 +102,14 @@ public:
 
   void setURL(const std::string &newUrl) { url = newUrl; }
 
+  std::string getURL() { return url; }
+
   /**
    * @brief Set the token for authentication
    * @param[in] new_token The token to be set.
    */
   void setToken(const std::string &newToken) { token = newToken; }
+  std::string getToken() { return token; }
 
   /**
    * @brief Set the session's status
@@ -171,28 +120,35 @@ public:
   }
 
   /**
+   * @brief Get function for the current session status
+   *
+   * @returns The current session status
+   */
+  LRZ_QDMI_DEVICE_SESSION_STATUS getStatus() { return status; }
+
+  /**
    * @brief Set the session's resource
    * @param[in] new_resource The resource to be set.
    */
-  void setResource(const std::string &newResourceName) {
-    resourceName = newResourceName;
-    resource = client.getResourceInfo(resourceName);
-    setSites();
-    setOperations();
-    setCouplingMap();
-  }
+  void setResource(const std::string &newResourceName);
 
   /**
    * @brief Returns the session's resource
    */
   const std::string getResource() { return resourceName; }
 
-  /**
-   * @brief Get function for the current session status
-   *
-   * @returns The current session status
-   */
-  LRZ_QDMI_DEVICE_SESSION_STATUS getStatus() { return status; }
+  std::vector<LRZ_QDMI_Site> getSites() {
+    return !resource.has_value() ? std::vector<LRZ_QDMI_Site>{} : sites;
+  }
+
+  std::vector<LRZ_QDMI_Operation> getOperations() {
+    return !resource.has_value() ? std::vector<LRZ_QDMI_Operation>{}
+                                 : operations;
+  }
+
+  std::vector<LRZ_QDMI_Site> getCouplingMap() {
+    return !resource.has_value() ? std::vector<LRZ_QDMI_Site>{} : couplingMap;
+  }
 
   /**
    * @brief Public function to init to the MQSSClient session.
@@ -202,46 +158,29 @@ public:
    * @ref LRZ_QDMI_device_session_set_parameter.
    *
    */
-  void init() {
-    client = mqss::client::MQSSClient(token, url, false);
-  }
-
-  std::vector<std::string> getAllResourceNames() {
-    std::vector<std::string> resouceNames;
-    std::vector<mqss::client::Resource> resources = client.getAllResources();
-    for (mqss::client::Resource resourceInfo : resources) {
-      resouceNames.push_back(resourceInfo.getName());
-    }
-    return resouceNames;
-  }
+  void init() { client = mqss::client::MQSSClient(token, url, false); }
 
   int getQubitCount() {
-    if (!resource.has_value()) {
-      return QDMI_ERROR_INVALIDARGUMENT;
-    }
-
-    return (int)(*resource).getQubitCount();
+    return !resource.has_value() ? QDMI_ERROR_INVALIDARGUMENT
+                                 : (int)(*resource).getQubitCount();
   }
 
-  std::vector<LRZ_QDMI_Site> getSites() {
-    if (!resource.has_value()) {
-      return {};
-    }
-
-    return *sites;
+  std::optional<std::string> submitJob(mqss::client::CircuitJobRequest job) {
+    return client.submitJob(job);
   }
 
-  auto getOperations() { return *operations; }
+  void cancelJob(mqss::client::CircuitJobRequest job) { client.cancelJob(job); }
 
-  auto getCouplingMap() { return *couplingMap; }
-
-  std::optional<std::string> submitJob(mqss::client::CircuitJobRequest) {}
-
-  auto cancelJob(mqss::client::CircuitJobRequest) {}
-
-  std::string getJobStatus(mqss::client::CircuitJobRequest) {}
+  std::string getJobStatus(mqss::client::CircuitJobRequest job) {
+    return client.getJobStatus(job);
+  }
 
   std::unique_ptr<mqss::client::JobResult>
-  getJobResult(mqss::client::CircuitJobRequest, bool wait = false,
-               size_t timeout = 0) {}
+  getJobResult(mqss::client::CircuitJobRequest job, bool wait = false,
+               size_t timeout = 0) {
+
+    return client.getJobResult(job, wait, timeout);
+  }
+
+  std::vector<std::string> getAllResourceNames();
 };

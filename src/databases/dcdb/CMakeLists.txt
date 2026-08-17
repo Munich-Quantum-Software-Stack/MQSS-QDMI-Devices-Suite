@@ -19,7 +19,7 @@ add_library(dcdb_device SHARED dcdb.cpp session.cpp sensors.cpp)
 
 fetch_qdmi("kayaercument" "152-env-prop")
 
-target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::qdmi_project_warnings
+target_link_libraries(dcdb_device PUBLIC qdmi::qdmi qdmi::project_warnings
                                          ${DCDB_LIBRARY})
 
 generate_prefixed_qdmi_headers(${DCDB_QDMI_PREFIX})

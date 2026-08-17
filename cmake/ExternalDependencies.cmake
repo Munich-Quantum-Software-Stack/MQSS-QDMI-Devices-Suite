@@ -34,7 +34,6 @@ function(FETCH_QDMI QDMI_OWNER QDMI_TAG)
     GIT_TAG ${QDMI_TAG})
 
   FetchContent_MakeAvailable(qdmi)
-
 endfunction()
 
 if(BUILD_DOCUMENTATION)
@@ -112,6 +111,15 @@ if(BUILD_BACKEND_DCDB)
   list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/common/include")
   list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/../install/include")
   list(APPEND DCDB_INCLUDE_DIRS "${dcdb_SOURCE_DIR}/tools/dcdbquery")
+endif()
+
+if(BUILD_BACKEND_LRZ)
+  FetchContent_Declare(
+    mqss_client
+    GIT_REPOSITORY https://github.com/Munich-Quantum-Software-Stack/MQSS-Client
+    GIT_TAG develop)
+
+  list(APPEND FETCH_PACKAGES mqss_client)
 
 endif()
 

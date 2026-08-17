@@ -1,7 +1,7 @@
-
-
-#include "lrz_qdmi/constants.h"
+#include "lrz_qdmi/types.h"
 #include <cstddef>
+#include <string>
+#include <vector>
 
 #define ADD_SINGLE_VALUE_PROPERTY(prop_name, prop_type, prop_value, prop,      \
                                   size, value, size_ret)                       \
@@ -57,23 +57,27 @@
     }                                                                          \
   } /// [DOXYGEN MACRO END]
 
-
-  struct LRZ_QDMI_Site_impl_d {
-
+struct LRZ_QDMI_Site_impl_d {
   size_t index;
 
 public:
-  LRZ_QDMI_Site_impl_d(size_t index) : index(index){};
+  LRZ_QDMI_Site_impl_d(size_t idx) : index(idx) {};
 };
 
+struct LRZ_QDMI_Operation_impl_d {
 
-static QDMI_Device_Status *LRZ_QDMI_get_device_status(void) {
-  static QDMI_Device_Status device_status = QDMI_DEVICE_STATUS_OFFLINE;
-  return &device_status;
-}
-inline QDMI_Device_Status LRZ_QDMI_read_device_status(void) {
-  return *LRZ_QDMI_get_device_status();
-}
-inline void LRZ_QDMI_set_device_status(QDMI_Device_Status status) {
-  *LRZ_QDMI_get_device_status() = status;
-}
+public:
+  std::string mName;
+  size_t mQubitNumber;
+  size_t mParameterNumber;
+  std::vector<LRZ_QDMI_Site> mSupportedSites;
+
+  LRZ_QDMI_Operation_impl_d() {};
+
+  LRZ_QDMI_Operation_impl_d(std::string name, size_t qubitNumber,
+                            size_t parameterNumber,
+                            std::vector<LRZ_QDMI_Site> supportedSites)
+      : mName(name), mQubitNumber(qubitNumber),
+        mParameterNumber(parameterNumber),
+        mSupportedSites(std::move(supportedSites)) {};
+};

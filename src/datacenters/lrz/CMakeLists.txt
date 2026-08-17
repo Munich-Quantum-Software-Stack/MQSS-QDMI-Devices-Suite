@@ -15,9 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # ------------------------------------------------------------------------------
 
-find_package(mqss_client REQUIRED)
-
-add_library(lrz_device SHARED lrz.cpp)
+add_library(lrz_device SHARED lrz.cpp session.cpp)
 
 fetch_qdmi("Munich-Quantum-Software-Stack" "v1.3.1")
 

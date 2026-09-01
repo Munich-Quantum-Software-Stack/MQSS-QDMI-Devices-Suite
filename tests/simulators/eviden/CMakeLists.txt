@@ -29,10 +29,10 @@ add_executable(QaptivaNoisyBackendTest QaptivaNoisyBackendTest.cpp)
 
 target_link_libraries(
   QaptivaBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
-                             qdmi::project_warnings)
+                             qdmi::qdmi_project_warnings)
 target_link_libraries(
   QaptivaNoisyBackendTest PRIVATE gtest gtest_main qdmi::qdmi qaptiva_device
-                                  qdmi::project_warnings)
+                                  qdmi::qdmi_project_warnings)
 
 add_dependencies(QaptivaBackendTest qdmi_test_qaptiva_device_defs)
 add_dependencies(QaptivaNoisyBackendTest qdmi_test_qaptiva_device_defs)

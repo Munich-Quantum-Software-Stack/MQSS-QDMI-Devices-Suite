@@ -207,13 +207,11 @@ struct QMIO_QDMI_Device_Job_impl_d {
     }                                                                          \
   }
 
-#define CHECK_PYTHON_ERROR(value, from_python)                                 \
+#define CHECK_PYTHON_ERROR(value)                                              \
   {                                                                            \
-    if (value == Py_None || value == NULL) {                                   \
+    if ((value) == Py_None || (value) == NULL) {                               \
       PyErr_Print();                                                           \
-      if (!from_python) {                                                      \
-        PyGILState_Release(gstate);                                            \
-      }                                                                        \
+      PyGILState_Release(gstate);                                              \
       QMIO_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);                    \
       return QDMI_ERROR_FATAL;                                                 \
     }                                                                          \
@@ -270,27 +268,54 @@ static int initialize_python(void) {
   char *script_location = getenv(SCRIPT_LOCATION);
   char *script_name = getenv(SCRIPT_NAME);
 
+  /* Idempotent: if we've already imported the auxiliary module in this
+   * process, reuse it. The interpreter is initialized once per process and
+   * deliberately never finalized (see QMIO_QDMI_device_finalize) because
+   * some native extensions in the qiskit/qmiotools stack (PyO3/Rust-based)
+   * cannot survive a Py_Finalize()/Py_Initialize() cycle within one
+   * process. So repeated device_initialize/device_finalize pairs must not
+   * tear the interpreter down and back up. */
+  if (*get_custom_python_module() != NULL) {
+    return QDMI_SUCCESS;
+  }
+
   *isFromPython() = Py_IsInitialized();
-  PyGILState_STATE gstate;
+
   if (!*isFromPython()) {
+    /* We own the interpreter. Initialize it, then drop the GIL so the rest
+     * of the device uses the PyGILState_Ensure/Release protocol uniformly
+     * (same as the case where Python was already running when we loaded). */
     Py_Initialize();
     (void)PyEval_SaveThread();
-    gstate = PyGILState_Ensure();
   }
+
+  /* From here on, always go through PyGILState_Ensure/Release -- this works
+   * whether or not we own the interpreter. */
+  PyGILState_STATE gstate = PyGILState_Ensure();
 
   PyObject *sysPath = PyImport_ImportModule("sys");
   PyObject *path = PyObject_GetAttrString(sysPath, "path");
   PyList_Append(path, PyUnicode_FromString(script_location));
 
   PyObject *pName = PyUnicode_DecodeFSDefault(script_name);
-  CHECK_PYTHON_ERROR(pName, *isFromPython())
+  if (pName == Py_None || pName == NULL) {
+    PyErr_Print();
+    PyGILState_Release(gstate);
+    QMIO_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+    return QDMI_ERROR_FATAL;
+  }
 
   *get_custom_python_module() = PyImport_Import(pName);
-  CHECK_PYTHON_ERROR(*get_custom_python_module(), *isFromPython());
   Py_XDECREF(pName);
-
-  if (!*isFromPython())
+  if (*get_custom_python_module() == Py_None ||
+      *get_custom_python_module() == NULL) {
+    PyErr_Print();
     PyGILState_Release(gstate);
+    QMIO_QDMI_set_device_status(QDMI_DEVICE_STATUS_IDLE);
+    return QDMI_ERROR_FATAL;
+  }
+
+  PyGILState_Release(gstate);
   return QDMI_SUCCESS;
 }
 
@@ -309,17 +334,27 @@ int QMIO_QDMI_device_initialize(void) {
 
 int QMIO_QDMI_device_finalize(void) {
   QMIO_QDMI_set_device_status(QDMI_DEVICE_STATUS_OFFLINE);
-  if (*get_custom_python_module() != NULL) {
-    Py_DECREF(*get_custom_python_module());
-    *get_custom_python_module() = NULL;
-  }
-  if (*get_backend() != NULL) {
-    Py_DECREF(*get_backend());
+
+  /* Release the per-session backend object, but DELIBERATELY keep the
+   * interpreter and the imported auxiliary module resident for the life of
+   * the process. Do NOT call Py_Finalize(): several native extensions in
+   * the qiskit/qmiotools stack are PyO3/Rust modules that cannot be
+   * re-initialized after a Py_Finalize()/Py_Initialize() cycle in the same
+   * process, which would break any second device_initialize (e.g. a second
+   * test case, or an MQSS client that opens the device more than once).
+   *
+   * Py_DECREF can run __del__/dealloc, which re-enters the interpreter and
+   * therefore REQUIRES the GIL. The device leaves the GIL released between
+   * calls, so re-acquire it before touching any PyObject. */
+  if (Py_IsInitialized() && !_Py_IsFinalizing()) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    if (*get_backend() != NULL) {
+      Py_DECREF(*get_backend());
+      *get_backend() = NULL;
+    }
+    PyGILState_Release(gstate);
+  } else {
     *get_backend() = NULL;
-  }
-  if (Py_IsInitialized() && !_Py_IsFinalizing() && !*isFromPython()) {
-    (void)PyGILState_Ensure();
-    Py_Finalize();
   }
   return QDMI_SUCCESS;
 }
@@ -413,7 +448,7 @@ int QMIO_QDMI_device_session_init(QMIO_QDMI_Device_Session session) {
   /* create_backend(calibration_file, use_fake) -> [backend, resolved_path] */
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
                                            CREATE_BACKEND_FUNCTION_NAME);
-  CHECK_PYTHON_ERROR(pFunc, *isFromPython())
+  CHECK_PYTHON_ERROR(pFunc)
   PyObject *pArgs = PyTuple_Pack(
       2,
       PyUnicode_FromString(session->calibration_file != NULL
@@ -421,10 +456,16 @@ int QMIO_QDMI_device_session_init(QMIO_QDMI_Device_Session session) {
                                : ""),
       PyLong_FromLong(session->use_fake));
   PyObject *pCreateResult = PyObject_CallObject(pFunc, pArgs);
-  CHECK_PYTHON_ERROR(pCreateResult, *isFromPython())
+  CHECK_PYTHON_ERROR(pCreateResult)
 
   PyObject *pBackend = PyList_GetItem(pCreateResult, 0); /* borrowed */
   Py_INCREF(pBackend);
+  /* Release any backend left over from a prior session before overwriting
+   * the process-global handle (the interpreter persists across sessions, so
+   * this global can already be set). */
+  if (*get_backend() != NULL) {
+    Py_DECREF(*get_backend());
+  }
   *get_backend() = pBackend;
 
   const char *resolved =
@@ -434,10 +475,10 @@ int QMIO_QDMI_device_session_init(QMIO_QDMI_Device_Session session) {
   /* get_metadata(backend) -> [n_qubits, "ops", "a-b;c-d"] */
   PyObject *pMeta = PyObject_GetAttrString(*get_custom_python_module(),
                                            GET_METADATA_FUNCTION_NAME);
-  CHECK_PYTHON_ERROR(pMeta, *isFromPython())
+  CHECK_PYTHON_ERROR(pMeta)
   PyObject *pMetaArgs = PyTuple_Pack(1, pBackend);
   PyObject *pResult = PyObject_CallObject(pMeta, pMetaArgs);
-  CHECK_PYTHON_ERROR(pResult, *isFromPython())
+  CHECK_PYTHON_ERROR(pResult)
 
   session->n_qubit = (size_t)PyLong_AsLong(PyList_GetItem(pResult, 0));
 
@@ -674,7 +715,7 @@ int QMIO_QDMI_device_job_submit(QMIO_QDMI_Device_Job job) {
 
   PyObject *pFunc = PyObject_GetAttrString(*get_custom_python_module(),
                                            SUBMIT_JOB_FUNCTION_NAME);
-  CHECK_PYTHON_ERROR(pFunc, *isFromPython())
+  CHECK_PYTHON_ERROR(pFunc)
 
   long fmt = (*(job->format) == QDMI_PROGRAM_FORMAT_QASM3) ? 3 : 2;
   PyObject *pArgs =
@@ -684,7 +725,7 @@ int QMIO_QDMI_device_job_submit(QMIO_QDMI_Device_Job job) {
                    PyLong_FromLong(job->do_transpile),
                    PyLong_FromLong(job->optimization_level),
                    PyLong_FromLong(job->seed_transpiler));
-  CHECK_PYTHON_ERROR(pArgs, *isFromPython())
+  CHECK_PYTHON_ERROR(pArgs)
 
   PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
   if (pResult == NULL || pResult == Py_None) {

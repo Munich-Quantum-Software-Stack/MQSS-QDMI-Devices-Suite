@@ -19,3 +19,5 @@ add_subdirectory(databases)
 add_subdirectory(datacenters)
 
 add_subdirectory(simulators)
+
+add_subdirectory(qpus)

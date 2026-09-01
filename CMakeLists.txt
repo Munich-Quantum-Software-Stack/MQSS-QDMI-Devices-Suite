@@ -36,7 +36,8 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(AVAILABLE_MODULES lrz eviden dcdb databases datacenters simulators)
+set(AVAILABLE_MODULES lrz eviden dcdb databases datacenters simulators qmio
+                      cesga qpus)
 # Main config variable for users
 set(BUILD_MODULES
     "all"
@@ -84,6 +85,12 @@ foreach(module ${AVAILABLE_MODULES})
       option(BUILD_DATACENTERS "Build Datacenter Backends" ON)
     elseif(module STREQUAL "databases")
       option(BUILD_DATABASES "Build Database Backends" ON)
+    elseif(module STREQUAL "qmio")
+      option(BUILD_BACKEND_QMIO "Build CESGA QMIO Backend" ON)
+    elseif(module STREQUAL "cesga")
+      option(BUILD_BACKEND_CESGA "Build CESGA Datacenter Backend" ON)
+    elseif(module STREQUAL "qpus")
+      option(BUILD_QPUS "Build QPU Backends" ON)
     endif()
   else()
     message(STATUS "Skipping module: ${module}")
@@ -108,6 +115,12 @@ if(BUILD_SIMULATOR)
       CACHE BOOL "" FORCE)
 endif()
 
+if(BUILD_QPUS)
+  set(BUILD_BACKEND_QMIO
+      ON
+      CACHE BOOL "" FORCE)
+endif()
+
 if(BUILD_BACKEND_EVIDEN)
   set(QAPTIVA_QDMI_PREFIX "QAPTIVA")
 endif()
@@ -118,6 +131,14 @@ endif()
 
 if(BUILD_BACKEND_LRZ)
   set(LRZ_QDMI_PREFIX "LRZ")
+endif()
+
+if(BUILD_BACKEND_QMIO)
+  set(QMIO_QDMI_PREFIX "QMIO")
+endif()
+
+if(BUILD_BACKEND_CESGA)
+  set(CESGA_QDMI_PREFIX "CESGA")
 endif()
 
 if(ENABLE_COVERAGE)

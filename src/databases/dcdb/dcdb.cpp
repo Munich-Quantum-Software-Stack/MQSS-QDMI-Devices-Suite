@@ -1005,7 +1005,7 @@ int DCDB_QDMI_device_telemetrysensor_query_get_results(
     return QDMI_SUCCESS;
   case QDMI_TELEMETRYSENSOR_QUERY_RESULT_VALUES:
 
-    req_size *= sizeof(float);
+    req_size *= sizeof(int64_t);
     if (data != nullptr) {
       if (size < req_size) {
         return QDMI_ERROR_INVALIDARGUMENT;

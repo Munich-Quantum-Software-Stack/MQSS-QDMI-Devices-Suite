@@ -65,20 +65,19 @@ private:
   std::optional<mqss::client::Resource> resource;
 
   /// Resource name
-  std::string resourceName; // ok
+  std::string resourceName;
 
   /// MQSS Client object. For more information, please see @return
   /// <ahref="https://munich-quantum-software-stack.github.io/MQSS-Client/>here</a>
-  mqss::client::MQSSClient client; // ok
-
+  mqss::client::MQSSClient client;
   /// The status of the session
   LRZ_QDMI_DEVICE_SESSION_STATUS status;
 
-  std::vector<LRZ_QDMI_Operation> operations = {}; // ok
+  std::vector<LRZ_QDMI_Operation> operations = {};
 
-  std::vector<LRZ_QDMI_Site> sites = {}; // ok
+  std::vector<LRZ_QDMI_Site> sites = {};
 
-  std::vector<LRZ_QDMI_Site> couplingMap; // ok
+  std::vector<LRZ_QDMI_Site> couplingMap;
 
   void setSites();
 

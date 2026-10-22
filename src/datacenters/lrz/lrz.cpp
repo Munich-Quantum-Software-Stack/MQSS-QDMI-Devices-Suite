@@ -22,9 +22,18 @@
 
 #include "lrz_qdmi/constants.h"
 #include "lrz_qdmi/types.h"
+#include <cstdlib>
 #include <lrz_qdmi/device.h>
 
 #include <mqss/client.h>
+
+std::string getEnvOr(const char *name, std::string fallback) {
+  if (const char *value = std::getenv(name)) {
+    return value;
+  }
+
+  return fallback;
+}
 
 using namespace mqss::client;
 
@@ -121,9 +130,25 @@ int LRZ_QDMI_device_session_init(LRZ_QDMI_Device_Session session) {
   if (session == NULL) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
+  int err = QDMI_SUCCESS;
+  if (!session->getURL().empty()) {
+    std::string url = getEnvOr("LRZ_QDMI_DEVICE_BASEURL",
+                               "https://portal.quantum.lrz.de:4000/v1/");
+    err = LRZ_QDMI_device_session_set_parameter(
+        session, QDMI_DEVICE_SESSION_PARAMETER_BASEURL, url.size(),
+        url.c_str());
+    if (err != QDMI_SUCCESS) {
+      return err;
+    }
+  }
   session->init();
 
-  return QDMI_SUCCESS;
+  std::string defaultQPU = getEnvOr("LRZ_QDMI_DEVICE_QPU", "EQE1");
+  err = LRZ_QDMI_device_session_set_parameter(
+      session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1, defaultQPU.size(),
+      defaultQPU.c_str());
+
+  return err;
 }
 
 void LRZ_QDMI_device_session_free(LRZ_QDMI_Device_Session session) {
@@ -148,7 +173,7 @@ int LRZ_QDMI_device_session_query_device_property(
                             LRZ_QDMI_read_device_status(), prop, size, value,
                             size_ret)
 
-  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_LIBRARYVERSION, "0.0.1", prop, size,
+  ADD_STRING_PROPERTY(QDMI_DEVICE_PROPERTY_LIBRARYVERSION, "1.3.1", prop, size,
                       value, size_ret)
 
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS,

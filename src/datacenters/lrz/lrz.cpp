@@ -438,8 +438,22 @@ int LRZ_QDMI_device_job_wait(LRZ_QDMI_Device_Job job, const size_t timeout) {
   }
 
   job->job_result = job->session->getJobResult(job->jobRequest, true, timeout);
-  if (job->job_result == nullptr)
-    return QDMI_ERROR_FATAL;
+  if (job->job_result == nullptr) {
+    // A null result means either the job is still legitimately running (we
+    // simply ran out of the time slice we were given to wait), it just
+    // finished in the gap between that timeout and this status check (the
+    // next slice's own first status check will see COMPLETED and fetch the
+    // result cleanly), or it truly failed. QDMI_device_job_wait's contract
+    // distinguishes timing out from failing: TIMEOUT lets the caller retry
+    // with another slice, FATAL tells it to give up. Collapsing all of this
+    // into FATAL breaks any caller (like a slice-and-retry polling loop)
+    // that relies on that distinction, so only the two genuinely terminal,
+    // unrecoverable statuses are FATAL here -- everything else is retried.
+    auto status = job->session->getJobStatus(job->jobRequest);
+    if (status == "FAILED" || status == "CANCELLED" || status.empty())
+      return QDMI_ERROR_FATAL;
+    return QDMI_ERROR_TIMEOUT;
+  }
 
   auto results = job->job_result->getResults();
   std::map<std::string, unsigned int> result = results[0];

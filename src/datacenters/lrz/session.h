@@ -69,7 +69,12 @@ private:
 
   /// MQSS Client object. For more information, please see @return
   /// <ahref="https://munich-quantum-software-stack.github.io/MQSS-Client/>here</a>
-  mqss::client::MQSSClient client;
+  /// @note Kept unengaged until @ref init constructs it with the real
+  /// token/URL -- MQSSClient's constructor eagerly makes a live network
+  /// call, so a plain (non-optional) member would default-construct one
+  /// with an empty token the instant a session is allocated, before
+  /// setToken()/setURL() ever run.
+  std::optional<mqss::client::MQSSClient> client;
   /// The status of the session
   LRZ_QDMI_DEVICE_SESSION_STATUS status;
 
@@ -157,7 +162,7 @@ public:
    * @ref LRZ_QDMI_device_session_set_parameter.
    *
    */
-  void init() { client = mqss::client::MQSSClient(token, url, false); }
+  void init() { client.emplace(token, url, false); }
 
   int getQubitCount() {
     return !resource.has_value() ? QDMI_ERROR_INVALIDARGUMENT
@@ -165,20 +170,22 @@ public:
   }
 
   std::optional<std::string> submitJob(mqss::client::CircuitJobRequest job) {
-    return client.submitJob(job);
+    return client->submitJob(job);
   }
 
-  void cancelJob(mqss::client::CircuitJobRequest job) { client.cancelJob(job); }
+  void cancelJob(mqss::client::CircuitJobRequest job) {
+    client->cancelJob(job);
+  }
 
   std::string getJobStatus(mqss::client::CircuitJobRequest job) {
-    return client.getJobStatus(job);
+    return client->getJobStatus(job);
   }
 
   std::unique_ptr<mqss::client::JobResult>
   getJobResult(mqss::client::CircuitJobRequest job, bool wait = false,
                size_t timeout = 0) {
 
-    return client.getJobResult(job, wait, timeout);
+    return client->getJobResult(job, wait, timeout);
   }
 
   std::vector<std::string> getAllResourceNames();

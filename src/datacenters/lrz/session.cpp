@@ -45,7 +45,7 @@ void LRZ_QDMI_Device_Session_impl_d::setCouplingMap() {
 void LRZ_QDMI_Device_Session_impl_d::setResource(
     const std::string &newResourceName) {
   resourceName = newResourceName;
-  resource = client.getResourceInfo(resourceName);
+  resource = client->getResourceInfo(resourceName);
   setSites();
   setOperations();
   setCouplingMap();
@@ -53,7 +53,7 @@ void LRZ_QDMI_Device_Session_impl_d::setResource(
 
 std::vector<std::string> LRZ_QDMI_Device_Session_impl_d::getAllResourceNames() {
   std::vector<std::string> resouceNames;
-  std::vector<mqss::client::Resource> resources = client.getAllResources();
+  std::vector<mqss::client::Resource> resources = client->getAllResources();
   for (mqss::client::Resource resourceInfo : resources) {
     resouceNames.push_back(resourceInfo.getName());
   }

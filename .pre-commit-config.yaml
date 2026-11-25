@@ -92,5 +92,12 @@ repos:
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2
     hooks:
-      - id: check-dependabot
+      - id: check-renovate
+        additional_dependencies: [json5]
       - id: check-github-workflows
+
+  ## Check for security issues in GitHub Actions workflows
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.33.0
+    hooks:
+      - id: zizmor

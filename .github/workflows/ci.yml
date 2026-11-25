@@ -41,8 +41,9 @@ jobs:
         libuv1-dev libcjson-dev nlohmann-json3-dev librabbitmq-dev libboost-dev libcurl4-openssl-dev
         libssl-dev
 
-  # The Eviden Qaptiva backend embeds Python 3.10-3.12, while the MQT template
-  # pins Python 3.13, so this module is built in a plain job.
+  # The Eviden Qaptiva backend embeds Python and asks CMake for "3.10...3.12",
+  # which excludes 3.12.x patch releases and the 3.13 the MQT template pins.
+  # So this module is built in a plain job with Python 3.11.
   cpp-tests-eviden:
     name: 🇨 Build eviden
     runs-on: ubuntu-26.04
@@ -59,12 +60,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build libuv1-dev libcjson-dev nlohmann-json3-dev \
             librabbitmq-dev libboost-dev libcurl4-openssl-dev libssl-dev
-      - name: Set up Python 3.12
+      - name: Set up Python 3.11
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Configure CMake
-        run: cmake --preset eviden -DPython3_ROOT_DIR="$pythonLocation"
+        run: cmake --preset eviden -DPython3_EXECUTABLE="$pythonLocation/bin/python"
       - name: Build
         run: cmake --build --preset eviden
       - name: Test

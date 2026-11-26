@@ -318,7 +318,6 @@ int LRZ_QDMI_device_job_set_parameter(LRZ_QDMI_Device_Job job,
   if (param == QDMI_DEVICE_JOB_PARAMETER_PROGRAM) {
     const char *program = static_cast<const char *>(value);
     job->circuit.assign(program, size - 1);
-    job->circuit[size] = '\0';
     return QDMI_SUCCESS;
   }
 

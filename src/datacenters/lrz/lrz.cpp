@@ -22,8 +22,11 @@
 
 #include "lrz_qdmi/constants.h"
 #include "lrz_qdmi/types.h"
+#include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <lrz_qdmi/device.h>
+#include <thread>
 
 #include <mqss/client.h>
 
@@ -436,7 +439,42 @@ int LRZ_QDMI_device_job_wait(LRZ_QDMI_Device_Job job, const size_t timeout) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
 
-  job->job_result = job->session->getJobResult(job->jobRequest, true, timeout);
+  using Clock = std::chrono::steady_clock;
+  const auto deadline = Clock::now() + std::chrono::seconds(timeout);
+
+  while (true) {
+    QDMI_Job_Status status;
+    // The timeout is best-effort: getJobStatus() performs a blocking HTTP
+    // request that may exceed the remaining deadline.
+    const int rc = LRZ_QDMI_device_job_check(job, &status);
+    if (rc != QDMI_SUCCESS)
+      return rc;
+
+    if (status == QDMI_JOB_STATUS_CANCELED)
+      return QDMI_SUCCESS;
+
+    if (status == QDMI_JOB_STATUS_FAILED)
+      return QDMI_ERROR_FATAL;
+
+    if (status == QDMI_JOB_STATUS_DONE)
+      break;
+
+    if (timeout != 0 && Clock::now() >= deadline)
+      return QDMI_ERROR_TIMEOUT;
+
+    auto sleep_time = std::chrono::milliseconds(100);
+    if (timeout != 0) {
+      const auto remaining = deadline - Clock::now();
+      if (remaining <= Clock::duration::zero())
+        return QDMI_ERROR_TIMEOUT;
+      sleep_time = std::min(
+          sleep_time,
+          std::chrono::duration_cast<std::chrono::milliseconds>(remaining));
+    }
+    std::this_thread::sleep_for(sleep_time);
+  }
+
+  job->job_result = job->session->getJobResult(job->jobRequest);
   if (job->job_result == nullptr)
     return QDMI_ERROR_FATAL;
 

@@ -117,7 +117,7 @@ if(BUILD_BACKEND_LRZ)
   FetchContent_Declare(
     mqss_client
     GIT_REPOSITORY https://github.com/Munich-Quantum-Software-Stack/MQSS-Client
-    GIT_TAG develop)
+    GIT_TAG v0.2.2)
 
   list(APPEND FETCH_PACKAGES mqss_client)
 

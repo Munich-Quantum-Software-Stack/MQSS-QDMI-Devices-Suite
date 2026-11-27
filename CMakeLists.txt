@@ -35,7 +35,7 @@ option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Available modules
-set(AVAILABLE_MODULES lrz eviden dcdb)
+set(AVAILABLE_MODULES lrz mqv eviden dcdb)
 
 # Main config variable for users
 set(BUILD_MODULE
@@ -61,6 +61,8 @@ message(STATUS "Enabled module: ${ENABLED_MODULES}")
 # Include the chosen module
 if(BUILD_MODULE STREQUAL "lrz")
   option(BUILD_BACKEND_LRZ "Build LRZ Backend" ON)
+elseif(BUILD_MODULE STREQUAL "mqv")
+  option(BUILD_BACKEND_MQV "Build MQV Backend" ON)
 elseif(BUILD_MODULE STREQUAL "eviden")
   option(BUILD_BACKEND_EVIDEN "Build EVIDEN Backend" ON)
 elseif(BUILD_MODULE STREQUAL "dcdb")
@@ -77,6 +79,10 @@ endif()
 
 if(BUILD_BACKEND_LRZ)
   set(LRZ_QDMI_PREFIX "LRZ")
+endif()
+
+if(BUILD_BACKEND_MQV)
+  set(MQV_QDMI_PREFIX "MQV")
 endif()
 
 if(ENABLE_COVERAGE)

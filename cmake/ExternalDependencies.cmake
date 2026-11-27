@@ -123,6 +123,30 @@ if(BUILD_BACKEND_LRZ)
 
 endif()
 
+if(BUILD_BACKEND_MQV)
+  # Pinned: the MQV device is tested against this MQSS-Client revision.
+  set(MQV_MQSS_CLIENT_REV
+      "08cc79b2c207b2774a38bd348aac2ad5530d5ff9"
+      CACHE STRING "MQSS-Client revision for the MQV device")
+  FetchContent_Declare(
+    mqss_client
+    GIT_REPOSITORY https://github.com/Munich-Quantum-Software-Stack/MQSS-Client
+    GIT_TAG ${MQV_MQSS_CLIENT_REV}
+    EXCLUDE_FROM_ALL)
+  # MQSS-Client is linked statically into the device library.
+  set(_mqv_saved_build_shared_libs "${BUILD_SHARED_LIBS}")
+  set(BUILD_SHARED_LIBS OFF)
+  FetchContent_MakeAvailable(mqss_client)
+  set(BUILD_SHARED_LIBS "${_mqv_saved_build_shared_libs}")
+  set_target_properties(mqss_client PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  find_library(MQV_RABBITMQ_LIBRARY NAMES rabbitmq REQUIRED)
+  get_filename_component(MQV_RABBITMQ_LIBRARY_DIR "${MQV_RABBITMQ_LIBRARY}"
+                         DIRECTORY)
+  target_link_directories(mqss_client PUBLIC "${MQV_RABBITMQ_LIBRARY_DIR}")
+  find_package(Boost REQUIRED CONFIG)
+  target_link_libraries(mqss_client PUBLIC Boost::headers)
+endif()
+
 if(FETCH_PACKAGES)
   FetchContent_MakeAvailable(${FETCH_PACKAGES})
 endif()

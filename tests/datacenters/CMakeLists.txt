@@ -18,3 +18,7 @@
 if(BUILD_BACKEND_LRZ)
   add_subdirectory(lrz)
 endif()
+
+if(BUILD_BACKEND_MQV)
+  add_subdirectory(mqv)
+endif()

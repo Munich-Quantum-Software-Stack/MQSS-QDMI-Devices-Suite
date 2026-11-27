@@ -1,0 +1,17 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions: {}
+
+jobs:
+  update_release_draft:
+    name: Run
+    permissions:
+      contents: write
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0

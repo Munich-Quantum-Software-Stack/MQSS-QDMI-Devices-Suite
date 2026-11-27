@@ -1,0 +1,57 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "BUILD_BACKEND_TESTS": "ON"
+      }
+    },
+    {
+      "name": "lrz",
+      "displayName": "LRZ backend (Release)",
+      "inherits": "base",
+      "cacheVariables": { "BUILD_MODULE": "lrz", "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "eviden",
+      "displayName": "Eviden Qaptiva backend (Release)",
+      "inherits": "base",
+      "cacheVariables": { "BUILD_MODULE": "eviden", "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "dcdb",
+      "displayName": "DCDB backend (Release)",
+      "inherits": "base",
+      "cacheVariables": { "BUILD_MODULE": "dcdb", "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "lint",
+      "displayName": "Compilation database for clang-tidy (LRZ backend)",
+      "inherits": "base",
+      "cacheVariables": { "BUILD_MODULE": "lrz", "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "lrz", "configurePreset": "lrz" },
+    { "name": "eviden", "configurePreset": "eviden" },
+    { "name": "dcdb", "configurePreset": "dcdb" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "unit" } },
+      "execution": { "noTestsAction": "ignore" }
+    },
+    { "name": "lrz", "inherits": "base", "configurePreset": "lrz" },
+    { "name": "eviden", "inherits": "base", "configurePreset": "eviden" },
+    { "name": "dcdb", "inherits": "base", "configurePreset": "dcdb" }
+  ]
+}

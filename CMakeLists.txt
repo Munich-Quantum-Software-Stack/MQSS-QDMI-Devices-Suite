@@ -30,6 +30,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
     CACHE BOOL "Export compile commands" FORCE)
 
 option(BUILD_BACKEND_TESTS "Build the backend tests" ON)
+
+# Register tests at the top level so that `ctest` (and `ctest --preset ...`) run
+# from the build directory finds the tests of the selected module.
+if(BUILD_BACKEND_TESTS)
+  enable_testing()
+endif()
 option(BUILD_DOCUMENTATION "Build the documentations" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
